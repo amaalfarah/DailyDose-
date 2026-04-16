@@ -1,0 +1,51 @@
+{
+  "signUp": {
+    "title": "Registrarse",
+    "fullName": "Nombre completo",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "dob": "Fecha de nacimiento",
+    "cta": "Registrarse →",
+    "login": "Iniciar sesión",
+    "caregiverNote": "¿Ya tienes una cuenta con un cuidador?"
+  },
+  "home": {
+    "greeting": "Buenos días,",
+    "todayProgress": "Progreso de hoy",
+    "moreDoses": "dosis más",
+    "moreDosesPlural": "dosis más",
+    "upcomingDoses": "Próximas dosis",
+    "nextDose": "Próxima dosis"
+  },
+  "meds": {
+    "myMedications": "Mis Medicamentos",
+    "add": "Agregar",
+    "active": "Activo",
+    "refillSoon": "Reabastecer pronto",
+    "prn": "PRN"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "languageSub": "Todas las respuestas aparecerán en este idioma",
+    "privacyMode": "Ocultar nombres de medicamentos en notificaciones",
+    "privacyModeSub": "Usar nombre alternativo o texto genérico",
+    "doseReminders": "Recordatorios de dosis",
+    "missedDoseAlerts": "Alertas de dosis perdida",
+    "addCaregiver": "Agregar cuidador",
+    "addCaregiverSub": "Dejar que la familia supervise los medicamentos"
+  },
+  "notifications": {
+    "doseReminder": "Es hora de tomar {{name}}",
+    "doseReminderGeneric": "Es hora de tomar tu medicamento",
+    "missedDose": "Dosis perdida: {{name}}",
+    "missedDoseGeneric": "Olvidaste una dosis"
+  },
+  "trial": {
+    "daysLabel": "Días Gratis",
+    "startTrial": "Iniciar prueba gratuita de 30 días",
+    "subscribeNow": "Suscribirse ahora — $5/mes",
+    "planName": "DailyDose+ Mensual",
+    "afterTrial": "Después de que termine tu prueba gratuita"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "DailyDose+",
+    "slug": "dailydose",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1fa97a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dailydoseplus.app",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "DailyDose+ uses notifications to remind you to take your medications on time.",
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1fa97a"
+      },
+      "package": "com.dailydoseplus.app",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS",
+        "SCHEDULE_EXACT_ALARM"
+      ]
+    },
+    "plugins": [
+      ["expo-notifications", {
+        "icon": "./assets/notification-icon.png",
+        "color": "#1fa97a",
+        "sounds": []
+      }]
+    ],
+    "scheme": "dailydoseplus",
+    "extra": {
+      "trialDays": 30,
+      "subscriptionPrice": 4.99
+    }
+  }
+}

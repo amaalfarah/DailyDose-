@@ -1,0 +1,52 @@
+// locales/en.json
+{
+  "signUp": {
+    "title": "Sign Up",
+    "fullName": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "dob": "Date of birth",
+    "cta": "Sign up →",
+    "login": "Log in",
+    "caregiverNote": "Already have an account with a caregiver?"
+  },
+  "home": {
+    "greeting": "Good morning,",
+    "todayProgress": "Today's progress",
+    "moreDoses": "more dose",
+    "moreDosesPlural": "more doses",
+    "upcomingDoses": "Upcoming doses",
+    "nextDose": "Next dose"
+  },
+  "meds": {
+    "myMedications": "My Medications",
+    "add": "Add",
+    "active": "Active",
+    "refillSoon": "Refill soon",
+    "prn": "PRN"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageSub": "All responses will appear in this language",
+    "privacyMode": "Hide medication names in notifications",
+    "privacyModeSub": "Always use cover name — or generic text if none set",
+    "doseReminders": "Dose reminders",
+    "missedDoseAlerts": "Missed dose alerts",
+    "addCaregiver": "Add caregiver",
+    "addCaregiverSub": "Let family monitor medications"
+  },
+  "notifications": {
+    "doseReminder": "Time to take {{name}}",
+    "doseReminderGeneric": "Time to take your medication",
+    "missedDose": "Missed dose: {{name}}",
+    "missedDoseGeneric": "You missed a dose"
+  },
+  "trial": {
+    "daysLabel": "Days Free",
+    "startTrial": "Start 30-Day Free Trial",
+    "subscribeNow": "Subscribe Now — $5/month",
+    "planName": "DailyDose+ Monthly",
+    "afterTrial": "After your free trial ends"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "signUp": {
+    "title": "إنشاء حساب",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "dob": "تاريخ الميلاد",
+    "cta": "إنشاء حساب ←",
+    "login": "تسجيل الدخول",
+    "caregiverNote": "هل لديك حساب بالفعل مع مقدم رعاية؟"
+  },
+  "home": {
+    "greeting": "صباح الخير،",
+    "todayProgress": "تقدم اليوم",
+    "moreDoses": "جرعة أخرى",
+    "moreDosesPlural": "جرعات أخرى",
+    "upcomingDoses": "الجرعات القادمة",
+    "nextDose": "الجرعة التالية"
+  },
+  "meds": {
+    "myMedications": "أدويتي",
+    "add": "إضافة",
+    "active": "نشط",
+    "refillSoon": "تجديد قريبًا",
+    "prn": "عند الحاجة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "languageSub": "ستظهر جميع الردود بهذه اللغة",
+    "privacyMode": "إخفاء أسماء الأدوية في الإشعارات",
+    "privacyModeSub": "استخدم الاسم البديل أو نصًا عامًا دائمًا",
+    "doseReminders": "تذكيرات الجرعات",
+    "missedDoseAlerts": "تنبيهات الجرعات الفائتة",
+    "addCaregiver": "إضافة مقدم رعاية",
+    "addCaregiverSub": "السماح للعائلة بمتابعة الأدوية"
+  },
+  "notifications": {
+    "doseReminder": "حان وقت تناول {{name}}",
+    "doseReminderGeneric": "حان وقت تناول دوائك",
+    "missedDose": "جرعة فائتة: {{name}}",
+    "missedDoseGeneric": "لقد فاتتك جرعة"
+  },
+  "trial": {
+    "daysLabel": "يومًا مجانًا",
+    "startTrial": "ابدأ التجربة المجانية لمدة 30 يومًا",
+    "subscribeNow": "اشترك الآن — 5 دولار/شهر",
+    "planName": "DailyDose+ الشهري",
+    "afterTrial": "بعد انتهاء فترة التجربة المجانية"
+  }
+}

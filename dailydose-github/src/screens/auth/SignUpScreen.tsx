@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import TCModal from '../../components/TCModal';
 import { AuthStackParams } from '../../navigation/AppNavigator';
 
@@ -19,6 +20,7 @@ type Nav = StackNavigationProp<AuthStackParams, 'SignUp'>;
 export default function SignUpScreen() {
   const navigation = useNavigation<Nav>();
   const { acceptTerms } = useAuthStore();
+  const { openTrialModal } = useSettingsStore();
 
   const [fullName, setFullName]     = useState('');
   const [email, setEmail]           = useState('');
@@ -34,7 +36,7 @@ export default function SignUpScreen() {
   function handleAcceptTC() {
     setShowTC(false);
     acceptTerms();
-    // TrialModal will appear automatically via App.tsx logic
+    openTrialModal();
     navigation.navigate('AddMedication');
   }
 
@@ -45,6 +47,7 @@ export default function SignUpScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}

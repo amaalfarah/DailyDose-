@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DailyDose+ Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0d6e51 0%, #1fa97a 45%, #0f1f2e 100%);
+      background-attachment: fixed;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 28px;
+      padding: 40px 20px 48px;
+    }
+
+    /* ── Title ── */
+    .title {
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    /* ── Phone shell ── */
+    .phone-wrap {
+      position: relative;
+      filter: drop-shadow(0 40px 60px rgba(0,0,0,0.55));
+    }
+
+    .phone {
+      width: 375px;
+      height: 812px;
+      background: #0f1f2e;
+      border-radius: 52px;
+      border: 2px solid rgba(255,255,255,0.12);
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 2px 4px rgba(255,255,255,0.06) inset;
+    }
+
+    /* Side buttons */
+    .phone::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 120px;
+      width: 4px;
+      height: 36px;
+      background: #1a2e3f;
+      border-radius: 3px 0 0 3px;
+      box-shadow: 0 50px 0 #1a2e3f, 0 96px 0 #1a2e3f;
+    }
+    .phone::after {
+      content: '';
+      position: absolute;
+      right: -4px;
+      top: 150px;
+      width: 4px;
+      height: 64px;
+      background: #1a2e3f;
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* Dynamic island */
+    .dynamic-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      gap: 6px;
+    }
+    .island-cam {
+      width: 12px;
+      height: 12px;
+      background: #1a1a1a;
+      border-radius: 50%;
+      border: 2px solid #222;
+      position: relative;
+    }
+    .island-cam::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 5px; height: 5px;
+      background: #111;
+      border-radius: 50%;
+    }
+
+    /* Screen area */
+    .screen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 50px;
+      overflow: hidden;
+      background: #f7fbf9;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 50px;
+    }
+
+    /* Home indicator */
+    .home-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 5px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      z-index: 20;
+    }
+
+    /* ── Instructions ── */
+    .instructions {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 16px 20px;
+      max-width: 375px;
+      width: 100%;
+    }
+    .instructions p {
+      color: rgba(255,255,255,0.75);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .instructions code {
+      background: rgba(255,255,255,0.12);
+      color: #a3dfc8;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+
+    /* ── Port switcher ── */
+    .port-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .port-row label {
+      color: rgba(255,255,255,0.6);
+      font-size: 11px;
+    }
+    .port-row input {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 8px;
+      width: 70px;
+      text-align: center;
+      font-family: monospace;
+    }
+    .port-row button {
+      background: #1fa97a;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    .port-row button:hover { background: #0d6e51; }
+  </style>
+</head>
+<body>
+
+  <p class="title">DailyDose+ · Phone Preview</p>
+
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="dynamic-island">
+        <div class="island-cam"></div>
+      </div>
+
+      <div class="screen">
+        <iframe id="appFrame" src="http://localhost:8081" title="DailyDose+ App"></iframe>
+      </div>
+
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <p>Start the Expo web server first:</p>
+    <p style="margin-top:6px"><code>npx expo start --web</code></p>
+    <div class="port-row">
+      <label>Port:</label>
+      <input id="portInput" type="number" value="8081" min="1000" max="65535" />
+      <button onclick="loadPort()">Load</button>
+    </div>
+  </div>
+
+  <script>
+    function loadPort() {
+      const port = document.getElementById('portInput').value;
+      document.getElementById('appFrame').src = 'http://localhost:' + port;
+    }
+    document.getElementById('portInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') loadPort();
+    });
+  </script>
+
+</body>
+</html>

@@ -3,6 +3,7 @@
     "name": "DailyDose+",
     "slug": "dailydose",
     "version": "1.0.0",
+    "platforms": ["ios", "android", "web"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -41,6 +42,18 @@
       }]
     ],
     "scheme": "dailydoseplus",
+    "web": {
+      "favicon": "./assets/icon.png",
+      "name": "DailyDose+",
+      "shortName": "DailyDose+",
+      "description": "Medication tracking — never miss a dose.",
+      "backgroundColor": "#f7fbf9",
+      "themeColor": "#1fa97a",
+      "display": "standalone",
+      "orientation": "portrait",
+      "lang": "en",
+      "output": "single-page"
+    },
     "extra": {
       "trialDays": 30,
       "subscriptionPrice": 4.99

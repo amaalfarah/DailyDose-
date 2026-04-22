@@ -55,7 +55,7 @@ export default function CaregiverSignupScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { padding: 16 },
-  inviteCard: { background: 'linear-gradient(135deg,#0d6e51,#1fa97a)', backgroundColor: colors.mintD, borderRadius: 18, padding: 18, marginBottom: 16 } as any,
+  inviteCard: { backgroundColor: colors.mintD, borderRadius: 18, padding: 18, marginBottom: 16 },
   inviteTitle: { fontSize: 16, fontFamily: fonts.bold, color: '#fff', marginBottom: 6 },
   inviteSub: { fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.85)', lineHeight: 16, marginBottom: 12 },
   inviteFrom: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 10 },

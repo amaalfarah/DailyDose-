@@ -58,8 +58,14 @@ export default function AddMedicationScreen() {
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>('med');
   const [privacyMode, setPrivacy] = useState(false);
 
+  const [nameError, setNameError] = useState(false);
+
   function handleSave() {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameError(true);
+      return;
+    }
+    setNameError(false);
     addMedication({
       name: name.trim(),
       coverName: coverName.trim() || undefined,
@@ -81,7 +87,7 @@ export default function AddMedicationScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
           <View style={s.backArr} /><Text style={s.backLabel}>Add medication</Text>
         </TouchableOpacity>
@@ -89,7 +95,14 @@ export default function AddMedicationScreen() {
         <Text style={s.note}>Add Luis's daily medications. You can always add or edit later.</Text>
 
         <Text style={s.lbl}>Medication name <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TextInput style={s.inp} placeholder="e.g. Amoxicillin 250mg" placeholderTextColor="#b0bec5" value={name} onChangeText={setName} />
+        <TextInput
+          style={[s.inp, nameError && s.inpError]}
+          placeholder="e.g. Amoxicillin 250mg"
+          placeholderTextColor="#b0bec5"
+          value={name}
+          onChangeText={(t) => { setName(t); if (t.trim()) setNameError(false); }}
+        />
+        {nameError && <Text style={s.errorText}>Please enter a medication name to continue.</Text>}
 
         <Text style={s.lbl}>Dosage</Text>
         <TextInput style={s.inp} placeholder="e.g. 250mg / 5mL" placeholderTextColor="#b0bec5" value={dosage} onChangeText={setDosage} />
@@ -191,7 +204,8 @@ export default function AddMedicationScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: 16 },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40, flexGrow: 1 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   backArr: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f4f3' },
   backLabel: { fontSize: 14, fontFamily: fonts.bold, color: colors.navy },
@@ -236,6 +250,8 @@ const s = StyleSheet.create({
   iconOptOn: { borderColor: colors.mint, backgroundColor: colors.mintL },
   iconOptNeutralOn: { borderColor: '#9b59b6', backgroundColor: '#f5eeff' },
   iconHelper: { fontSize: fontSizes.xs, color: '#7a50a0', padding: 10, paddingTop: 0, lineHeight: 16 },
+  inpError: { borderColor: colors.rose },
+  errorText: { fontSize: fontSizes.xs, color: colors.rose, marginTop: -8, marginBottom: 12 },
   btnPrimary: { backgroundColor: colors.mint, borderRadius: 12, padding: 14, alignItems: 'center', marginBottom: 10 },
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
   btnSecondary: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, padding: 13, alignItems: 'center' },

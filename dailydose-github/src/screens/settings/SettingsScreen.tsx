@@ -153,6 +153,13 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Version */}
+        <View style={styles.versionRow}>
+          <Text style={styles.versionText}>DailyDose+ · Version 1.0.0</Text>
+          <Text style={styles.versionSub}>© 2026 DailyDose+. All rights reserved.</Text>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -227,4 +234,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   checkCircleOn: { backgroundColor: colors.mint, borderColor: colors.mint },
+  versionRow: { alignItems: 'center', paddingVertical: 28, gap: 4 },
+  versionText: { fontSize: fontSizes.xs, fontFamily: fonts.medium, color: colors.muted },
+  versionSub: { fontSize: fontSizes.xs - 1, color: '#b0bec5' },
 });

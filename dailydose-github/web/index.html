@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- Mobile viewport — prevents zoom on input focus, covers notch area -->
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover"
+  />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Theme color (browser chrome / Android status bar) -->
+  <meta name="theme-color" content="#1fa97a" />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DailyDose+" />
+
+  <!-- Android PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="DailyDose+" />
+
+  <!-- Description / Open Graph -->
+  <meta name="description" content="Medication tracking — never miss a dose." />
+
+  <title>DailyDose+</title>
+
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /*
+     * Critical for React Native Web scrolling:
+     * html/body/root must have a bounded height and overflow:hidden.
+     * ScrollViews then scroll within their own bounded containers.
+     */
+    html {
+      height: 100%;
+      background: #1fa97a;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0d6e51 0%, #1fa97a 50%, #0f1f2e 100%);
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* Safe area support for notch/home-indicator on iOS PWA */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Root container — mobile width, centered on desktop */
+    #root {
+      height: 100%;
+      width: 100%;
+      max-width: 430px;       /* iPhone 14 Pro Max width */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #f7fbf9;
+      position: relative;
+      /* Subtle phone shadow when viewed on desktop */
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Remove tap highlight on mobile */
+    * { -webkit-tap-highlight-color: transparent; }
+
+    /* Smooth scrolling feel on iOS */
+    * { -webkit-overflow-scrolling: touch; }
+
+    /* Hide scrollbars globally (RN Web adds them sometimes) */
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    // Register service worker for PWA offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js').catch(function () {
+          // Service worker registration failed — app still works online
+        });
+      });
+    }
+  </script>
+</body>
+</html>

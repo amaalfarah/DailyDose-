@@ -2,17 +2,12 @@
 import React from 'react';
 import {
   Modal, View, Text, TouchableOpacity,
-  StyleSheet, Pressable,
+  StyleSheet,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
-
-interface Props {
-  visible: boolean;
-  onStartTrial: () => void;
-  onSubscribeNow: () => void;
-}
+import { useSettingsStore } from '../store/useSettingsStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 const features = [
   'Unlimited medications & reminders',
@@ -22,9 +17,17 @@ const features = [
   'Multilingual support (EN, ES, FR, AR)',
 ];
 
-export default function TrialModal({ visible, onStartTrial, onSubscribeNow }: Props) {
+export default function TrialModal() {
+  const { showTrialModal, startTrial, subscribe } = useSettingsStore();
+  const { startTrial: authStartTrial } = useAuthStore();
+
+  function handleStartTrial() {
+    startTrial();
+    authStartTrial();
+  }
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={showTrialModal} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modal}>
 
@@ -65,10 +68,10 @@ export default function TrialModal({ visible, onStartTrial, onSubscribeNow }: Pr
 
           {/* Buttons */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.btnPrimary} onPress={onStartTrial}>
+            <TouchableOpacity style={styles.btnPrimary} onPress={handleStartTrial}>
               <Text style={styles.btnPrimaryText}>Start 30-Day Free Trial</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnSecondary} onPress={onSubscribeNow}>
+            <TouchableOpacity style={styles.btnSecondary} onPress={subscribe}>
               <Text style={styles.btnSecondaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>
             <Text style={styles.fine}>Cancel anytime. Billed monthly after trial ends.</Text>

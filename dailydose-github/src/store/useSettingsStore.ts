@@ -16,6 +16,7 @@ interface SettingsStore {
   trialStartDate: string | null;
   isSubscribed: boolean;
   trialExpired: boolean;
+  showTrialModal: boolean;
 
   setLanguage: (lang: AppLanguage) => void;
   setPrivacyMode: (on: boolean) => void;
@@ -23,6 +24,8 @@ interface SettingsStore {
   startTrial: () => void;
   subscribe: () => void;
   checkTrialExpiry: () => void;
+  openTrialModal: () => void;
+  dismissTrialModal: () => void;
 }
 
 const TRIAL_DAYS = 30;
@@ -40,6 +43,7 @@ export const useSettingsStore = create<SettingsStore>()(
       trialStartDate: null,
       isSubscribed: false,
       trialExpired: false,
+      showTrialModal: false,
 
       setLanguage: (lang) => set({ language: lang }),
 
@@ -47,11 +51,15 @@ export const useSettingsStore = create<SettingsStore>()(
 
       toggleSetting: (key) => set((s) => ({ [key]: !s[key] })),
 
+      openTrialModal: () => set({ showTrialModal: true }),
+
+      dismissTrialModal: () => set({ showTrialModal: false }),
+
       startTrial: () =>
-        set({ trialStartDate: new Date().toISOString(), trialExpired: false }),
+        set({ trialStartDate: new Date().toISOString(), trialExpired: false, showTrialModal: false }),
 
       subscribe: () =>
-        set({ isSubscribed: true, trialExpired: false }),
+        set({ isSubscribed: true, trialExpired: false, showTrialModal: false }),
 
       checkTrialExpiry: () => {
         const { trialStartDate, isSubscribed } = get();

@@ -25,7 +25,7 @@ export default function NotificationSetupScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <ScrollView contentContainerStyle={s.scroll}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={s.scroll}>
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
           <View style={s.backArr} /><Text style={s.backLabel}>Notification settings</Text>
         </TouchableOpacity>
@@ -40,6 +40,9 @@ export default function NotificationSetupScreen() {
         <View style={{ height: 12 }} />
         <TouchableOpacity style={s.btnPrimary} onPress={handleContinue}>
           <Text style={s.btnText}>Continue →</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={s.btnSkip} onPress={handleContinue}>
+          <Text style={s.btnSkipText}>Skip for now</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -70,6 +73,8 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1.5, borderColor: colors.border },
   rowLabel: { fontSize: fontSizes.base, fontFamily: fonts.medium, color: colors.navy },
   rowSub: { fontSize: fontSizes.xs, color: colors.muted, marginTop: 1 },
-  btnPrimary: { backgroundColor: colors.mint, borderRadius: 12, padding: 14, alignItems: 'center' },
+  btnPrimary: { backgroundColor: colors.mint, borderRadius: 12, padding: 14, alignItems: 'center', marginBottom: 10 },
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
+  btnSkip: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, padding: 13, alignItems: 'center' },
+  btnSkipText: { color: colors.muted, fontFamily: fonts.medium, fontSize: fontSizes.base },
 });

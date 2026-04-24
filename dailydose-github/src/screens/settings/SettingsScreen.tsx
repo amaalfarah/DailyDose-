@@ -101,7 +101,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionHead}>Caregiver</Text>
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Settings', { screen: 'Invite' })}
+          onPress={() => navigation.navigate('Invite')}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Add caregiver</Text>
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.row}
-          onPress={() => navigation.navigate('Settings', { screen: 'AccountSwitcher' })}
+          onPress={() => navigation.navigate('AccountSwitcher')}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Manage accounts</Text>

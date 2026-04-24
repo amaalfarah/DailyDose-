@@ -48,9 +48,20 @@ export type CaregiverStackParams = {
   CaregiverSignup: { token: string };
 };
 
+export type SettingsStackParams = {
+  SettingsMain: undefined;
+  Invite: undefined;
+  InviteSent: { caregiverName: string; caregiverEmail: string };
+  AccountSwitcher: undefined;
+  MyDashboard: undefined;
+  SharedDashboard: undefined;
+  CaregiverSignup: { token: string };
+};
+
 const AuthStack = createStackNavigator<AuthStackParams>();
 const Tab = createBottomTabNavigator<MainTabParams>();
 const CaregiverStack = createStackNavigator<CaregiverStackParams>();
+const SettingsStack = createStackNavigator<SettingsStackParams>();
 
 function CaregiverNavigator() {
   return (
@@ -62,6 +73,20 @@ function CaregiverNavigator() {
       <CaregiverStack.Screen name="InviteSent" component={InviteSentScreen} />
       <CaregiverStack.Screen name="CaregiverSignup" component={CaregiverSignupScreen} />
     </CaregiverStack.Navigator>
+  );
+}
+
+function SettingsNavigator() {
+  return (
+    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="Invite" component={InviteScreen} />
+      <SettingsStack.Screen name="InviteSent" component={InviteSentScreen} />
+      <SettingsStack.Screen name="AccountSwitcher" component={AccountSwitcherScreen} />
+      <SettingsStack.Screen name="MyDashboard" component={MyDashboardScreen} />
+      <SettingsStack.Screen name="SharedDashboard" component={SharedDashboardScreen} />
+      <SettingsStack.Screen name="CaregiverSignup" component={CaregiverSignupScreen} />
+    </SettingsStack.Navigator>
   );
 }
 
@@ -105,7 +130,7 @@ function MainTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Meds" component={MedsScreen} />
       <Tab.Screen name="History" component={CalendarScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="Settings" component={SettingsNavigator} />
     </Tab.Navigator>
   );
 }

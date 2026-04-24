@@ -18,22 +18,34 @@ import { linking } from './src/utils/inviteLink';
 if (Platform.OS === 'web') {
   const style = document.createElement('style');
   style.textContent = `
-    /* Pin the app to viewport height so flex:1 children get a bounded size.
-       Without this, React Native Web ScrollViews expand to content height
-       and have nothing to scroll within. */
-    html, body { height: 100vh !important; overflow: hidden; }
+    html {
+      height: 100%;
+      background: #1fa97a;
+    }
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0d6e51 0%, #1fa97a 50%, #0f1f2e 100%);
+      background-attachment: fixed;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
     #root {
-      height: 100vh !important;
+      height: 100vh;
+      width: 100%;
+      max-width: 430px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      background: #f7fbf9;
+      position: relative;
+      box-shadow: 0 0 80px rgba(0,0,0,0.4);
     }
-
-    /* Show scrollbars — React Native Web hides them by default. */
-    ::-webkit-scrollbar { display: block !important; width: 12px; height: 12px; }
-    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.45); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.08); border-radius: 8px; }
-    * { scrollbar-width: auto !important; scrollbar-color: rgba(0,0,0,0.45) rgba(0,0,0,0.08) !important; }
+    ::-webkit-scrollbar { display: block !important; width: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.3); border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
     * { -webkit-overflow-scrolling: touch; }
   `;
   document.head.appendChild(style);

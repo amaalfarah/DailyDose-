@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
@@ -82,16 +83,12 @@ function formatDob(text: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
-// ── Inline status row (checking / taken / available) ─────────────────────────
+// ── Async status indicator ────────────────────────────────────────────────────
 
 function FieldStatus({
-  localError,
-  asyncStatus,
-  takenMessage,
+  localError, asyncStatus, takenMessage,
 }: {
-  localError: string;
-  asyncStatus: AsyncStatus;
-  takenMessage: string;
+  localError: string; asyncStatus: AsyncStatus; takenMessage: string;
 }) {
   if (localError) return <Text style={styles.errorText}>{localError}</Text>;
   if (asyncStatus === 'checking')
@@ -101,10 +98,8 @@ function FieldStatus({
         <Text style={styles.checkingText}> Checking…</Text>
       </View>
     );
-  if (asyncStatus === 'taken')
-    return <Text style={styles.errorText}>{takenMessage}</Text>;
-  if (asyncStatus === 'available')
-    return <Text style={styles.successText}>Available ✓</Text>;
+  if (asyncStatus === 'taken') return <Text style={styles.errorText}>{takenMessage}</Text>;
+  if (asyncStatus === 'available') return <Text style={styles.successText}>Available ✓</Text>;
   return null;
 }
 
@@ -115,20 +110,19 @@ export default function SignUpScreen() {
   const { acceptTerms } = useAuthStore();
   const { openTrialModal } = useSettingsStore();
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [dob, setDob]           = useState('');
-  const [showTC, setShowTC]     = useState(false);
-
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [username, setUsername]         = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [dob, setDob]                   = useState('');
+  const [showTC, setShowTC]             = useState(false);
+  const [touched, setTouched]           = useState<Record<string, boolean>>({});
   const [usernameStatus, setUsernameStatus] = useState<AsyncStatus>('idle');
   const [emailStatus, setEmailStatus]       = useState<AsyncStatus>('idle');
 
   const usernameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emailTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced username uniqueness check
   useEffect(() => {
     if (usernameTimer.current) clearTimeout(usernameTimer.current);
     if (validateUsername(username)) { setUsernameStatus('idle'); return; }
@@ -142,7 +136,6 @@ export default function SignUpScreen() {
     return () => { if (usernameTimer.current) clearTimeout(usernameTimer.current); };
   }, [username]);
 
-  // Debounced email uniqueness check
   useEffect(() => {
     if (emailTimer.current) clearTimeout(emailTimer.current);
     if (validateEmail(email)) { setEmailStatus('idle'); return; }
@@ -198,13 +191,9 @@ export default function SignUpScreen() {
   }
 
   function handleGoToLogin() {
-    setUsername('');
-    setEmail('');
-    setPassword('');
-    setDob('');
+    setUsername(''); setEmail(''); setPassword(''); setDob('');
     setTouched({});
-    setUsernameStatus('idle');
-    setEmailStatus('idle');
+    setUsernameStatus('idle'); setEmailStatus('idle');
     navigation.navigate('Login');
   }
 
@@ -215,114 +204,153 @@ export default function SignUpScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Logo */}
-          <View style={styles.header}>
-            <Text style={styles.logo}>
-              Daily<Text style={styles.logoAccent}>Dose</Text>+
-            </Text>
-          </View>
-
-          {/* Step pill */}
-          <View style={styles.stepPill}>
-            <Text style={styles.stepPillText}>Step 1 of 4 — Account</Text>
-          </View>
-
-          {/* Username */}
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            style={[styles.input, borderStyle('username')]}
-            placeholder="maria_santos"
-            placeholderTextColor="#b0bec5"
-            value={username}
-            onChangeText={setUsername}
-            onBlur={() => touch('username')}
-            autoCapitalize="none"
-            autoCorrect={false}
-            maxLength={20}
-          />
-          <FieldStatus
-            localError={touched.username ? validateUsername(username) : ''}
-            asyncStatus={usernameStatus}
-            takenMessage="Username is already taken"
-          />
-
-          {/* Email */}
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, borderStyle('email')]}
-            placeholder="maria@email.com"
-            placeholderTextColor="#b0bec5"
-            value={email}
-            onChangeText={setEmail}
-            onBlur={() => touch('email')}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <FieldStatus
-            localError={touched.email ? validateEmail(email) : ''}
-            asyncStatus={emailStatus}
-            takenMessage="Email is already registered"
-          />
-
-          {/* Password */}
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={[styles.input, borderStyle('password')]}
-            placeholder="••••••••"
-            placeholderTextColor="#b0bec5"
-            value={password}
-            onChangeText={setPassword}
-            onBlur={() => touch('password')}
-            secureTextEntry
-            autoCapitalize="none"
-            maxLength={12}
-          />
-          {touched.password && validatePassword(password) ? (
-            <Text style={styles.errorText}>{validatePassword(password)}</Text>
-          ) : null}
-          {touched.password && !validatePassword(password) ? (
-            <Text style={styles.successText}>Strong password ✓</Text>
-          ) : null}
-
-          {/* Date of birth */}
-          <Text style={styles.label}>Date of birth</Text>
-          <TextInput
-            style={[styles.input, borderStyle('dob')]}
-            placeholder="MM/DD/YYYY"
-            placeholderTextColor="#b0bec5"
-            value={dob}
-            onChangeText={t => setDob(formatDob(t))}
-            onBlur={() => touch('dob')}
-            keyboardType="numeric"
-            maxLength={10}
-          />
-          {touched.dob && validateDob(dob) ? (
-            <Text style={styles.errorText}>{validateDob(dob)}</Text>
-          ) : null}
-          {touched.dob && !validateDob(dob) ? (
-            <Text style={styles.successText}>Valid date ✓</Text>
-          ) : null}
-
-          <Text style={styles.caregiverNote}>
-            Already have an account with a caregiver?
+          <Text style={styles.logo}>
+            Daily<Text style={styles.logoAccent}>Dose</Text>+
           </Text>
 
-          <TouchableOpacity style={styles.btnPrimary} onPress={handleSignUp}>
-            <Text style={styles.btnPrimaryText}>Sign up →</Text>
-          </TouchableOpacity>
+          {/* Card */}
+          <View style={styles.card}>
+            <Text style={styles.title}>Sign Up</Text>
 
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            onPress={handleGoToLogin}
-          >
-            <Text style={styles.btnSecondaryText}>Log in</Text>
-          </TouchableOpacity>
+            {/* Step pill */}
+            <View style={styles.stepPill}>
+              <Text style={styles.stepPillText}>Step 1 of 4 — Account</Text>
+            </View>
+
+            {/* Username */}
+            <Text style={styles.fieldLabel}>Username</Text>
+            <View style={styles.inputRow}>
+              <MaterialCommunityIcons
+                name="account-outline"
+                size={20}
+                color={touched.username && validateUsername(username) ? colors.rose : colors.muted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, borderStyle('username')]}
+                placeholder="maria_santos"
+                placeholderTextColor="#b0bec5"
+                value={username}
+                onChangeText={setUsername}
+                onBlur={() => touch('username')}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={20}
+              />
+            </View>
+            <FieldStatus
+              localError={touched.username ? validateUsername(username) : ''}
+              asyncStatus={usernameStatus}
+              takenMessage="Username is already taken"
+            />
+
+            {/* Email */}
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={styles.inputRow}>
+              <MaterialCommunityIcons
+                name="email-outline"
+                size={20}
+                color={touched.email && validateEmail(email) ? colors.rose : colors.muted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, borderStyle('email')]}
+                placeholder="maria@email.com"
+                placeholderTextColor="#b0bec5"
+                value={email}
+                onChangeText={setEmail}
+                onBlur={() => touch('email')}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <FieldStatus
+              localError={touched.email ? validateEmail(email) : ''}
+              asyncStatus={emailStatus}
+              takenMessage="Email is already registered"
+            />
+
+            {/* Password */}
+            <Text style={styles.fieldLabel}>Password</Text>
+            <View style={styles.inputRow}>
+              <MaterialCommunityIcons
+                name="lock-outline"
+                size={20}
+                color={touched.password && validatePassword(password) ? colors.rose : colors.muted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }, borderStyle('password')]}
+                placeholder="••••••••"
+                placeholderTextColor="#b0bec5"
+                value={password}
+                onChangeText={setPassword}
+                onBlur={() => touch('password')}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                maxLength={12}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(p => !p)}>
+                <MaterialCommunityIcons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color={colors.muted}
+                />
+              </TouchableOpacity>
+            </View>
+            {touched.password && validatePassword(password)
+              ? <Text style={styles.errorText}>{validatePassword(password)}</Text>
+              : null}
+            {touched.password && !validatePassword(password)
+              ? <Text style={styles.successText}>Strong password ✓</Text>
+              : null}
+
+            {/* Date of birth */}
+            <Text style={styles.fieldLabel}>Date of birth</Text>
+            <View style={styles.inputRow}>
+              <MaterialCommunityIcons
+                name="calendar-outline"
+                size={20}
+                color={touched.dob && validateDob(dob) ? colors.rose : colors.muted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, borderStyle('dob')]}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#b0bec5"
+                value={dob}
+                onChangeText={t => setDob(formatDob(t))}
+                onBlur={() => touch('dob')}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
+            {touched.dob && validateDob(dob)
+              ? <Text style={styles.errorText}>{validateDob(dob)}</Text>
+              : null}
+            {touched.dob && !validateDob(dob)
+              ? <Text style={styles.successText}>Valid date ✓</Text>
+              : null}
+
+            {/* Sign up button */}
+            <TouchableOpacity style={styles.btnPrimary} onPress={handleSignUp} activeOpacity={0.85}>
+              <Text style={styles.btnPrimaryText}>SIGN UP</Text>
+            </TouchableOpacity>
+
+            {/* Log in link */}
+            <View style={styles.loginRow}>
+              <Text style={styles.loginPrompt}>Already have an account? </Text>
+              <TouchableOpacity onPress={handleGoToLogin}>
+                <Text style={styles.loginLink}>Log in</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -337,22 +365,45 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: colors.bg },
-  scroll: { padding: 20, paddingBottom: 40 },
-  header: { marginBottom: 20 },
+  scroll: { flexGrow: 1, padding: 24, justifyContent: 'center' },
+
   logo: {
     fontSize: 20,
     fontFamily: fonts.bold,
     color: colors.navy,
     letterSpacing: -0.4,
+    marginBottom: 28,
+    textAlign: 'center',
   },
   logoAccent: { color: colors.mint },
+
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 6,
+  },
+
+  title: {
+    fontSize: 28,
+    fontFamily: fonts.bold,
+    color: colors.navy,
+    textAlign: 'center',
+    marginBottom: 16,
+    letterSpacing: -0.5,
+  },
+
   stepPill: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     backgroundColor: colors.mintL,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   stepPillText: {
     fontSize: fontSizes.xs,
@@ -360,78 +411,95 @@ const styles = StyleSheet.create({
     color: colors.mintD,
     letterSpacing: 0.3,
   },
-  label: {
+
+  fieldLabel: {
     fontSize: fontSizes.xs,
     fontFamily: fonts.bold,
     color: colors.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: 4,
+    marginBottom: 6,
+    marginTop: 14,
   },
+
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 2,
+  },
+  inputIcon: { marginRight: 10 },
+
   input: {
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
+    flex: 1,
     fontSize: fontSizes.base,
     fontFamily: fonts.regular,
     color: colors.navy,
-    marginBottom: 4,
+    paddingVertical: 6,
+    borderBottomWidth: 1.5,
+    borderBottomColor: colors.border,
   },
-  inputError: { borderColor: colors.rose },
-  inputValid: { borderColor: colors.mint },
+  inputError: { borderBottomColor: colors.rose },
+  inputValid:  { borderBottomColor: colors.mint },
+
   errorText: {
     fontSize: fontSizes.xs,
     color: colors.rose,
-    marginBottom: 10,
-    marginLeft: 2,
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 30,
   },
   successText: {
     fontSize: fontSizes.xs,
     color: colors.mint,
-    marginBottom: 10,
-    marginLeft: 2,
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 30,
   },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 30,
   },
   checkingText: {
     fontSize: fontSizes.xs,
     color: colors.muted,
   },
-  caregiverNote: {
-    fontSize: fontSizes.xs,
-    color: colors.muted,
-    marginBottom: 14,
-    marginTop: 4,
-  },
+
   btnPrimary: {
     backgroundColor: colors.mint,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 30,
+    paddingVertical: 15,
     alignItems: 'center',
-    marginBottom: 10,
+    marginTop: 28,
+    shadowColor: colors.mint,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
   },
   btnPrimaryText: {
     color: colors.white,
     fontFamily: fonts.bold,
     fontSize: fontSizes.base,
-    letterSpacing: 0.3,
+    letterSpacing: 2,
   },
-  btnSecondary: {
-    borderRadius: 12,
-    padding: 13,
+
+  loginRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    marginTop: 24,
   },
-  btnSecondaryText: {
+  loginPrompt: {
+    fontSize: fontSizes.sm,
+    fontFamily: fonts.regular,
     color: colors.muted,
-    fontFamily: fonts.medium,
-    fontSize: fontSizes.base,
+  },
+  loginLink: {
+    fontSize: fontSizes.sm,
+    fontFamily: fonts.bold,
+    color: colors.mint,
   },
 });

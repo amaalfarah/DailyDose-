@@ -14,7 +14,7 @@ const features = [
 ];
 
 export default function SubWallModal() {
-  const { subscribe } = useSettingsStore();
+  const { openSubscribeModal } = useSettingsStore();
 
   return (
     <Modal visible transparent animationType="fade">
@@ -48,7 +48,7 @@ export default function SubWallModal() {
 
           {/* Button */}
           <View style={s.footer}>
-            <TouchableOpacity style={s.btnPrimary} onPress={subscribe}>
+            <TouchableOpacity style={s.btnPrimary} onPress={openSubscribeModal}>
               <Text style={s.btnPrimaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>
           </View>

@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 import AppNavigator from './src/navigation/AppNavigator';
 import TrialModal from './src/components/TrialModal';
 import SubWallModal from './src/components/SubWallModal';
+import SubscribeModal from './src/components/SubscribeModal';
 import { useSettingsStore } from './src/store/useSettingsStore';
 import { linking } from './src/utils/inviteLink';
 
@@ -81,6 +82,7 @@ export default function App() {
           {/* Global modals — rendered on top of everything */}
           <TrialModal />
           {trialExpired && !isSubscribed && <SubWallModal />}
+          <SubscribeModal />
 
           <Toast />
         </NavigationContainer>

@@ -19,7 +19,7 @@ const features = [
 ];
 
 export default function TrialModal() {
-  const { showTrialModal, startTrial, subscribe } = useSettingsStore();
+  const { showTrialModal, startTrial, openSubscribeModal } = useSettingsStore();
   const { startTrial: authStartTrial } = useAuthStore();
 
   function handleStartTrial() {
@@ -72,7 +72,7 @@ export default function TrialModal() {
             <TouchableOpacity style={styles.btnPrimary} onPress={handleStartTrial}>
               <Text style={styles.btnPrimaryText}>Start 30-Day Free Trial</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnSecondary} onPress={subscribe}>
+            <TouchableOpacity style={styles.btnSecondary} onPress={openSubscribeModal}>
               <Text style={styles.btnSecondaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>
             <Text style={styles.fine}>Cancel anytime. Billed monthly after trial ends.</Text>

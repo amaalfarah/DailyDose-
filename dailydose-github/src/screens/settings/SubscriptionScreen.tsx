@@ -41,6 +41,7 @@ export default function SubscriptionScreen() {
   const { subscribe, isSubscribed } = useSettingsStore();
 
   const [step, setStep] = useState<'plan' | 'card'>('plan');
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [cardName, setCardName]     = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -90,12 +91,43 @@ export default function SubscriptionScreen() {
               <Text style={s.planIntro}>Subscribe to DailyDose+</Text>
               <Text style={s.planSub}>Full access to every feature, cancel anytime.</Text>
 
+              {/* Billing toggle */}
+              <View style={s.toggle}>
+                <TouchableOpacity
+                  style={[s.toggleOption, billing === 'monthly' && s.toggleActive]}
+                  onPress={() => setBilling('monthly')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.toggleText, billing === 'monthly' && s.toggleTextActive]}>Monthly</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.toggleOption, billing === 'yearly' && s.toggleActive]}
+                  onPress={() => setBilling('yearly')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[s.toggleText, billing === 'yearly' && s.toggleTextActive]}>Yearly</Text>
+                  <View style={s.saveBadge}>
+                    <Text style={s.saveBadgeText}>Save 18%</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
               {/* Plan card */}
               <View style={s.planCard}>
                 <MaterialCommunityIcons name="crown-outline" size={32} color="#fff" style={s.crown} />
-                <Text style={s.planPrice}>
-                  $5<Text style={s.planPer}>/month</Text>
-                </Text>
+                {billing === 'monthly' ? (
+                  <Text style={s.planPrice}>
+                    $5<Text style={s.planPer}>/month</Text>
+                  </Text>
+                ) : (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={s.planPrice}>
+                      $49<Text style={s.planPer}>/year</Text>
+                    </Text>
+                    <Text style={s.planPerMonth}>$4.08 / month · billed annually</Text>
+                  </View>
+                )}
+                <View style={s.divider} />
                 {FEATURES.map((f, i) => (
                   <View key={i} style={s.featureRow}>
                     <MaterialCommunityIcons name={f.icon as any} size={15} color="rgba(255,255,255,0.85)" />
@@ -108,7 +140,9 @@ export default function SubscriptionScreen() {
                   activeOpacity={0.85}
                 >
                   <Text style={s.addCardBtnText}>
-                    {isSubscribed ? 'Manage Payment Method' : 'Add Payment Method'}
+                    {isSubscribed
+                      ? 'Manage Payment Method'
+                      : billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -209,11 +243,15 @@ export default function SubscriptionScreen() {
               </View>
 
               <TouchableOpacity style={s.subscribeBtn} onPress={handleSubscribe} activeOpacity={0.85}>
-                <Text style={s.subscribeBtnText}>Subscribe — $5/month</Text>
+                <Text style={s.subscribeBtnText}>
+                  {billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
+                </Text>
               </TouchableOpacity>
 
               <Text style={s.fine}>
-                By subscribing you agree to be billed $5/month. Cancel anytime in Settings.
+                {billing === 'monthly'
+                  ? 'Billed $5/month. Cancel anytime in Settings.'
+                  : 'Billed $49/year (~$4.08/month). Cancel anytime in Settings.'}
               </Text>
             </>
           )}
@@ -262,11 +300,51 @@ const s = StyleSheet.create({
     elevation: 8,
   },
   crown: { alignSelf: 'center', marginBottom: 8 },
+  toggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.mintL,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.mintM,
+    padding: 4,
+    marginBottom: 16,
+  },
+  toggleOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  toggleActive: {
+    backgroundColor: colors.mint,
+    shadowColor: colors.mint,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  toggleText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mintD },
+  toggleTextActive: { color: '#fff' },
+  saveBadge: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  saveBadgeText: { fontSize: 10, fontFamily: fonts.bold, color: '#fff' },
   planPrice: {
     fontSize: 36, fontFamily: fonts.bold, color: '#fff',
-    textAlign: 'center', marginBottom: 16,
+    textAlign: 'center', marginBottom: 4,
+  },
+  planPerMonth: {
+    fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center', marginBottom: 12,
   },
   planPer: { fontSize: fontSizes.sm, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.8)' },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 14 },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
   featureLabel: { fontSize: fontSizes.sm, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.9)' },
   addCardBtn: {

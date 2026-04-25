@@ -18,7 +18,8 @@ function validateEmail(v: string): string {
 
 export default function InviteScreen() {
   const navigation = useNavigation<any>();
-  const { addCaregiver } = useAuthStore();
+  const { addCaregiver, sharedPatientName } = useAuthStore();
+  const patientName = sharedPatientName || 'your patient';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
@@ -42,7 +43,7 @@ export default function InviteScreen() {
     ].filter(Boolean) as string[];
 
     addCaregiver({ id: token, name: name || 'Caregiver', email, permissions: perms, status: 'pending', inviteToken: token, invitedAt: new Date().toISOString() });
-    await shareInviteLink(token, name || 'Caregiver', 'Luis Santos');
+    await shareInviteLink(token, name || 'Caregiver', sharedPatientName || 'Patient');
     navigation.navigate('InviteSent', { caregiverName: name, caregiverEmail: email });
   }
 
@@ -60,7 +61,7 @@ export default function InviteScreen() {
 
         {/* Description */}
         <Text style={s.note}>
-          Invite a trusted person to help manage Luis's medications. They'll create their own account and can switch between their personal dashboard and Luis's shared account.
+          Invite a trusted person to help manage {patientName}'s medications. They'll create their own account and can switch between their personal dashboard and {patientName}'s shared account.
         </Text>
 
         {/* Name */}
@@ -91,7 +92,7 @@ export default function InviteScreen() {
         {/* Access Permissions */}
         <Text style={s.lbl}>Access Permissions</Text>
         <TogRow label="View medication schedule" sub="See doses, times, and history" value={canView} onToggle={() => setView(!canView)} />
-        <TogRow label="Mark doses as taken" sub="Log doses on Luis's behalf" value={canLog} onToggle={() => setLog(!canLog)} />
+        <TogRow label="Mark doses as taken" sub={`Log doses on ${patientName}'s behalf`} value={canLog} onToggle={() => setLog(!canLog)} />
         <TogRow label="Edit medications" sub="Add, change, or remove meds" value={canEdit} onToggle={() => setEdit(!canEdit)} />
 
         {/* Notification Permissions */}

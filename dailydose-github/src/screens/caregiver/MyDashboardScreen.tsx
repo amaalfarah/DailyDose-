@@ -5,9 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function MyDashboardScreen() {
   const navigation = useNavigation<any>();
+  const { user } = useAuthStore();
+  const firstName = user?.name?.split(' ')[0] ?? 'there';
+  const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.scroll}>
@@ -22,10 +26,10 @@ export default function MyDashboardScreen() {
         </View>
         <View style={s.header}>
           <Text style={s.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
-          <View style={s.avatar}><Text style={s.avatarText}>SS</Text></View>
+          <View style={s.avatar}><Text style={s.avatarText}>{initials}</Text></View>
         </View>
         <Text style={s.greetSmall}>Good morning,</Text>
-        <Text style={s.greetBig}>Sofia 👋</Text>
+        <Text style={s.greetBig}>{firstName} 👋</Text>
         <View style={s.progressCard}>
           <Text style={s.cardLabel}>My progress today</Text>
           <Text style={s.cardBig}>0 <Text style={s.cardTotal}>/ 0</Text></Text>

@@ -10,6 +10,7 @@ import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -17,6 +18,8 @@ export default function HomeScreen() {
   const { medications, toggleDoseTaken } = useMedStore();
   const { checkTrialExpiry } = useSettingsStore();
   const { isOnTrial, daysRemaining } = useTrialStatus();
+  const { user, pendingName } = useAuthStore();
+  const displayName = user?.name || pendingName || 'there';
 
   useEffect(() => {
     checkTrialExpiry();
@@ -50,7 +53,7 @@ export default function HomeScreen() {
         </View>
 
         <Text style={styles.greetSmall}>Good morning,</Text>
-        <Text style={styles.greetBig}>Maria 👋 — Luis's day 3</Text>
+        <Text style={styles.greetBig}>Hello {displayName}</Text>
 
         {/* Progress card */}
         <View style={styles.progressCard}>

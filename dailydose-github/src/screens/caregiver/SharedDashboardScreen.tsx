@@ -7,10 +7,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function SharedDashboardScreen() {
   const navigation = useNavigation<any>();
   const { medications, toggleDoseTaken } = useMedStore();
+  const { sharedPatientName, sharedAccountOwnerName } = useAuthStore();
+  const ownerName = sharedAccountOwnerName || 'Shared';
+  const patientName = sharedPatientName || 'Patient';
+  const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const totalDoses = medications.reduce((s, m) => s + m.totalDosesToday, 0);
   const takenDoses = medications.reduce((s, m) => s + m.dosesTakenToday.filter(Boolean).length, 0);
 
@@ -21,7 +26,7 @@ export default function SharedDashboardScreen() {
         <View style={s.switchBar}>
           <View>
             <Text style={[s.switchLabel, { color: colors.blueD }]}>Current Account</Text>
-            <Text style={s.switchName}>Maria's Account</Text>
+            <Text style={s.switchName}>{ownerName}'s Account</Text>
           </View>
           <TouchableOpacity style={s.switchBtn} onPress={() => navigation.navigate('AccountSwitcher')}>
             <Text style={s.switchBtnText}>Switch ⇄</Text>
@@ -30,30 +35,30 @@ export default function SharedDashboardScreen() {
 
         <View style={s.header}>
           <Text style={s.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
-          <View style={[s.avatar, { backgroundColor: '#e0eeff' }]}><Text style={[s.avatarText, { color: colors.blueD }]}>MS</Text></View>
+          <View style={[s.avatar, { backgroundColor: '#e0eeff' }]}><Text style={[s.avatarText, { color: colors.blueD }]}>{ownerInitials}</Text></View>
         </View>
 
         <Text style={s.greetSmall}>Managing account for</Text>
-        <Text style={s.greetBig}>Luis Santos 👦</Text>
+        <Text style={s.greetBig}>{patientName} 👦</Text>
 
         {/* Permission warning */}
         <View style={s.permWarn}>
           <Text style={s.permIcon}>🔒</Text>
           <View style={{ flex: 1 }}>
             <Text style={s.permTitle}>View & log access only</Text>
-            <Text style={s.permSub}>You can mark doses and view the schedule. Editing medications requires Maria's approval.</Text>
+            <Text style={s.permSub}>You can mark doses and view the schedule. Editing medications requires {ownerName}'s approval.</Text>
           </View>
         </View>
 
         {/* Progress card */}
         <View style={s.progressCard}>
-          <Text style={s.cardLabel}>Luis's progress today</Text>
+          <Text style={s.cardLabel}>{patientName}'s progress today</Text>
           <Text style={s.cardBig}>{takenDoses} <Text style={s.cardTotal}>/ {totalDoses}</Text></Text>
           <Text style={s.cardSub}>{totalDoses - takenDoses} more dose{totalDoses - takenDoses !== 1 ? 's' : ''} today</Text>
           <View style={s.pbar}><View style={[s.pfill, { width: `${totalDoses > 0 ? (takenDoses / totalDoses) * 100 : 0}%` as any }]} /></View>
         </View>
 
-        <Text style={s.sectionHead}>Luis's doses today</Text>
+        <Text style={s.sectionHead}>{patientName}'s doses today</Text>
         {medications.map((med) =>
           med.dosesTakenToday.map((taken, di) => (
             <TouchableOpacity

@@ -26,7 +26,8 @@ export default function SettingsScreen() {
     doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates,
     toggleSetting,
   } = useSettingsStore();
-  const logout = useAuthStore((s) => s.logout);
+  const { user, sharedPatientName, logout } = useAuthStore();
+  const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
 
   function handleLogout() {
     logout();
@@ -57,11 +58,11 @@ export default function SettingsScreen() {
         <Text style={styles.sectionHead}>Profile</Text>
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.rowLabel}>Maria Santos</Text>
-            <Text style={styles.rowSub}>maria@email.com</Text>
+            <Text style={styles.rowLabel}>{user?.name ?? ''}</Text>
+            <Text style={styles.rowSub}>{user?.email ?? ''}</Text>
           </View>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>MS</Text>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
         </View>
 
@@ -111,7 +112,7 @@ export default function SettingsScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Add caregiver</Text>
-            <Text style={styles.rowSub}>Let family monitor Luis's meds</Text>
+            <Text style={styles.rowSub}>Let family monitor {sharedPatientName ? `${sharedPatientName}'s` : 'your'} meds</Text>
           </View>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>

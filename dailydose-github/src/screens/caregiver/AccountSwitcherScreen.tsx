@@ -10,7 +10,11 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 export default function AccountSwitcherScreen() {
   const navigation = useNavigation<any>();
-  const { switchAccount } = useAuthStore();
+  const { switchAccount, user, sharedPatientName, sharedAccountOwnerName } = useAuthStore();
+  const myInitials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
+  const ownerName = sharedAccountOwnerName || 'Shared';
+  const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
+  const patientName = sharedPatientName || 'Patient';
 
   function goToMine() {
     switchAccount('mine');
@@ -37,7 +41,7 @@ export default function AccountSwitcherScreen() {
         <TouchableOpacity style={[styles.card, styles.cardMine]} onPress={goToMine}>
           <View style={styles.cardTop}>
             <View style={[styles.cardAvatar, styles.cardAvatarMine]}>
-              <Text style={styles.cardAvatarText}>SS</Text>
+              <Text style={styles.cardAvatarText}>{myInitials}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardLabel}>Personal</Text>
@@ -56,18 +60,18 @@ export default function AccountSwitcherScreen() {
         <TouchableOpacity style={[styles.card, styles.cardShared]} onPress={goToShared}>
           <View style={styles.cardTop}>
             <View style={[styles.cardAvatar, styles.cardAvatarShared]}>
-              <Text style={[styles.cardAvatarText, { color: colors.blueD }]}>MS</Text>
+              <Text style={[styles.cardAvatarText, { color: colors.blueD }]}>{ownerInitials}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.cardLabel, { color: colors.blueD }]}>
                 Shared · Caregiver access
               </Text>
-              <Text style={styles.cardName}>Maria's Account</Text>
+              <Text style={styles.cardName}>{ownerName}'s Account</Text>
             </View>
             <Text style={styles.cardArrow}>›</Text>
           </View>
           <View style={styles.chips}>
-            <Chip label="Luis's schedule" color="blue" />
+            <Chip label={`${patientName}'s schedule`} color="blue" />
             <Chip label="Mark doses taken" color="blue" />
             <Chip label="View only · Edit locked" color="amber" />
           </View>
@@ -77,7 +81,7 @@ export default function AccountSwitcherScreen() {
         <View style={styles.privacyNote}>
           <Text style={styles.privacyTitle}>🔒 Privacy & separation</Text>
           <Text style={styles.privacyText}>
-            Your personal medications and Maria's account data are fully separate.
+            Your personal medications and {ownerName}'s account data are fully separate.
             Switching accounts never mixes your data.
           </Text>
         </View>

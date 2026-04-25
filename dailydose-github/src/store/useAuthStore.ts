@@ -28,6 +28,8 @@ interface AuthStore {
   hasStartedTrial: boolean;
   activeAccount: 'mine' | 'shared';
   sharedPatientName: string;
+  sharedAccountOwnerName: string;
+  setSharedAccountOwnerName: (name: string) => void;
   pendingInviteToken: string | null;
   caregivers: Caregiver[];
 
@@ -51,7 +53,8 @@ export const useAuthStore = create<AuthStore>()(
       hasAcceptedTerms: false,
       hasStartedTrial: false,
       activeAccount: 'mine',
-      sharedPatientName: "Luis Santos",
+      sharedPatientName: '',
+      sharedAccountOwnerName: '',
       pendingInviteToken: null,
       caregivers: [],
 
@@ -67,6 +70,8 @@ export const useAuthStore = create<AuthStore>()(
       startTrial: () => set({ hasStartedTrial: true }),
 
       switchAccount: (type) => set({ activeAccount: type }),
+
+      setSharedAccountOwnerName: (name) => set({ sharedAccountOwnerName: name }),
 
       addCaregiver: (cg) =>
         set((s) => ({ caregivers: [...s.caregivers, cg] })),

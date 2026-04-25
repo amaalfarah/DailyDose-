@@ -181,15 +181,6 @@ export default function SubscriptionScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={s.featureCard}>
-                    {FEATURES.map((f, i) => (
-                      <View key={i} style={s.featureRow}>
-                        <MaterialCommunityIcons name={f.icon as any} size={15} color={colors.mint} />
-                        <Text style={s.featureLabel}>{f.label}</Text>
-                      </View>
-                    ))}
-                  </View>
-
                   <TouchableOpacity
                     style={s.addCardBtn}
                     onPress={() => setStep('card')}
@@ -201,6 +192,17 @@ export default function SubscriptionScreen() {
                   </TouchableOpacity>
                 </>
               )}
+
+              {/* What's included — always visible */}
+              <Text style={s.faqHead}>What's included</Text>
+              <View style={s.featureCard}>
+                {FEATURES.map((f, i) => (
+                  <View key={i} style={s.featureRow}>
+                    <MaterialCommunityIcons name={f.icon as any} size={15} color={colors.mint} />
+                    <Text style={s.featureLabel}>{f.label}</Text>
+                  </View>
+                ))}
+              </View>
 
               {/* FAQ */}
               <Text style={s.faqHead}>Frequently asked questions</Text>

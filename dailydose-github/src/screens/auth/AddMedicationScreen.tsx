@@ -91,8 +91,7 @@ export default function AddMedicationScreen() {
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
           <View style={s.backArr} /><Text style={s.backLabel}>Add medication</Text>
         </TouchableOpacity>
-        <View style={s.stepPill}><Text style={s.stepText}>Step 2 of 4 — Medications</Text></View>
-        <Text style={s.note}>Add Luis's daily medications. You can always add or edit later.</Text>
+<Text style={s.note}>Add Luis's daily medications. You can always add or edit later.</Text>
 
         <Text style={s.lbl}>Medication name <Text style={{ color: colors.rose }}>Required</Text></Text>
         <TextInput
@@ -209,8 +208,6 @@ const s = StyleSheet.create({
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   backArr: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f4f3' },
   backLabel: { fontSize: 14, fontFamily: fonts.bold, color: colors.navy },
-  stepPill: { alignSelf: 'flex-start', backgroundColor: colors.mintL, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 10 },
-  stepText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.mintD },
   note: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 14 },
   lbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
   inp: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy, marginBottom: 12 },

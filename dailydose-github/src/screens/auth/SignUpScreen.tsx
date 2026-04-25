@@ -217,11 +217,6 @@ export default function SignUpScreen() {
           <View style={styles.card}>
             <Text style={styles.title}>Sign Up</Text>
 
-            {/* Step pill */}
-            <View style={styles.stepPill}>
-              <Text style={styles.stepPillText}>Step 1 of 4 — Account</Text>
-            </View>
-
             {/* Username */}
             <Text style={styles.fieldLabel}>Username</Text>
             <View style={styles.inputRow}>
@@ -395,21 +390,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: -0.5,
-  },
-
-  stepPill: {
-    alignSelf: 'center',
-    backgroundColor: colors.mintL,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginBottom: 20,
-  },
-  stepPillText: {
-    fontSize: fontSizes.xs,
-    fontFamily: fonts.bold,
-    color: colors.mintD,
-    letterSpacing: 0.3,
   },
 
   fieldLabel: {

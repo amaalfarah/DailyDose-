@@ -29,8 +29,7 @@ export default function NotificationSetupScreen() {
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
           <View style={s.backArr} /><Text style={s.backLabel}>Notification settings</Text>
         </TouchableOpacity>
-        <View style={s.stepPill}><Text style={s.stepText}>Step 3 of 4 — Reminders</Text></View>
-        <Text style={s.note}>Set up reminders so you never forget a dose.</Text>
+<Text style={s.note}>Set up reminders so you never forget a dose.</Text>
 
         <ToggleRow label="Dose reminders" sub="Push notifications before each dose" value={doseReminders} onToggle={() => toggleSetting('doseReminders')} />
         <ToggleRow label="Missed dose alerts" sub="Alert if dose not logged in 30 min" value={missedDoseAlerts} onToggle={() => toggleSetting('missedDoseAlerts')} />
@@ -67,8 +66,6 @@ const s = StyleSheet.create({
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   backArr: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f4f3' },
   backLabel: { fontSize: 14, fontFamily: fonts.bold, color: colors.navy },
-  stepPill: { alignSelf: 'flex-start', backgroundColor: colors.mintL, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 10 },
-  stepText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.mintD },
   note: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 14 },
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1.5, borderColor: colors.border },
   rowLabel: { fontSize: fontSizes.base, fontFamily: fonts.medium, color: colors.navy },

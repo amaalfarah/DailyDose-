@@ -57,10 +57,17 @@ export default function SubscriptionScreen() {
   function handleCancel() {
     Alert.alert(
       'Cancel Subscription',
-      'Are you sure? You will lose access to DailyDose+ features at the end of your billing period.',
+      'Are you sure you want to cancel? Your saved card will be removed and you will lose access to DailyDose+ features.',
       [
         { text: 'Keep Subscription', style: 'cancel' },
-        { text: 'Cancel Subscription', style: 'destructive', onPress: () => { cancelSubscription(); navigation.goBack(); } },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: () => {
+            cancelSubscription();
+            navigation.goBack();
+          },
+        },
       ]
     );
   }
@@ -132,22 +139,22 @@ export default function SubscriptionScreen() {
                       </View>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={s.updateCardBtn}
-                    onPress={() => setStep('card')}
-                    activeOpacity={0.85}
-                  >
-                    <MaterialCommunityIcons name="credit-card-plus-outline" size={16} color={colors.mintD} />
-                    <Text style={s.updateCardBtnText}>Add / Update Card</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={s.cancelBtn}
-                    onPress={handleCancel}
-                    activeOpacity={0.85}
-                  >
-                    <MaterialCommunityIcons name="cancel" size={16} color={colors.rose} />
-                    <Text style={s.cancelBtnText}>Cancel Subscription</Text>
-                  </TouchableOpacity>
+                  <View style={s.actionRow}>
+                    <TouchableOpacity style={s.actionBtn} onPress={() => setStep('card')} activeOpacity={0.85}>
+                      <MaterialCommunityIcons name="credit-card-plus-outline" size={18} color={colors.mintD} />
+                      <Text style={s.actionBtnText}>Add Card</Text>
+                    </TouchableOpacity>
+                    <View style={s.actionDivider} />
+                    <TouchableOpacity style={s.actionBtn} onPress={() => setStep('card')} activeOpacity={0.85}>
+                      <MaterialCommunityIcons name="pencil-outline" size={18} color={colors.mintD} />
+                      <Text style={s.actionBtnText}>Update Card</Text>
+                    </TouchableOpacity>
+                    <View style={s.actionDivider} />
+                    <TouchableOpacity style={[s.actionBtn, s.actionBtnCancel]} onPress={handleCancel} activeOpacity={0.85}>
+                      <MaterialCommunityIcons name="close-circle-outline" size={18} color={colors.rose} />
+                      <Text style={[s.actionBtnText, s.actionBtnCancelText]}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ) : (
                 /* ── Not subscribed: show plan picker ── */
@@ -413,18 +420,26 @@ const s = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 5,
   },
   planBadgeText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#fff' },
-  updateCardBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: colors.mintL, borderWidth: 1.5, borderColor: colors.mintM,
-    borderRadius: 12, padding: 13, marginBottom: 10,
+  actionRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    overflow: 'hidden',
   },
-  updateCardBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.mintD },
-  cancelBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: colors.roseL, borderWidth: 1.5, borderColor: colors.rose,
-    borderRadius: 12, padding: 13,
+  actionBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+    backgroundColor: colors.mintL,
   },
-  cancelBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.rose },
+  actionBtnCancel: { backgroundColor: colors.roseL },
+  actionBtnText: { fontSize: 11, fontFamily: fonts.bold, color: colors.mintD },
+  actionBtnCancelText: { color: colors.rose },
+  actionDivider: { width: 1.5, backgroundColor: colors.border },
 
   faqHead: {
     fontSize: fontSizes.base, fontFamily: fonts.bold,

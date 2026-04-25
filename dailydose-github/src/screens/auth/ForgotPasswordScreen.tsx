@@ -75,10 +75,6 @@ export default function ForgotPasswordScreen() {
             />
             {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backLink}>
-              <Text style={styles.backLinkText}>Back to sign in</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity style={styles.btn} onPress={handleSend} activeOpacity={0.85}>
               <Text style={styles.btnText}>Send</Text>
             </TouchableOpacity>
@@ -159,13 +155,6 @@ const styles = StyleSheet.create({
     color: colors.rose,
     marginBottom: 8,
     marginLeft: 6,
-  },
-
-  backLink: { alignSelf: 'center', marginTop: 10, marginBottom: 20 },
-  backLinkText: {
-    fontSize: fontSizes.sm,
-    fontFamily: fonts.medium,
-    color: colors.muted,
   },
 
   btn: {

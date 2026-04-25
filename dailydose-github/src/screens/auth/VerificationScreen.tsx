@@ -117,7 +117,7 @@ export default function VerificationScreen() {
             </View>
 
             <TouchableOpacity style={styles.btn} onPress={handleSend} activeOpacity={0.85}>
-              <Text style={styles.btnText}>Send</Text>
+              <Text style={styles.btnText}>Verify</Text>
             </TouchableOpacity>
 
             <View style={styles.signupRow}>

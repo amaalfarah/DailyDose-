@@ -4,6 +4,7 @@ import {
   Modal, View, Text, TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -59,7 +60,7 @@ export default function TrialModal() {
 
             {/* Warning */}
             <View style={styles.warning}>
-              <Text style={styles.warningIcon}>⚠️</Text>
+              <MaterialCommunityIcons name="alert-circle-outline" size={16} color="#7a5030" />
               <Text style={styles.warningText}>
                 After 30 days, access requires an active subscription. Your data is saved.
               </Text>
@@ -152,7 +153,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: 'flex-start',
   },
-  warningIcon: { fontSize: 13 },
   warningText: { flex: 1, fontSize: fontSizes.xs, color: '#7a5030', lineHeight: 16 },
   footer: { paddingHorizontal: 18, paddingBottom: 20, gap: 8 },
   btnPrimary: {

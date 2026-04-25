@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform,
-  ScrollView, Alert,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -83,11 +83,7 @@ export default function LoginScreen() {
   }
 
   function handleForgotPassword() {
-    Alert.alert(
-      'Forgot Password',
-      "Enter the email you signed up with and we will send a reset link.",
-      [{ text: 'OK' }],
-    );
+    navigation.navigate('ForgotPassword');
   }
 
   return (

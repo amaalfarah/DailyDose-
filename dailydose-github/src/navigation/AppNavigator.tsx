@@ -10,6 +10,9 @@ import { useAuthStore } from '../store/useAuthStore';
 // Auth screens
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import VerificationScreen from '../screens/auth/VerificationScreen';
+import NewPasswordScreen from '../screens/auth/NewPasswordScreen';
 import AddMedicationScreen from '../screens/auth/AddMedicationScreen';
 import NotificationSetupScreen from '../screens/auth/NotificationSetupScreen';
 
@@ -30,6 +33,9 @@ import SharedDashboardScreen from '../screens/caregiver/SharedDashboardScreen';
 export type AuthStackParams = {
   SignUp: undefined;
   Login: undefined;
+  ForgotPassword: undefined;
+  Verification: { email: string };
+  NewPassword: { email: string };
   AddMedication: undefined;
   NotificationSetup: undefined;
 };
@@ -146,6 +152,9 @@ export default function AppNavigator() {
       <AuthStack.Navigator screenOptions={{ headerShown: false }}>
         <AuthStack.Screen name="SignUp" component={SignUpScreen} />
         <AuthStack.Screen name="Login" component={LoginScreen} />
+        <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <AuthStack.Screen name="Verification" component={VerificationScreen} />
+        <AuthStack.Screen name="NewPassword" component={NewPasswordScreen} />
         <AuthStack.Screen name="AddMedication" component={AddMedicationScreen} />
         <AuthStack.Screen name="NotificationSetup" component={NotificationSetupScreen} />
       </AuthStack.Navigator>

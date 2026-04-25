@@ -209,6 +209,36 @@ export function subscribeToMedications(userId: string, callback: (payload: any) 
     .subscribe();
 }
 
+// ── Username / email availability checks ─────────────────────────────────────
+
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+    if (error) return true; // gracefully allow signup if table not yet set up
+    return data === null;
+  } catch {
+    return true;
+  }
+}
+
+export async function checkEmailAvailable(email: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+    if (error) return true;
+    return data === null;
+  } catch {
+    return true;
+  }
+}
+
 // ── Subscription/trial helpers ────────────────────────────────────────────────
 
 export async function getUserAccess(userId: string) {

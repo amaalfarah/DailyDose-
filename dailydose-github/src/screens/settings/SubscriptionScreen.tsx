@@ -1,7 +1,7 @@
 // screens/settings/SubscriptionScreen.tsx
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Alert,
+  View, Text, TouchableOpacity, StyleSheet,
   TextInput, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,6 +44,7 @@ export default function SubscriptionScreen() {
   const [step, setStep] = useState<'plan' | 'card'>('plan');
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
   const [cardName, setCardName]     = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry]         = useState('');
@@ -55,18 +56,12 @@ export default function SubscriptionScreen() {
   }
 
   function handleCancel() {
-    Alert.alert(
-      'Cancel Subscription',
-      'Are you sure you want to cancel? Your saved card will be removed and you will lose access to DailyDose+ features.',
-      [
-        { text: 'Keep Subscription', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: () => cancelSubscription(),
-        },
-      ]
-    );
+    setConfirmCancel(true);
+  }
+
+  function confirmCancelSubscription() {
+    cancelSubscription();
+    setConfirmCancel(false);
   }
 
   function handleSubscribe() {
@@ -144,9 +139,24 @@ export default function SubscriptionScreen() {
                     <View style={s.actionDivider} />
                     <TouchableOpacity style={[s.actionBtn, s.actionBtnCancel]} onPress={handleCancel} activeOpacity={0.85}>
                       <MaterialCommunityIcons name="close-circle-outline" size={18} color={colors.rose} />
-                      <Text style={[s.actionBtnText, s.actionBtnCancelText]}>Cancel</Text>
+                      <Text style={[s.actionBtnText, s.actionBtnCancelText]}>Cancel Subscription</Text>
                     </TouchableOpacity>
                   </View>
+
+                  {confirmCancel && (
+                    <View style={s.confirmBox}>
+                      <Text style={s.confirmTitle}>Cancel Subscription?</Text>
+                      <Text style={s.confirmSub}>Your saved card will be removed and you will lose access to DailyDose+ features.</Text>
+                      <View style={s.confirmBtns}>
+                        <TouchableOpacity style={s.confirmKeep} onPress={() => setConfirmCancel(false)} activeOpacity={0.85}>
+                          <Text style={s.confirmKeepText}>Keep Subscription</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={s.confirmYes} onPress={confirmCancelSubscription} activeOpacity={0.85}>
+                          <Text style={s.confirmYesText}>Yes, Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
               ) : (
                 /* ── Not subscribed: show plan picker ── */
@@ -432,6 +442,28 @@ const s = StyleSheet.create({
   actionBtnText: { fontSize: 11, fontFamily: fonts.bold, color: colors.mintD },
   actionBtnCancelText: { color: colors.rose },
   actionDivider: { width: 1.5, backgroundColor: colors.border },
+  confirmBox: {
+    marginTop: 12,
+    backgroundColor: colors.roseL,
+    borderWidth: 1.5,
+    borderColor: colors.rose,
+    borderRadius: 14,
+    padding: 16,
+  },
+  confirmTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.rose, marginBottom: 6 },
+  confirmSub: { fontSize: fontSizes.xs, fontFamily: fonts.regular, color: '#7a3040', lineHeight: 18, marginBottom: 14 },
+  confirmBtns: { flexDirection: 'row', gap: 10 },
+  confirmKeep: {
+    flex: 1, backgroundColor: colors.white, borderRadius: 10,
+    borderWidth: 1.5, borderColor: colors.border,
+    padding: 11, alignItems: 'center',
+  },
+  confirmKeepText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.navy },
+  confirmYes: {
+    flex: 1, backgroundColor: colors.rose, borderRadius: 10,
+    padding: 11, alignItems: 'center',
+  },
+  confirmYesText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: '#fff' },
 
   faqHead: {
     fontSize: fontSizes.base, fontFamily: fonts.bold,

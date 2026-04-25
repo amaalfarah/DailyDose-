@@ -7,6 +7,14 @@ import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useAuthStore } from '../../store/useAuthStore';
 
+const EMAIL_RE = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function validateEmail(v: string): string {
+  if (!v.trim()) return 'Email is required';
+  if (!EMAIL_RE.test(v)) return 'Enter a valid email address';
+  return '';
+}
+
 export default function CaregiverSignupScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -14,10 +22,15 @@ export default function CaregiverSignupScreen() {
   const { acceptInvite } = useAuthStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [password, setPassword] = useState('');
 
+  const emailError = emailTouched ? validateEmail(email) : '';
+
   function handleCreate() {
-    acceptInvite(token, { id: Date.now().toString(), name: name || 'Sofia Santos', email: email || 'sofia@email.com', type: 'caregiver' });
+    setEmailTouched(true);
+    if (validateEmail(email)) return;
+    acceptInvite(token, { id: Date.now().toString(), name: name || 'Sofia Santos', email, type: 'caregiver' });
     navigation.navigate('AccountSwitcher');
   }
 
@@ -40,7 +53,18 @@ export default function CaregiverSignupScreen() {
         <Text style={s.lbl}>Your full name</Text>
         <TextInput style={s.inp} placeholder="Sofia Santos" placeholderTextColor="#b0bec5" value={name} onChangeText={setName} autoCapitalize="words" />
         <Text style={s.lbl}>Email</Text>
-        <TextInput style={s.inp} placeholder="sofia@email.com" placeholderTextColor="#b0bec5" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <TextInput
+          style={[s.inp, { marginBottom: 4 }, emailError ? s.inpError : null]}
+          placeholder="sofia@email.com"
+          placeholderTextColor="#b0bec5"
+          value={email}
+          onChangeText={v => { setEmail(v); setEmailTouched(false); }}
+          onBlur={() => setEmailTouched(true)}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {emailError ? <Text style={s.fieldError}>{emailError}</Text> : null}
         <Text style={s.lbl}>Password</Text>
         <TextInput style={s.inp} placeholder="Min 8 characters" placeholderTextColor="#b0bec5" value={password} onChangeText={setPassword} secureTextEntry />
         <View style={{ height: 8 }} />
@@ -68,6 +92,8 @@ const s = StyleSheet.create({
   note: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 14 },
   lbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
   inp: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy, marginBottom: 12 },
+  inpError: { borderColor: colors.rose },
+  fieldError: { fontSize: fontSizes.xs, color: colors.rose, marginBottom: 10, marginLeft: 2 },
   btn: { backgroundColor: colors.mint, borderRadius: 12, padding: 14, alignItems: 'center' },
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
 });

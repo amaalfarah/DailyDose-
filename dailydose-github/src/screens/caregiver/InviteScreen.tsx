@@ -8,11 +8,20 @@ import { fonts, fontSizes } from '../../theme/typography';
 import { useAuthStore } from '../../store/useAuthStore';
 import { generateInviteToken, shareInviteLink } from '../../utils/inviteLink';
 
+const EMAIL_RE = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function validateEmail(v: string): string {
+  if (!v.trim()) return 'Email is required';
+  if (!EMAIL_RE.test(v)) return 'Enter a valid email address';
+  return '';
+}
+
 export default function InviteScreen() {
   const navigation = useNavigation<any>();
   const { addCaregiver } = useAuthStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [canView, setView] = useState(true);
   const [canLog, setLog] = useState(true);
   const [canEdit, setEdit] = useState(false);
@@ -20,8 +29,11 @@ export default function InviteScreen() {
   const [notifyMissedDose, setNotifyMissedDose] = useState(true);
   const [notifyUpcoming, setNotifyUpcoming] = useState(false);
 
+  const emailError = emailTouched ? validateEmail(email) : '';
+
   async function sendInvite() {
-    if (!email.trim()) return;
+    setEmailTouched(true);
+    if (validateEmail(email)) return;
     const token = generateInviteToken();
     const perms = [
       canView && 'View medication schedule',
@@ -64,14 +76,17 @@ export default function InviteScreen() {
         {/* Email */}
         <Text style={s.lbl}>Caregiver's Email</Text>
         <TextInput
-          style={s.inp}
+          style={[s.inp, s.inpEmail, emailError ? s.inpError : null]}
           placeholder="sofia@email.com"
           placeholderTextColor="#b0bec5"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={v => { setEmail(v); setEmailTouched(false); }}
+          onBlur={() => setEmailTouched(true)}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
         />
+        {emailError ? <Text style={s.fieldError}>{emailError}</Text> : null}
 
         {/* Access Permissions */}
         <Text style={s.lbl}>Access Permissions</Text>
@@ -167,6 +182,9 @@ const s = StyleSheet.create({
   note: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 18, marginBottom: 16 },
   lbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6, marginTop: 4 },
   inp: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy, marginBottom: 14 },
+  inpEmail: { marginBottom: 4 },
+  inpError: { borderColor: colors.rose },
+  fieldError: { fontSize: fontSizes.xs, color: colors.rose, marginBottom: 10, marginLeft: 2 },
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 7, borderWidth: 1.5, borderColor: colors.border },
   rowLabel: { fontSize: fontSizes.base, fontFamily: fonts.medium, color: colors.navy },
   rowSub: { fontSize: fontSizes.xs, color: colors.muted, marginTop: 1 },

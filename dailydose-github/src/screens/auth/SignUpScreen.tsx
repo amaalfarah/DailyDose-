@@ -306,7 +306,10 @@ export default function SignUpScreen() {
             <Text style={styles.btnPrimaryText}>Sign up →</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.btnSecondary}>
+          <TouchableOpacity
+            style={styles.btnSecondary}
+            onPress={() => navigation.navigate('Login')}
+          >
             <Text style={styles.btnSecondaryText}>Log in</Text>
           </TouchableOpacity>
         </ScrollView>

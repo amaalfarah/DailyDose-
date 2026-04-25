@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useSettingsStore, AppLanguage } from '../../store/useSettingsStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const LANGUAGES: { code: AppLanguage; name: string; native: string; flag: string }[] = [
   { code: 'en', name: 'English',  native: 'English',   flag: '🇺🇸' },
@@ -25,6 +26,18 @@ export default function SettingsScreen() {
     doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates,
     toggleSetting,
   } = useSettingsStore();
+  const logout = useAuthStore((s) => s.logout);
+
+  function handleLogout() {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log Out', style: 'destructive', onPress: logout },
+      ]
+    );
+  }
 
   function handleLanguageChange(lang: AppLanguage) {
     if (lang === language) return;
@@ -154,6 +167,11 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        {/* Log Out */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+
         {/* Version */}
         <View style={styles.versionRow}>
           <Text style={styles.versionText}>DailyDose+ · Version 1.0.0</Text>
@@ -234,6 +252,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   checkCircleOn: { backgroundColor: colors.mint, borderColor: colors.mint },
+  logoutBtn: {
+    backgroundColor: colors.roseL,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.rose,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  logoutText: {
+    fontSize: fontSizes.base,
+    fontFamily: fonts.bold,
+    color: colors.rose,
+  },
   versionRow: { alignItems: 'center', paddingVertical: 28, gap: 4 },
   versionText: { fontSize: fontSizes.xs, fontFamily: fonts.medium, color: colors.muted },
   versionSub: { fontSize: fontSizes.xs - 1, color: '#b0bec5' },

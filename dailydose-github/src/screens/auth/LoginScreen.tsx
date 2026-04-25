@@ -13,25 +13,73 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { AuthStackParams } from '../../navigation/AppNavigator';
+import { useAuthStore } from '../../store/useAuthStore';
 
 type Nav = StackNavigationProp<AuthStackParams, 'Login'>;
 
+// ── Same validators as SignUpScreen ───────────────────────────────────────────
+
+const COMMON_PASSWORDS = new Set([
+  'password', 'password1', 'password12', 'password123',
+  '12345678', '123456789', '1234567890', 'qwerty123',
+  'iloveyou1', 'admin1234', 'letmein1!', 'welcome1!', 'monkey123',
+]);
+
+function validateUsername(v: string): string {
+  if (!v) return 'Username is required';
+  if (v.length < 3) return 'Must be at least 3 characters';
+  if (v.length > 20) return 'Must be 20 characters or less';
+  if (!/^[a-zA-Z0-9_-]+$/.test(v)) return 'Only letters, numbers, _ and - allowed';
+  return '';
+}
+
+function validatePassword(v: string): string {
+  if (!v) return 'Password is required';
+  if (v.length < 8) return 'Must be at least 8 characters';
+  if (v.length > 12) return 'Must be 12 characters or less';
+  if (!/[A-Z]/.test(v)) return 'Needs an uppercase letter';
+  if (!/[a-z]/.test(v)) return 'Needs a lowercase letter';
+  if (!/[0-9]/.test(v)) return 'Needs a number';
+  if (!/[@#$!%^&*()\-_=+[\]{};:'",.<>?/\\|`~]/.test(v))
+    return 'Needs a special character (@, #, $, !, etc.)';
+  if (COMMON_PASSWORDS.has(v.toLowerCase())) return 'This password is too common';
+  return '';
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 export default function LoginScreen() {
   const navigation = useNavigation<Nav>();
+  const { login } = useAuthStore();
 
-  const [username, setUsername]       = useState('');
-  const [password, setPassword]       = useState('');
+  const [username, setUsername]         = useState('');
+  const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]             = useState('');
+  const [touched, setTouched]           = useState<Record<string, boolean>>({});
+
+  function touch(field: string) {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  }
+
+  const usernameError = touched.username ? validateUsername(username) : '';
+  const passwordError = touched.password ? validatePassword(password) : '';
+
+  function dividerColor(field: 'username' | 'password', error: string) {
+    if (!touched[field]) return colors.border;
+    return error ? colors.rose : colors.mint;
+  }
 
   function handleLogin() {
-    if (!username.trim() || !password.trim()) {
-      setError('Please enter your username and password.');
-      return;
-    }
-    setError('');
-    // TODO: wire up real Supabase signIn
-    Alert.alert('Login', 'Sign-in coming soon!');
+    setTouched({ username: true, password: true });
+    if (validateUsername(username) || validatePassword(password)) return;
+
+    // Set the user in the auth store → AppNavigator auto-switches to MainTabs
+    login({
+      id: Date.now().toString(),
+      name: username,
+      email: '',
+      type: 'primary',
+    });
   }
 
   function handleForgotPassword() {
@@ -68,7 +116,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="account-outline"
                 size={20}
-                color={colors.muted}
+                color={usernameError ? colors.rose : colors.muted}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -76,12 +124,15 @@ export default function LoginScreen() {
                 placeholder="Type your username"
                 placeholderTextColor="#b0bec5"
                 value={username}
-                onChangeText={v => { setUsername(v); setError(''); }}
+                onChangeText={setUsername}
+                onBlur={() => touch('username')}
                 autoCapitalize="none"
                 autoCorrect={false}
+                maxLength={20}
               />
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: dividerColor('username', usernameError) }]} />
+            {usernameError ? <Text style={styles.fieldError}>{usernameError}</Text> : null}
 
             {/* Password */}
             <Text style={styles.fieldLabel}>Password</Text>
@@ -89,7 +140,7 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="lock-outline"
                 size={20}
-                color={colors.muted}
+                color={passwordError ? colors.rose : colors.muted}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -97,9 +148,11 @@ export default function LoginScreen() {
                 placeholder="Type your password"
                 placeholderTextColor="#b0bec5"
                 value={password}
-                onChangeText={v => { setPassword(v); setError(''); }}
+                onChangeText={setPassword}
+                onBlur={() => touch('password')}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                maxLength={12}
               />
               <TouchableOpacity onPress={() => setShowPassword(p => !p)}>
                 <MaterialCommunityIcons
@@ -109,18 +162,13 @@ export default function LoginScreen() {
                 />
               </TouchableOpacity>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: dividerColor('password', passwordError) }]} />
+            {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
 
             {/* Forgot password */}
-            <TouchableOpacity
-              style={styles.forgotRow}
-              onPress={handleForgotPassword}
-            >
+            <TouchableOpacity style={styles.forgotRow} onPress={handleForgotPassword}>
               <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
-
-            {/* Error */}
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             {/* Login button */}
             <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
@@ -194,9 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 2,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
+  inputIcon: { marginRight: 10 },
   input: {
     flex: 1,
     fontSize: fontSizes.base,
@@ -206,27 +252,24 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1.5,
-    backgroundColor: colors.border,
     marginTop: 4,
+  },
+  fieldError: {
+    fontSize: fontSizes.xs,
+    color: colors.rose,
+    marginTop: 4,
+    marginLeft: 30,
   },
 
   forgotRow: {
     alignSelf: 'flex-end',
-    marginTop: 12,
+    marginTop: 14,
     marginBottom: 4,
   },
   forgotText: {
     fontSize: fontSizes.sm,
     fontFamily: fonts.medium,
     color: colors.mint,
-  },
-
-  errorText: {
-    fontSize: fontSizes.xs,
-    color: colors.rose,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 4,
   },
 
   loginBtn: {

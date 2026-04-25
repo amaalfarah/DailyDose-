@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import type { SavedCard } from '../../store/useSettingsStore';
 
 const FEATURES = [
   { icon: 'pill',                  label: 'Unlimited medications & reminders' },
@@ -38,7 +39,7 @@ function formatExpiry(raw: string) {
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
-  const { subscribe, isSubscribed } = useSettingsStore();
+  const { subscribe, isSubscribed, savedCard } = useSettingsStore();
 
   const [step, setStep] = useState<'plan' | 'card'>('plan');
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
@@ -54,7 +55,14 @@ export default function SubscriptionScreen() {
   }
 
   function handleSubscribe() {
-    subscribe();
+    const digits = cardNumber.replace(/\D/g, '');
+    const card: SavedCard = {
+      name: cardName,
+      last4: digits.slice(-4),
+      expiry,
+      billing,
+    };
+    subscribe(card);
     navigation.goBack();
   }
 
@@ -88,57 +96,92 @@ export default function SubscriptionScreen() {
         >
           {step === 'plan' ? (
             <>
-              <Text style={s.planIntro}>Subscribe to DailyDose+</Text>
-              <Text style={s.planSub}>Full access to every feature, cancel anytime.</Text>
-
-              {/* Side-by-side plan cards */}
-              <View style={s.planRow}>
-                <TouchableOpacity
-                  style={[s.planCard, billing === 'monthly' && s.planCardActive]}
-                  onPress={() => setBilling('monthly')}
-                  activeOpacity={0.85}
-                >
-                  <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
-                  <Text style={s.planLabel}>Monthly</Text>
-                  <Text style={s.planPrice}>$5</Text>
-                  <Text style={s.planPer}>per month</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[s.planCard, billing === 'yearly' && s.planCardActive]}
-                  onPress={() => setBilling('yearly')}
-                  activeOpacity={0.85}
-                >
-                  <View style={s.saveBadge}><Text style={s.saveBadgeText}>Save 18%</Text></View>
-                  <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
-                  <Text style={s.planLabel}>Yearly</Text>
-                  <Text style={s.planPrice}>$49</Text>
-                  <Text style={s.planPer}>per year</Text>
-                  <Text style={s.planPerMonth}>$4.08 / mo</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Feature list */}
-              <View style={s.featureCard}>
-                {FEATURES.map((f, i) => (
-                  <View key={i} style={s.featureRow}>
-                    <MaterialCommunityIcons name={f.icon as any} size={15} color={colors.mint} />
-                    <Text style={s.featureLabel}>{f.label}</Text>
+              {isSubscribed && savedCard ? (
+                /* ── Subscribed: show saved card ── */
+                <View style={s.savedCardWrap}>
+                  <View style={s.savedCardPreview}>
+                    <View style={s.savedCardTop}>
+                      <Text style={s.savedCardBrand}>DailyDose+</Text>
+                      <MaterialCommunityIcons name="nfc" size={20} color="rgba(255,255,255,0.55)" />
+                    </View>
+                    <Text style={s.savedCardNum}>•••• •••• •••• {savedCard.last4}</Text>
+                    <View style={s.savedCardBottom}>
+                      <View>
+                        <Text style={s.savedCardMeta}>CARDHOLDER</Text>
+                        <Text style={s.savedCardMetaVal}>{savedCard.name.toUpperCase()}</Text>
+                      </View>
+                      <View>
+                        <Text style={s.savedCardMeta}>EXPIRES</Text>
+                        <Text style={s.savedCardMetaVal}>{savedCard.expiry}</Text>
+                      </View>
+                      <View style={s.planBadge}>
+                        <Text style={s.planBadgeText}>
+                          {savedCard.billing === 'monthly' ? '$5/mo' : '$49/yr'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                ))}
-              </View>
+                  <TouchableOpacity
+                    style={s.updateCardBtn}
+                    onPress={() => setStep('card')}
+                    activeOpacity={0.85}
+                  >
+                    <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.mintD} />
+                    <Text style={s.updateCardBtnText}>Update Payment Method</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* ── Not subscribed: show plan picker ── */
+                <>
+                  <Text style={s.planIntro}>Subscribe to DailyDose+</Text>
+                  <Text style={s.planSub}>Full access to every feature, cancel anytime.</Text>
 
-              <TouchableOpacity
-                style={s.addCardBtn}
-                onPress={() => setStep('card')}
-                activeOpacity={0.85}
-              >
-                <Text style={s.addCardBtnText}>
-                  {isSubscribed
-                    ? 'Manage Payment Method'
-                    : billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
-                </Text>
-              </TouchableOpacity>
+                  <View style={s.planRow}>
+                    <TouchableOpacity
+                      style={[s.planCard, billing === 'monthly' && s.planCardActive]}
+                      onPress={() => setBilling('monthly')}
+                      activeOpacity={0.85}
+                    >
+                      <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
+                      <Text style={s.planLabel}>Monthly</Text>
+                      <Text style={s.planPrice}>$5</Text>
+                      <Text style={s.planPer}>per month</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[s.planCard, billing === 'yearly' && s.planCardActive]}
+                      onPress={() => setBilling('yearly')}
+                      activeOpacity={0.85}
+                    >
+                      <View style={s.saveBadge}><Text style={s.saveBadgeText}>Save 18%</Text></View>
+                      <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
+                      <Text style={s.planLabel}>Yearly</Text>
+                      <Text style={s.planPrice}>$49</Text>
+                      <Text style={s.planPer}>per year</Text>
+                      <Text style={s.planPerMonth}>$4.08 / mo</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={s.featureCard}>
+                    {FEATURES.map((f, i) => (
+                      <View key={i} style={s.featureRow}>
+                        <MaterialCommunityIcons name={f.icon as any} size={15} color={colors.mint} />
+                        <Text style={s.featureLabel}>{f.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <TouchableOpacity
+                    style={s.addCardBtn}
+                    onPress={() => setStep('card')}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={s.addCardBtnText}>
+                      {billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
 
               {/* FAQ */}
               <Text style={s.faqHead}>Frequently asked questions</Text>
@@ -330,6 +373,31 @@ const s = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
   },
   addCardBtnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
+
+  savedCardWrap: { marginBottom: 20 },
+  savedCardPreview: {
+    backgroundColor: colors.mintD,
+    borderRadius: 18, padding: 20, marginBottom: 12,
+    shadowColor: colors.mintD, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35, shadowRadius: 14, elevation: 7,
+  },
+  savedCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  savedCardBrand: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: '#fff' },
+  savedCardNum: { fontSize: 18, fontFamily: fonts.bold, color: '#fff', letterSpacing: 2, marginBottom: 20 },
+  savedCardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  savedCardMeta: { fontSize: 9, fontFamily: fonts.bold, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.8 },
+  savedCardMetaVal: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#fff', marginTop: 2 },
+  planBadge: {
+    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  planBadgeText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#fff' },
+  updateCardBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: colors.mintL, borderWidth: 1.5, borderColor: colors.mintM,
+    borderRadius: 12, padding: 13,
+  },
+  updateCardBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.mintD },
 
   faqHead: {
     fontSize: fontSizes.base, fontFamily: fonts.bold,

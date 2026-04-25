@@ -5,6 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type AppLanguage = 'en' | 'es' | 'fr' | 'ar';
 
+export interface SavedCard {
+  name: string;
+  last4: string;
+  expiry: string;
+  billing: 'monthly' | 'yearly';
+}
+
 interface SettingsStore {
   language: AppLanguage;
   privacyMode: boolean;
@@ -17,12 +24,13 @@ interface SettingsStore {
   isSubscribed: boolean;
   trialExpired: boolean;
   showTrialModal: boolean;
+  savedCard: SavedCard | null;
 
   setLanguage: (lang: AppLanguage) => void;
   setPrivacyMode: (on: boolean) => void;
   toggleSetting: (key: 'doseReminders' | 'missedDoseAlerts' | 'refillReminders' | 'caregiverUpdates') => void;
   startTrial: () => void;
-  subscribe: () => void;
+  subscribe: (card: SavedCard) => void;
   checkTrialExpiry: () => void;
   openTrialModal: () => void;
   dismissTrialModal: () => void;
@@ -44,6 +52,7 @@ export const useSettingsStore = create<SettingsStore>()(
       isSubscribed: false,
       trialExpired: false,
       showTrialModal: false,
+      savedCard: null,
 
       setLanguage: (lang) => set({ language: lang }),
 
@@ -58,8 +67,8 @@ export const useSettingsStore = create<SettingsStore>()(
       startTrial: () =>
         set({ trialStartDate: new Date().toISOString(), trialExpired: false, showTrialModal: false }),
 
-      subscribe: () =>
-        set({ isSubscribed: true, trialExpired: false, showTrialModal: false }),
+      subscribe: (card) =>
+        set({ isSubscribed: true, trialExpired: false, showTrialModal: false, savedCard: card }),
 
       checkTrialExpiry: () => {
         const { trialStartDate, isSubscribed } = get();

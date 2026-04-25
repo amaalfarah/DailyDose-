@@ -307,15 +307,15 @@ export default function SubscriptionScreen() {
               </View>
 
               <TouchableOpacity style={s.subscribeBtn} onPress={handleSubscribe} activeOpacity={0.85}>
-                <Text style={s.subscribeBtnText}>
-                  {billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
-                </Text>
+                <Text style={s.subscribeBtnText}>Add Card</Text>
               </TouchableOpacity>
 
               <Text style={s.fine}>
-                {billing === 'monthly'
-                  ? 'Billed $5/month. Cancel anytime in Settings.'
-                  : 'Billed $49/year (~$4.08/month). Cancel anytime in Settings.'}
+                {isSubscribed
+                  ? 'Your new card will be saved for future billing.'
+                  : billing === 'monthly'
+                    ? 'Billed $5/month. Cancel anytime in Settings.'
+                    : 'Billed $49/year (~$4.08/month). Cancel anytime in Settings.'}
               </Text>
             </>
           )}

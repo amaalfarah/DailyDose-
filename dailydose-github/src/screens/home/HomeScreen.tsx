@@ -1,5 +1,5 @@
 // screens/home/HomeScreen.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
@@ -8,11 +8,17 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function HomeScreen() {
   const { medications, toggleDoseTaken } = useMedStore();
+  const { checkTrialExpiry } = useSettingsStore();
+
+  useEffect(() => {
+    checkTrialExpiry();
+  }, []);
 
   const totalDoses = medications.reduce((s, m) => s + m.totalDosesToday, 0);
   const takenDoses = medications.reduce(

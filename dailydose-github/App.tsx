@@ -53,7 +53,11 @@ if (Platform.OS === 'web') {
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const { isSubscribed, trialExpired } = useSettingsStore();
+  const { isSubscribed, trialExpired, checkTrialExpiry } = useSettingsStore();
+
+  useEffect(() => {
+    checkTrialExpiry();
+  }, []);
 
   useEffect(() => {
     Font.loadAsync({

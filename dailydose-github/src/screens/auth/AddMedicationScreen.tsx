@@ -132,7 +132,12 @@ export default function AddMedicationScreen() {
             placeholderTextColor="#b0bec5"
             keyboardType="numeric"
             value={dosageAmount}
-            onChangeText={(t) => { setDosageAmount(t); if (t.trim()) setDosageError(false); }}
+            onChangeText={(t) => {
+              const digits = t.replace(/\D/g, '');
+              const clamped = digits === '' ? '' : String(Math.min(parseInt(digits, 10), 999));
+              setDosageAmount(clamped);
+              if (clamped.trim()) setDosageError(false);
+            }}
           />
           <View style={s.unitDropWrapper}>
             <TouchableOpacity style={s.unitDropBtn} onPress={() => setUnitDropOpen((o) => !o)} activeOpacity={0.8}>
@@ -195,9 +200,10 @@ export default function AddMedicationScreen() {
             keyboardType="numeric"
             value={reminderHour}
             onChangeText={(t) => {
-              const digits = t.replace(/\D/g, '').slice(0, 2);
-              setHour(digits);
-              if (digits.trim()) setTimeError(false);
+              const digits = t.replace(/\D/g, '');
+              const clamped = digits === '' ? '' : String(Math.min(parseInt(digits, 10), 12));
+              setHour(clamped);
+              if (clamped.trim()) setTimeError(false);
             }}
             onBlur={() => {
               if (reminderHour.trim()) setHour(formatHour(reminderHour));

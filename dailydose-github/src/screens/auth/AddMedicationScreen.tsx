@@ -18,6 +18,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const COLORS = ['#e3f7f0', '#fdedf2', '#eaf2fb', '#fef3e7', '#f0eafb', '#fafaea'];
 const MED_ICONS = [
@@ -47,29 +48,38 @@ const FREQ_LABELS: Record<string, string> = {
 export default function AddMedicationScreen() {
   const navigation = useNavigation<any>();
   const { addMedication } = useMedStore();
+  const { user } = useAuthStore();
+  const displayName = user?.name ?? 'your';
 
   const [name, setName]           = useState('');
   const [coverName, setCoverName] = useState('');
-  const [dosage, setDosage]       = useState('');
+  const [dosageAmount, setDosageAmount] = useState('');
+  const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>('mg');
+  const [unitDropOpen, setUnitDropOpen] = useState(false);
   const [frequency, setFreq]      = useState<typeof FREQUENCIES[number]>('daily');
-  const [reminderTime, setTime]   = useState('08:00');
+  const [reminderTime, setTime]   = useState('');
   const [selectedColor, setColor] = useState(COLORS[0]);
   const [selectedIcon, setIcon]   = useState('pill');
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>('med');
   const [privacyMode, setPrivacy] = useState(false);
 
-  const [nameError, setNameError] = useState(false);
+  const [nameError, setNameError]     = useState(false);
+  const [dosageError, setDosageError] = useState(false);
+  const [timeError, setTimeError]     = useState(false);
 
   function handleSave() {
-    if (!name.trim()) {
-      setNameError(true);
-      return;
-    }
-    setNameError(false);
+    const nameInvalid   = !name.trim();
+    const dosageInvalid = !dosageAmount.trim();
+    const timeInvalid   = !reminderTime.trim();
+    setNameError(nameInvalid);
+    setDosageError(dosageInvalid);
+    setTimeError(timeInvalid);
+    if (nameInvalid || dosageInvalid || timeInvalid) return;
+    const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     addMedication({
       name: name.trim(),
       coverName: coverName.trim() || undefined,
-      dosage: dosage.trim() || '—',
+      dosage,
       frequency,
       reminderTime,
       color: selectedColor,
@@ -91,7 +101,7 @@ export default function AddMedicationScreen() {
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
           <View style={s.backArr} /><Text style={s.backLabel}>Add medication</Text>
         </TouchableOpacity>
-<Text style={s.note}>Add Luis's daily medications. You can always add or edit later.</Text>
+<Text style={s.note}>Add {displayName}'s daily medications. You can always add or edit later.</Text>
 
         <Text style={s.lbl}>Medication name <Text style={{ color: colors.rose }}>Required</Text></Text>
         <TextInput
@@ -103,8 +113,37 @@ export default function AddMedicationScreen() {
         />
         {nameError && <Text style={s.errorText}>Please enter a medication name to continue.</Text>}
 
-        <Text style={s.lbl}>Dosage</Text>
-        <TextInput style={s.inp} placeholder="e.g. 250mg / 5mL" placeholderTextColor="#b0bec5" value={dosage} onChangeText={setDosage} />
+        <Text style={s.lbl}>Dosage <Text style={{ color: colors.rose }}>Required</Text></Text>
+        <View style={s.dosageRow}>
+          <TextInput
+            style={[s.inp, s.dosageAmountInp, dosageError && s.inpError]}
+            placeholder="e.g. 250"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={dosageAmount}
+            onChangeText={(t) => { setDosageAmount(t); if (t.trim()) setDosageError(false); }}
+          />
+          <View style={s.unitDropWrapper}>
+            <TouchableOpacity style={s.unitDropBtn} onPress={() => setUnitDropOpen((o) => !o)} activeOpacity={0.8}>
+              <Text style={s.unitDropBtnText}>{dosageUnit}</Text>
+              <MaterialCommunityIcons name={unitDropOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.navy} />
+            </TouchableOpacity>
+            {unitDropOpen && (
+              <View style={s.unitDropMenu}>
+                {(['mg', 'mL'] as const).map((u) => (
+                  <TouchableOpacity
+                    key={u}
+                    style={[s.unitDropItem, dosageUnit === u && s.unitDropItemOn]}
+                    onPress={() => { setDosageUnit(u); setUnitDropOpen(false); }}
+                  >
+                    <Text style={[s.unitDropItemText, dosageUnit === u && s.unitDropItemTextOn]}>{u}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+        {dosageError && <Text style={s.errorText}>Please enter a dosage amount to continue.</Text>}
 
         {/* Cover Name */}
         <View style={s.coverSection}>
@@ -127,7 +166,7 @@ export default function AddMedicationScreen() {
           <Switch value={privacyMode} onValueChange={setPrivacy} trackColor={{ false: colors.border, true: colors.mint }} thumbColor="#fff" />
         </View>
 
-        <Text style={s.lbl}>Frequency</Text>
+        <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
           {FREQUENCIES.map((f) => (
             <TouchableOpacity key={f} style={[s.chip, frequency === f && s.chipOn]} onPress={() => setFreq(f)}>
@@ -136,8 +175,15 @@ export default function AddMedicationScreen() {
           ))}
         </View>
 
-        <Text style={s.lbl}>Reminder time</Text>
-        <TextInput style={s.inp} placeholder="08:00 AM" placeholderTextColor="#b0bec5" value={reminderTime} onChangeText={setTime} />
+        <Text style={s.lbl}>Reminder time <Text style={{ color: colors.rose }}>Required</Text></Text>
+        <TextInput
+          style={[s.inp, timeError && s.inpError]}
+          placeholder="08:00 AM"
+          placeholderTextColor="#b0bec5"
+          value={reminderTime}
+          onChangeText={(t) => { setTime(t); if (t.trim()) setTimeError(false); }}
+        />
+        {timeError && <Text style={s.errorText}>Please enter a reminder time to continue.</Text>}
 
         {/* Preview */}
         <View style={s.preview}>
@@ -253,4 +299,22 @@ const s = StyleSheet.create({
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
   btnSecondary: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, padding: 13, alignItems: 'center' },
   btnSecondaryText: { color: colors.muted, fontFamily: fonts.medium, fontSize: fontSizes.base },
+  dosageRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  dosageAmountInp: { flex: 1, marginBottom: 0 },
+  unitDropWrapper: { position: 'relative', width: 88 },
+  unitDropBtn: {
+    height: 46, backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+  },
+  unitDropBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy },
+  unitDropMenu: {
+    position: 'absolute', top: 50, left: 0, right: 0,
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 10, overflow: 'hidden', zIndex: 99,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 4,
+  },
+  unitDropItem: { paddingVertical: 11, alignItems: 'center' },
+  unitDropItemOn: { backgroundColor: colors.mintL },
+  unitDropItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
+  unitDropItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
 });

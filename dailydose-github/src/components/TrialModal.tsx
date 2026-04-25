@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { navigateTo } from '../navigation/navigationRef';
 
 const features = [
   'Unlimited medications & reminders',
@@ -19,7 +20,7 @@ const features = [
 ];
 
 export default function TrialModal() {
-  const { showTrialModal, startTrial, openSubscribeModal } = useSettingsStore();
+  const { showTrialModal, startTrial, dismissTrialModal } = useSettingsStore();
   const { startTrial: authStartTrial } = useAuthStore();
 
   function handleStartTrial() {
@@ -72,7 +73,10 @@ export default function TrialModal() {
             <TouchableOpacity style={styles.btnPrimary} onPress={handleStartTrial}>
               <Text style={styles.btnPrimaryText}>Start 30-Day Free Trial</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnSecondary} onPress={openSubscribeModal}>
+            <TouchableOpacity
+              style={styles.btnSecondary}
+              onPress={() => { dismissTrialModal(); navigateTo('Settings', { screen: 'Subscription' }); }}
+            >
               <Text style={styles.btnSecondaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>
             <Text style={styles.fine}>Cancel anytime. Billed monthly after trial ends.</Text>

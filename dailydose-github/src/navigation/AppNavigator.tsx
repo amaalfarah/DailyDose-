@@ -21,6 +21,7 @@ import HomeScreen from '../screens/home/HomeScreen';
 import CalendarScreen from '../screens/home/CalendarScreen';
 import MedsScreen from '../screens/meds/MedsScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import SubscriptionScreen from '../screens/settings/SubscriptionScreen';
 
 // Caregiver screens
 import InviteScreen from '../screens/caregiver/InviteScreen';
@@ -58,6 +59,7 @@ export type CaregiverStackParams = {
 
 export type SettingsStackParams = {
   SettingsMain: undefined;
+  Subscription: undefined;
   Invite: undefined;
   InviteSent: { caregiverName: string; caregiverEmail: string };
   AccountSwitcher: undefined;
@@ -88,6 +90,7 @@ function SettingsNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
       <SettingsStack.Screen name="Invite" component={InviteScreen} />
       <SettingsStack.Screen name="InviteSent" component={InviteSentScreen} />
       <SettingsStack.Screen name="AccountSwitcher" component={AccountSwitcherScreen} />

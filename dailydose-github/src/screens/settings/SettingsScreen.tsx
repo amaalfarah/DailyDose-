@@ -164,7 +164,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionHead}>Subscription</Text>
         <TouchableOpacity
           style={styles.row}
-          onPress={() => Alert.alert('Manage Subscription', 'Subscription management coming soon.')}
+          onPress={() => navigation.navigate('Subscription')}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Manage Subscription</Text>

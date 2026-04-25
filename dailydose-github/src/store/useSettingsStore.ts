@@ -17,7 +17,6 @@ interface SettingsStore {
   isSubscribed: boolean;
   trialExpired: boolean;
   showTrialModal: boolean;
-  showSubscribeModal: boolean;
 
   setLanguage: (lang: AppLanguage) => void;
   setPrivacyMode: (on: boolean) => void;
@@ -27,8 +26,6 @@ interface SettingsStore {
   checkTrialExpiry: () => void;
   openTrialModal: () => void;
   dismissTrialModal: () => void;
-  openSubscribeModal: () => void;
-  dismissSubscribeModal: () => void;
 }
 
 const TRIAL_DAYS = 30;
@@ -47,7 +44,6 @@ export const useSettingsStore = create<SettingsStore>()(
       isSubscribed: false,
       trialExpired: false,
       showTrialModal: false,
-      showSubscribeModal: false,
 
       setLanguage: (lang) => set({ language: lang }),
 
@@ -62,12 +58,8 @@ export const useSettingsStore = create<SettingsStore>()(
       startTrial: () =>
         set({ trialStartDate: new Date().toISOString(), trialExpired: false, showTrialModal: false }),
 
-      openSubscribeModal: () => set({ showSubscribeModal: true, showTrialModal: false }),
-
-      dismissSubscribeModal: () => set({ showSubscribeModal: false }),
-
       subscribe: () =>
-        set({ isSubscribed: true, trialExpired: false, showTrialModal: false, showSubscribeModal: false }),
+        set({ isSubscribed: true, trialExpired: false, showTrialModal: false }),
 
       checkTrialExpiry: () => {
         const { trialStartDate, isSubscribed } = get();
@@ -81,7 +73,7 @@ export const useSettingsStore = create<SettingsStore>()(
     {
       name: 'settings',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: ({ showTrialModal: _t, showSubscribeModal: _s, ...rest }) => rest,
+      partialize: ({ showTrialModal: _, ...rest }) => rest,
     }
   )
 );

@@ -10,9 +10,9 @@ import { DMSans_400Regular, DMSans_500Medium, DMSans_700Bold } from '@expo-googl
 import Toast from 'react-native-toast-message';
 
 import AppNavigator from './src/navigation/AppNavigator';
+import { navigationRef } from './src/navigation/navigationRef';
 import TrialModal from './src/components/TrialModal';
 import SubWallModal from './src/components/SubWallModal';
-import SubscribeModal from './src/components/SubscribeModal';
 import { useSettingsStore } from './src/store/useSettingsStore';
 import { linking } from './src/utils/inviteLink';
 
@@ -75,14 +75,13 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1, ...(Platform.OS === 'web' && { height: '100vh' }) }}>
       <SafeAreaProvider>
-        <NavigationContainer linking={linking}>
+        <NavigationContainer linking={linking} ref={navigationRef}>
           <StatusBar style="dark" />
           <AppNavigator />
 
           {/* Global modals — rendered on top of everything */}
           <TrialModal />
           {trialExpired && !isSubscribed && <SubWallModal />}
-          <SubscribeModal />
 
           <Toast />
         </NavigationContainer>

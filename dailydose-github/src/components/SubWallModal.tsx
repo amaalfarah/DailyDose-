@@ -4,6 +4,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { navigateTo } from '../navigation/navigationRef';
 
 const features = [
   'Unlimited medications & reminders',
@@ -14,7 +15,7 @@ const features = [
 ];
 
 export default function SubWallModal() {
-  const { openSubscribeModal } = useSettingsStore();
+  const { subscribe } = useSettingsStore();
 
   return (
     <Modal visible transparent animationType="fade">
@@ -48,7 +49,10 @@ export default function SubWallModal() {
 
           {/* Button */}
           <View style={s.footer}>
-            <TouchableOpacity style={s.btnPrimary} onPress={openSubscribeModal}>
+            <TouchableOpacity
+              style={s.btnPrimary}
+              onPress={() => navigateTo('Settings', { screen: 'Subscription' })}
+            >
               <Text style={s.btnPrimaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>
           </View>

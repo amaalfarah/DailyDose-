@@ -9,12 +9,14 @@ import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useTrialStatus } from '../../hooks/useTrialStatus';
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function HomeScreen() {
   const { medications, toggleDoseTaken } = useMedStore();
   const { checkTrialExpiry } = useSettingsStore();
+  const { isOnTrial, daysRemaining } = useTrialStatus();
 
   useEffect(() => {
     checkTrialExpiry();
@@ -110,6 +112,16 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
         ))}
+        {/* Trial countdown */}
+        {isOnTrial && daysRemaining !== null && (
+          <View style={styles.trialBanner}>
+            <MaterialCommunityIcons name="clock-outline" size={16} color={colors.mintD} />
+            <Text style={styles.trialBannerText}>
+              <Text style={styles.trialBannerDays}>{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</Text>
+              {' '}left in your free trial
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -169,4 +181,24 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   checkCircleDone: { backgroundColor: colors.mint, borderColor: colors.mint },
+  trialBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.mintL,
+    borderWidth: 1.5,
+    borderColor: colors.mintM,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  trialBannerText: {
+    fontSize: fontSizes.sm,
+    fontFamily: fonts.regular,
+    color: colors.mintD,
+  },
+  trialBannerDays: {
+    fontFamily: fonts.bold,
+    color: colors.mintD,
+  },
 });

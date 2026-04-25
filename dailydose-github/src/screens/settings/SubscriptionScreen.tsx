@@ -91,61 +91,54 @@ export default function SubscriptionScreen() {
               <Text style={s.planIntro}>Subscribe to DailyDose+</Text>
               <Text style={s.planSub}>Full access to every feature, cancel anytime.</Text>
 
-              {/* Billing toggle */}
-              <View style={s.toggle}>
+              {/* Side-by-side plan cards */}
+              <View style={s.planRow}>
                 <TouchableOpacity
-                  style={[s.toggleOption, billing === 'monthly' && s.toggleActive]}
+                  style={[s.planCard, billing === 'monthly' && s.planCardActive]}
                   onPress={() => setBilling('monthly')}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
-                  <Text style={[s.toggleText, billing === 'monthly' && s.toggleTextActive]}>Monthly</Text>
+                  <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
+                  <Text style={s.planLabel}>Monthly</Text>
+                  <Text style={s.planPrice}>$5</Text>
+                  <Text style={s.planPer}>per month</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={[s.toggleOption, billing === 'yearly' && s.toggleActive]}
+                  style={[s.planCard, billing === 'yearly' && s.planCardActive]}
                   onPress={() => setBilling('yearly')}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                 >
-                  <Text style={[s.toggleText, billing === 'yearly' && s.toggleTextActive]}>Yearly</Text>
-                  <View style={s.saveBadge}>
-                    <Text style={s.saveBadgeText}>Save 18%</Text>
-                  </View>
+                  <View style={s.saveBadge}><Text style={s.saveBadgeText}>Save 18%</Text></View>
+                  <MaterialCommunityIcons name="crown-outline" size={24} color="#fff" style={s.crown} />
+                  <Text style={s.planLabel}>Yearly</Text>
+                  <Text style={s.planPrice}>$49</Text>
+                  <Text style={s.planPer}>per year</Text>
+                  <Text style={s.planPerMonth}>$4.08 / mo</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Plan card */}
-              <View style={s.planCard}>
-                <MaterialCommunityIcons name="crown-outline" size={32} color="#fff" style={s.crown} />
-                {billing === 'monthly' ? (
-                  <Text style={s.planPrice}>
-                    $5<Text style={s.planPer}>/month</Text>
-                  </Text>
-                ) : (
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={s.planPrice}>
-                      $49<Text style={s.planPer}>/year</Text>
-                    </Text>
-                    <Text style={s.planPerMonth}>$4.08 / month · billed annually</Text>
-                  </View>
-                )}
-                <View style={s.divider} />
+              {/* Feature list */}
+              <View style={s.featureCard}>
                 {FEATURES.map((f, i) => (
                   <View key={i} style={s.featureRow}>
-                    <MaterialCommunityIcons name={f.icon as any} size={15} color="rgba(255,255,255,0.85)" />
+                    <MaterialCommunityIcons name={f.icon as any} size={15} color={colors.mint} />
                     <Text style={s.featureLabel}>{f.label}</Text>
                   </View>
                 ))}
-                <TouchableOpacity
-                  style={s.addCardBtn}
-                  onPress={() => setStep('card')}
-                  activeOpacity={0.85}
-                >
-                  <Text style={s.addCardBtnText}>
-                    {isSubscribed
-                      ? 'Manage Payment Method'
-                      : billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
-                  </Text>
-                </TouchableOpacity>
               </View>
+
+              <TouchableOpacity
+                style={s.addCardBtn}
+                onPress={() => setStep('card')}
+                activeOpacity={0.85}
+              >
+                <Text style={s.addCardBtnText}>
+                  {isSubscribed
+                    ? 'Manage Payment Method'
+                    : billing === 'monthly' ? 'Subscribe — $5/month' : 'Subscribe — $49/year'}
+                </Text>
+              </TouchableOpacity>
 
               {/* FAQ */}
               <Text style={s.faqHead}>Frequently asked questions</Text>
@@ -288,71 +281,55 @@ const s = StyleSheet.create({
     fontSize: fontSizes.sm, color: colors.muted,
     textAlign: 'center', marginBottom: 18,
   },
+  planRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   planCard: {
-    backgroundColor: colors.mint,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: colors.mint,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    flex: 1,
+    backgroundColor: colors.mintD,
+    borderRadius: 18,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    shadowColor: colors.mintD,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  planCardActive: {
+    borderColor: colors.mint,
+    shadowOpacity: 0.45,
     shadowRadius: 16,
     elevation: 8,
   },
-  crown: { alignSelf: 'center', marginBottom: 8 },
-  toggle: {
-    flexDirection: 'row',
-    backgroundColor: colors.mintL,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.mintM,
-    padding: 4,
-    marginBottom: 16,
-    alignSelf: 'center',
+  crown: { marginBottom: 6 },
+  planLabel: {
+    fontSize: fontSizes.xs, fontFamily: fonts.bold,
+    color: 'rgba(255,255,255,0.7)', letterSpacing: 0.8,
+    textTransform: 'uppercase', marginBottom: 6,
   },
-  toggleOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    gap: 6,
-  },
-  toggleActive: {
-    backgroundColor: colors.mint,
-    shadowColor: colors.mint,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  toggleText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mintD },
-  toggleTextActive: { color: '#fff' },
+  planPrice: { fontSize: 30, fontFamily: fonts.bold, color: '#fff', lineHeight: 32 },
+  planPer: { fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)', marginTop: 2, textAlign: 'center' },
+  planPerMonth: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 4, textAlign: 'center' },
   saveBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: colors.amber,
+    borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, marginBottom: 6,
   },
   saveBadgeText: { fontSize: 10, fontFamily: fonts.bold, color: '#fff' },
-  planPrice: {
-    fontSize: 36, fontFamily: fonts.bold, color: '#fff',
-    textAlign: 'center', marginBottom: 4,
+  featureCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14, borderWidth: 1.5, borderColor: colors.border,
+    padding: 14, marginBottom: 16,
   },
-  planPerMonth: {
-    fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.7)',
-    textAlign: 'center', marginBottom: 12,
-  },
-  planPer: { fontSize: fontSizes.sm, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.8)' },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 14 },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
-  featureLabel: { fontSize: fontSizes.sm, fontFamily: fonts.regular, color: 'rgba(255,255,255,0.9)' },
+  featureLabel: { fontSize: fontSizes.sm, fontFamily: fonts.regular, color: colors.navy },
   addCardBtn: {
-    backgroundColor: colors.white, borderRadius: 12,
-    padding: 14, alignItems: 'center', marginTop: 18,
+    backgroundColor: colors.mint, borderRadius: 12,
+    padding: 14, alignItems: 'center', marginBottom: 24,
+    shadowColor: colors.mint, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
   },
-  addCardBtnText: { color: colors.mintD, fontFamily: fonts.bold, fontSize: fontSizes.base },
+  addCardBtnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
 
   faqHead: {
     fontSize: fontSizes.base, fontFamily: fonts.bold,

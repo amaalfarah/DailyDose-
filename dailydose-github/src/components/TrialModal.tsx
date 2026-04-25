@@ -4,6 +4,7 @@ import {
   Modal, View, Text, TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -18,7 +19,7 @@ const features = [
 ];
 
 export default function TrialModal() {
-  const { showTrialModal, startTrial, subscribe } = useSettingsStore();
+  const { showTrialModal, startTrial, subscribe, dismissTrialModal } = useSettingsStore();
   const { startTrial: authStartTrial } = useAuthStore();
 
   function handleStartTrial() {
@@ -33,6 +34,9 @@ export default function TrialModal() {
 
           {/* Hero */}
           <View style={styles.hero}>
+            <TouchableOpacity style={styles.closeBtn} onPress={dismissTrialModal}>
+              <MaterialCommunityIcons name="close" size={20} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
             <View style={styles.badge}><Text style={styles.badgeText}>Free Trial</Text></View>
             <Text style={styles.days}>30</Text>
             <Text style={styles.daysLabel}>Days Free</Text>
@@ -107,6 +111,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.mintD,
     padding: 24,
     alignItems: 'center',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    padding: 4,
+    zIndex: 1,
   },
   badge: {
     backgroundColor: 'rgba(255,255,255,0.18)',

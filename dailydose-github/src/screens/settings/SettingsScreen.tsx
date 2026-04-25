@@ -160,6 +160,19 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        {/* Subscription */}
+        <Text style={styles.sectionHead}>Subscription</Text>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => Alert.alert('Manage Subscription', 'Subscription management coming soon.')}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Manage Subscription</Text>
+            <Text style={styles.rowSub}>View plan, billing, and renewal details</Text>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
+
         {/* Log Out */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
           <Text style={styles.logoutText}>Log Out</Text>

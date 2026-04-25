@@ -41,6 +41,7 @@ export default function SubscriptionScreen() {
   const { subscribe, isSubscribed } = useSettingsStore();
 
   const [step, setStep] = useState<'plan' | 'card'>('plan');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [cardName, setCardName]     = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry]         = useState('');
@@ -114,15 +115,27 @@ export default function SubscriptionScreen() {
 
               {/* FAQ */}
               <Text style={s.faqHead}>Frequently asked questions</Text>
-              {FAQS.map((item, i) => (
-                <View key={i} style={s.faqItem}>
-                  <MaterialCommunityIcons name="plus" size={15} color={colors.muted} style={{ marginTop: 2 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.faqQ}>{item.q}</Text>
-                    <Text style={s.faqA}>{item.a}</Text>
-                  </View>
-                </View>
-              ))}
+              {FAQS.map((item, i) => {
+                const isOpen = openFaq === i;
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    style={s.faqItem}
+                    onPress={() => setOpenFaq(isOpen ? null : i)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.faqQ}>{item.q}</Text>
+                      {isOpen && <Text style={s.faqA}>{item.a}</Text>}
+                    </View>
+                    <MaterialCommunityIcons
+                      name={isOpen ? 'minus' : 'plus'}
+                      size={18}
+                      color={isOpen ? colors.mint : colors.muted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
             </>
           ) : (
             <>
@@ -267,7 +280,7 @@ const s = StyleSheet.create({
     color: colors.navy, marginBottom: 12,
   },
   faqItem: {
-    flexDirection: 'row', gap: 10, alignItems: 'flex-start',
+    flexDirection: 'row', gap: 12, alignItems: 'center',
     backgroundColor: colors.white, borderRadius: 12, padding: 14,
     marginBottom: 8, borderWidth: 1.5, borderColor: colors.border,
   },

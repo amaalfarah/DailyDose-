@@ -57,7 +57,9 @@ export default function AddMedicationScreen() {
   const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>('mg');
   const [unitDropOpen, setUnitDropOpen] = useState(false);
   const [frequency, setFreq]      = useState<typeof FREQUENCIES[number]>('daily');
-  const [reminderTime, setTime]   = useState('');
+  const [reminderHour, setHour]         = useState('');
+  const [reminderPeriod, setPeriod]     = useState<'AM' | 'PM'>('AM');
+  const [periodDropOpen, setPeriodOpen] = useState(false);
   const [selectedColor, setColor] = useState(COLORS[0]);
   const [selectedIcon, setIcon]   = useState('pill');
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>('med');
@@ -67,15 +69,24 @@ export default function AddMedicationScreen() {
   const [dosageError, setDosageError] = useState(false);
   const [timeError, setTimeError]     = useState(false);
 
+  function formatHour(raw: string): string {
+    const digits = raw.replace(/\D/g, '');
+    if (!digits) return '';
+    const h = parseInt(digits, 10);
+    const clamped = Math.min(Math.max(h, 1), 12);
+    return `${clamped}:00`;
+  }
+
   function handleSave() {
     const nameInvalid   = !name.trim();
     const dosageInvalid = !dosageAmount.trim();
-    const timeInvalid   = !reminderTime.trim();
+    const timeInvalid   = !reminderHour.trim();
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
     setTimeError(timeInvalid);
     if (nameInvalid || dosageInvalid || timeInvalid) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
+    const reminderTime = `${formatHour(reminderHour)} ${reminderPeriod}`;
     addMedication({
       name: name.trim(),
       coverName: coverName.trim() || undefined,
@@ -176,13 +187,42 @@ export default function AddMedicationScreen() {
         </View>
 
         <Text style={s.lbl}>Reminder time <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TextInput
-          style={[s.inp, timeError && s.inpError]}
-          placeholder="08:00 AM"
-          placeholderTextColor="#b0bec5"
-          value={reminderTime}
-          onChangeText={(t) => { setTime(t); if (t.trim()) setTimeError(false); }}
-        />
+        <View style={s.timeRow}>
+          <TextInput
+            style={[s.inp, s.timeInp, timeError && s.inpError]}
+            placeholder="e.g. 8"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={reminderHour}
+            onChangeText={(t) => {
+              const digits = t.replace(/\D/g, '').slice(0, 2);
+              setHour(digits);
+              if (digits.trim()) setTimeError(false);
+            }}
+            onBlur={() => {
+              if (reminderHour.trim()) setHour(formatHour(reminderHour));
+            }}
+          />
+          <View style={s.periodWrapper}>
+            <TouchableOpacity style={s.unitDropBtn} onPress={() => setPeriodOpen((o) => !o)} activeOpacity={0.8}>
+              <Text style={s.unitDropBtnText}>{reminderPeriod}</Text>
+              <MaterialCommunityIcons name={periodDropOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.navy} />
+            </TouchableOpacity>
+            {periodDropOpen && (
+              <View style={s.unitDropMenu}>
+                {(['AM', 'PM'] as const).map((p) => (
+                  <TouchableOpacity
+                    key={p}
+                    style={[s.unitDropItem, reminderPeriod === p && s.unitDropItemOn]}
+                    onPress={() => { setPeriod(p); setPeriodOpen(false); }}
+                  >
+                    <Text style={[s.unitDropItemText, reminderPeriod === p && s.unitDropItemTextOn]}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
         {timeError && <Text style={s.errorText}>Please enter a reminder time to continue.</Text>}
 
         {/* Preview */}
@@ -299,9 +339,12 @@ const s = StyleSheet.create({
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
   btnSecondary: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, padding: 13, alignItems: 'center' },
   btnSecondaryText: { color: colors.muted, fontFamily: fonts.medium, fontSize: fontSizes.base },
-  dosageRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  dosageRow: { flexDirection: 'row', gap: 8, marginBottom: 12, zIndex: 20 },
   dosageAmountInp: { flex: 1, marginBottom: 0 },
-  unitDropWrapper: { position: 'relative', width: 88 },
+  unitDropWrapper: { width: 88, zIndex: 20 },
+  timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12, zIndex: 19 },
+  timeInp: { flex: 1, marginBottom: 0 },
+  periodWrapper: { width: 88, zIndex: 19 },
   unitDropBtn: {
     height: 46, backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
@@ -310,8 +353,8 @@ const s = StyleSheet.create({
   unitDropMenu: {
     position: 'absolute', top: 50, left: 0, right: 0,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 10, overflow: 'hidden', zIndex: 99,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 4,
+    borderRadius: 10, overflow: 'hidden', zIndex: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 20,
   },
   unitDropItem: { paddingVertical: 11, alignItems: 'center' },
   unitDropItemOn: { backgroundColor: colors.mintL },

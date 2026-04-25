@@ -66,9 +66,6 @@ export default function TCModal({ visible, onDecline, onAccept }: Props) {
 
           {/* Header */}
           <View style={styles.head}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>📋 Legal</Text>
-            </View>
             <Text style={styles.title}>Terms & Conditions</Text>
             <View style={styles.divider} />
           </View>
@@ -145,15 +142,6 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   head: { padding: 16, paddingBottom: 0 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.mintL,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 8,
-  },
-  badgeText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.mintD },
   title: { fontSize: 15, fontFamily: fonts.bold, color: colors.navy, marginBottom: 2 },
   divider: { height: 1, backgroundColor: colors.border, marginTop: 10 },
   body: { paddingHorizontal: 16, paddingTop: 12, maxHeight: 320 },

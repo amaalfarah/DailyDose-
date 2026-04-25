@@ -37,7 +37,7 @@ export default function LoginScreen() {
   function handleForgotPassword() {
     Alert.alert(
       'Forgot Password',
-      'Enter the email you signed up with and we'll send a reset link.',
+      "Enter the email you signed up with and we will send a reset link.",
       [{ text: 'OK' }],
     );
   }

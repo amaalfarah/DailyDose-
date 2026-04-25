@@ -197,6 +197,17 @@ export default function SignUpScreen() {
     navigation.navigate('AddMedication');
   }
 
+  function handleGoToLogin() {
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setDob('');
+    setTouched({});
+    setUsernameStatus('idle');
+    setEmailStatus('idle');
+    navigation.navigate('Login');
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
@@ -308,7 +319,7 @@ export default function SignUpScreen() {
 
           <TouchableOpacity
             style={styles.btnSecondary}
-            onPress={() => navigation.navigate('Login')}
+            onPress={handleGoToLogin}
           >
             <Text style={styles.btnSecondaryText}>Log in</Text>
           </TouchableOpacity>

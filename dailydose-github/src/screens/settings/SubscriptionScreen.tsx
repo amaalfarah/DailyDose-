@@ -63,10 +63,7 @@ export default function SubscriptionScreen() {
         {
           text: 'Yes, Cancel',
           style: 'destructive',
-          onPress: () => {
-            cancelSubscription();
-            navigation.goBack();
-          },
+          onPress: () => cancelSubscription(),
         },
       ]
     );
@@ -102,7 +99,7 @@ export default function SubscriptionScreen() {
             <MaterialCommunityIcons name="arrow-left" size={22} color={colors.navy} />
           </TouchableOpacity>
           <Text style={s.headerTitle}>
-            {step === 'plan' ? 'Subscription Plans' : 'Add Card'}
+            {step === 'plan' ? 'Subscription Plans' : isSubscribed ? 'Update Card' : 'Add Card'}
           </Text>
           <View style={s.headerBtn} />
         </View>
@@ -140,11 +137,6 @@ export default function SubscriptionScreen() {
                     </View>
                   </View>
                   <View style={s.actionRow}>
-                    <TouchableOpacity style={s.actionBtn} onPress={() => setStep('card')} activeOpacity={0.85}>
-                      <MaterialCommunityIcons name="credit-card-plus-outline" size={18} color={colors.mintD} />
-                      <Text style={s.actionBtnText}>Add Card</Text>
-                    </TouchableOpacity>
-                    <View style={s.actionDivider} />
                     <TouchableOpacity style={s.actionBtn} onPress={() => setStep('card')} activeOpacity={0.85}>
                       <MaterialCommunityIcons name="pencil-outline" size={18} color={colors.mintD} />
                       <Text style={s.actionBtnText}>Update Card</Text>
@@ -307,7 +299,7 @@ export default function SubscriptionScreen() {
               </View>
 
               <TouchableOpacity style={s.subscribeBtn} onPress={handleSubscribe} activeOpacity={0.85}>
-                <Text style={s.subscribeBtnText}>Add Card</Text>
+                <Text style={s.subscribeBtnText}>{isSubscribed ? 'Update Card' : 'Add Card'}</Text>
               </TouchableOpacity>
 
               <Text style={s.fine}>

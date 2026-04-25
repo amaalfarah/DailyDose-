@@ -59,7 +59,6 @@ export type CaregiverStackParams = {
 
 export type SettingsStackParams = {
   SettingsMain: undefined;
-  Subscription: undefined;
   Invite: undefined;
   InviteSent: { caregiverName: string; caregiverEmail: string };
   AccountSwitcher: undefined;
@@ -68,10 +67,16 @@ export type SettingsStackParams = {
   CaregiverSignup: { token: string };
 };
 
+export type RootStackParams = {
+  Main: undefined;
+  Subscription: undefined;
+};
+
 const AuthStack = createStackNavigator<AuthStackParams>();
 const Tab = createBottomTabNavigator<MainTabParams>();
 const CaregiverStack = createStackNavigator<CaregiverStackParams>();
 const SettingsStack = createStackNavigator<SettingsStackParams>();
+const RootStack = createStackNavigator<RootStackParams>();
 
 function CaregiverNavigator() {
   return (
@@ -90,7 +95,6 @@ function SettingsNavigator() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
-      <SettingsStack.Screen name="Subscription" component={SubscriptionScreen} />
       <SettingsStack.Screen name="Invite" component={InviteScreen} />
       <SettingsStack.Screen name="InviteSent" component={InviteSentScreen} />
       <SettingsStack.Screen name="AccountSwitcher" component={AccountSwitcherScreen} />
@@ -146,10 +150,9 @@ function MainTabs() {
   );
 }
 
-export default function AppNavigator() {
-  const { user, hasAcceptedTerms, hasStartedTrial } = useAuthStore();
+function MainApp() {
+  const { user } = useAuthStore();
 
-  // Not logged in → show auth flow
   if (!user) {
     return (
       <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -164,6 +167,14 @@ export default function AppNavigator() {
     );
   }
 
-  // Logged in → main app
   return <MainTabs />;
+}
+
+export default function AppNavigator() {
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Screen name="Main" component={MainApp} />
+      <RootStack.Screen name="Subscription" component={SubscriptionScreen} />
+    </RootStack.Navigator>
+  );
 }

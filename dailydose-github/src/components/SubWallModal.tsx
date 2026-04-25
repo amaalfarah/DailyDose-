@@ -51,7 +51,7 @@ export default function SubWallModal() {
           <View style={s.footer}>
             <TouchableOpacity
               style={s.btnPrimary}
-              onPress={() => navigateTo('Settings', { screen: 'Subscription' })}
+              onPress={() => navigateTo('Subscription')}
             >
               <Text style={s.btnPrimaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>

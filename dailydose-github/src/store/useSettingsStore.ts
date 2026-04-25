@@ -73,6 +73,7 @@ export const useSettingsStore = create<SettingsStore>()(
     {
       name: 'settings',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: ({ showTrialModal: _, ...rest }) => rest,
     }
   )
 );

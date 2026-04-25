@@ -39,7 +39,7 @@ function validateUsername(v: string): string {
 
 function validateEmail(v: string): string {
   if (!v) return 'Email is required';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address';
+  if (!/^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v)) return 'Enter a valid email address';
   return '';
 }
 

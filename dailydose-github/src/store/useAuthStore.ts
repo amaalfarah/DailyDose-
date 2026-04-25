@@ -22,6 +22,8 @@ export interface Caregiver {
 
 interface AuthStore {
   user: User | null;
+  pendingName: string;
+  pendingEmail: string;
   hasAcceptedTerms: boolean;
   hasStartedTrial: boolean;
   activeAccount: 'mine' | 'shared';
@@ -31,6 +33,7 @@ interface AuthStore {
 
   login: (user: User) => void;
   logout: () => void;
+  setPendingUser: (name: string, email: string) => void;
   acceptTerms: () => void;
   startTrial: () => void;
   switchAccount: (type: 'mine' | 'shared') => void;
@@ -43,6 +46,8 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
+      pendingName: '',
+      pendingEmail: '',
       hasAcceptedTerms: false,
       hasStartedTrial: false,
       activeAccount: 'mine',
@@ -54,6 +59,8 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: () =>
         set({ user: null, hasAcceptedTerms: false, hasStartedTrial: false }),
+
+      setPendingUser: (name, email) => set({ pendingName: name, pendingEmail: email }),
 
       acceptTerms: () => set({ hasAcceptedTerms: true }),
 

@@ -48,8 +48,8 @@ const FREQ_LABELS: Record<string, string> = {
 export default function AddMedicationScreen() {
   const navigation = useNavigation<any>();
   const { addMedication } = useMedStore();
-  const { user } = useAuthStore();
-  const displayName = user?.name ?? 'your';
+  const { pendingName } = useAuthStore();
+  const displayName = pendingName || 'your';
 
   const [name, setName]           = useState('');
   const [coverName, setCoverName] = useState('');

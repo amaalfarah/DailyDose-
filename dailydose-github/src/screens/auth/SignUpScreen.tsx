@@ -107,7 +107,7 @@ function FieldStatus({
 
 export default function SignUpScreen() {
   const navigation = useNavigation<Nav>();
-  const { acceptTerms, login } = useAuthStore();
+  const { acceptTerms, setPendingUser } = useAuthStore();
   const { openTrialModal } = useSettingsStore();
 
   const [username, setUsername]         = useState('');
@@ -185,7 +185,7 @@ export default function SignUpScreen() {
 
   function handleAcceptTC() {
     setShowTC(false);
-    login({ id: Date.now().toString(), name: username, email, type: 'primary' });
+    setPendingUser(username, email);
     acceptTerms();
     openTrialModal();
     navigation.navigate('AddMedication');

@@ -126,6 +126,19 @@ export default function SettingsScreen() {
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
 
+        {/* Subscription */}
+        <Text style={styles.sectionHead}>Subscription</Text>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => navigation.navigate('Subscription')}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Manage Subscription</Text>
+            <Text style={styles.rowSub}>View plan, billing, and renewal details</Text>
+          </View>
+          <Text style={styles.arrow}>›</Text>
+        </TouchableOpacity>
+
         {/* Language */}
         <Text style={styles.sectionHead}>Language</Text>
         <View style={styles.langCard}>
@@ -159,19 +172,6 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Subscription */}
-        <Text style={styles.sectionHead}>Subscription</Text>
-        <TouchableOpacity
-          style={styles.row}
-          onPress={() => navigation.navigate('Subscription')}
-        >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.rowLabel}>Manage Subscription</Text>
-            <Text style={styles.rowSub}>View plan, billing, and renewal details</Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
 
         {/* Log Out */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>

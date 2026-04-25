@@ -1,7 +1,7 @@
 // screens/settings/SubscriptionScreen.tsx
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet,
+  View, Text, TouchableOpacity, StyleSheet, Alert,
   TextInput, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,7 +39,7 @@ function formatExpiry(raw: string) {
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
-  const { subscribe, isSubscribed, savedCard } = useSettingsStore();
+  const { subscribe, isSubscribed, savedCard, cancelSubscription } = useSettingsStore();
 
   const [step, setStep] = useState<'plan' | 'card'>('plan');
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
@@ -52,6 +52,17 @@ export default function SubscriptionScreen() {
   function handleBack() {
     if (step === 'card') { setStep('plan'); return; }
     navigation.goBack();
+  }
+
+  function handleCancel() {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure? You will lose access to DailyDose+ features at the end of your billing period.',
+      [
+        { text: 'Keep Subscription', style: 'cancel' },
+        { text: 'Cancel Subscription', style: 'destructive', onPress: () => { cancelSubscription(); navigation.goBack(); } },
+      ]
+    );
   }
 
   function handleSubscribe() {
@@ -126,8 +137,16 @@ export default function SubscriptionScreen() {
                     onPress={() => setStep('card')}
                     activeOpacity={0.85}
                   >
-                    <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.mintD} />
-                    <Text style={s.updateCardBtnText}>Update Payment Method</Text>
+                    <MaterialCommunityIcons name="credit-card-plus-outline" size={16} color={colors.mintD} />
+                    <Text style={s.updateCardBtnText}>Add / Update Card</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.cancelBtn}
+                    onPress={handleCancel}
+                    activeOpacity={0.85}
+                  >
+                    <MaterialCommunityIcons name="cancel" size={16} color={colors.rose} />
+                    <Text style={s.cancelBtnText}>Cancel Subscription</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -395,9 +414,15 @@ const s = StyleSheet.create({
   updateCardBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: colors.mintL, borderWidth: 1.5, borderColor: colors.mintM,
-    borderRadius: 12, padding: 13,
+    borderRadius: 12, padding: 13, marginBottom: 10,
   },
   updateCardBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.mintD },
+  cancelBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: colors.roseL, borderWidth: 1.5, borderColor: colors.rose,
+    borderRadius: 12, padding: 13,
+  },
+  cancelBtnText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.rose },
 
   faqHead: {
     fontSize: fontSizes.base, fontFamily: fonts.bold,

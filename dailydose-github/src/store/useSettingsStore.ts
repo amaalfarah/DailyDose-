@@ -34,6 +34,7 @@ interface SettingsStore {
   checkTrialExpiry: () => void;
   openTrialModal: () => void;
   dismissTrialModal: () => void;
+  cancelSubscription: () => void;
 }
 
 const TRIAL_DAYS = 30;
@@ -69,6 +70,9 @@ export const useSettingsStore = create<SettingsStore>()(
 
       subscribe: (card) =>
         set({ isSubscribed: true, trialExpired: false, showTrialModal: false, savedCard: card }),
+
+      cancelSubscription: () =>
+        set({ isSubscribed: false, savedCard: null }),
 
       checkTrialExpiry: () => {
         const { trialStartDate, isSubscribed } = get();

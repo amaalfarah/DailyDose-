@@ -56,15 +56,13 @@ export default function App() {
   const { isSubscribed, trialExpired } = useSettingsStore();
 
   useEffect(() => {
-    async function loadFonts() {
-      await Font.loadAsync({
-        DMSans_400Regular,
-        DMSans_500Medium,
-        DMSans_700Bold,
-      });
-      setFontsLoaded(true);
-    }
-    loadFonts();
+    Font.loadAsync({
+      DMSans_400Regular,
+      DMSans_500Medium,
+      DMSans_700Bold,
+    })
+      .catch(() => {})
+      .finally(() => setFontsLoaded(true));
   }, []);
 
   if (!fontsLoaded) return null;

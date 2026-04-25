@@ -20,17 +20,27 @@ const storage = Platform.OS === 'web'
   : ExpoSecureStoreAdapter;
 
 // ── Supabase client ───────────────────────────────────────────────────────────
-const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL  ?? '';
+const SUPABASE_ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: {
-    storage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+// Guard against missing env vars — app still renders; DB calls will no-op.
+function makeClient() {
+  if (!SUPABASE_URL || !SUPABASE_ANON) return null;
+  try {
+    return createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: {
+        storage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    });
+  } catch {
+    return null;
+  }
+}
+
+export const supabase = makeClient()!;
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -212,13 +222,14 @@ export function subscribeToMedications(userId: string, callback: (payload: any) 
 // ── Username / email availability checks ─────────────────────────────────────
 
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  if (!supabase) return true;
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('username', username)
       .maybeSingle();
-    if (error) return true; // gracefully allow signup if table not yet set up
+    if (error) return true;
     return data === null;
   } catch {
     return true;
@@ -226,6 +237,7 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
 }
 
 export async function checkEmailAvailable(email: string): Promise<boolean> {
+  if (!supabase) return true;
   try {
     const { data, error } = await supabase
       .from('users')

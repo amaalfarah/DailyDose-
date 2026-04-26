@@ -26,7 +26,7 @@ export default function SettingsScreen() {
     doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates,
     toggleSetting,
   } = useSettingsStore();
-  const { user, logout, savedCaregiverCode, setSavedCaregiverCode } = useAuthStore();
+  const { user, logout, savedCaregiverCode, setSavedCaregiverCode, setPendingInviteToken } = useAuthStore();
   const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const [codeExpanded, setCodeExpanded] = useState(false);
   const [caregiverCode, setCaregiverCode] = useState(savedCaregiverCode);
@@ -45,7 +45,8 @@ export default function SettingsScreen() {
     setCodeError('');
     setCodeExpanded(false);
     setSavedCaregiverCode(trimmed);
-    navigation.navigate('CaregiverSignup', { token: trimmed });
+    setPendingInviteToken(trimmed);
+    navigation.navigate('AccountSwitcher');
   }
 
   function handleLanguageChange(lang: AppLanguage) {

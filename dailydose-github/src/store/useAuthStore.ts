@@ -68,6 +68,8 @@ export const useAuthStore = create<AuthStore>()(
           hasStartedTrial: false,
           activeAccount: 'mine',
           sharedAccountOwnerName: '',
+          savedCaregiverCode: '',
+          pendingInviteToken: null,
         }),
 
       setPendingUser: (name, email) => set({ pendingName: name, pendingEmail: email }),

@@ -107,7 +107,7 @@ function FieldStatus({
 
 export default function SignUpScreen() {
   const navigation = useNavigation<Nav>();
-  const { acceptTerms, setPendingUser, setSavedCaregiverCode } = useAuthStore();
+  const { acceptTerms, setPendingUser, setSavedCaregiverCode, setPendingInviteToken } = useAuthStore();
   const { openTrialModal } = useSettingsStore();
 
   const [username, setUsername]         = useState('');
@@ -187,7 +187,10 @@ export default function SignUpScreen() {
   function handleAcceptTC() {
     setShowTC(false);
     setPendingUser(username, email);
-    if (caregiverCode.trim()) setSavedCaregiverCode(caregiverCode.trim());
+    if (caregiverCode.trim()) {
+      setSavedCaregiverCode(caregiverCode.trim());
+      setPendingInviteToken(caregiverCode.trim());
+    }
     acceptTerms();
     openTrialModal();
     navigation.navigate('AddMedication');

@@ -9,9 +9,10 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 export default function AccountSwitcherScreen() {
   const navigation = useNavigation<any>();
-  const { switchAccount, user, sharedAccountOwnerName } = useAuthStore();
+  const { switchAccount, user, sharedAccountOwnerName, savedCaregiverCode } = useAuthStore();
   const myInitials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
-  const ownerName = sharedAccountOwnerName || 'Shared';
+  const hasSharedAccess = !!(sharedAccountOwnerName || savedCaregiverCode);
+  const ownerName = sharedAccountOwnerName || 'Linked Account';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
 
   function goToMine() {
@@ -54,8 +55,8 @@ export default function AccountSwitcherScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Shared Account — only shown if a caregiver relationship exists */}
-        {ownerName !== 'Shared' && (
+        {/* Shared Account — shown when a caregiver code has been entered */}
+        {hasSharedAccess && (
           <TouchableOpacity style={[styles.card, styles.cardShared]} onPress={goToShared}>
             <View style={styles.cardTop}>
               <View style={[styles.cardAvatar, styles.cardAvatarShared]}>
@@ -81,7 +82,7 @@ export default function AccountSwitcherScreen() {
         <View style={styles.privacyNote}>
           <Text style={styles.privacyTitle}>🔒 Privacy & separation</Text>
           <Text style={styles.privacyText}>
-            Your personal medications{sharedAccountOwnerName ? ` and ${sharedAccountOwnerName}'s account data` : ''} are fully separate.
+            Your personal medications{hasSharedAccess ? ` and ${ownerName}'s account data` : ''} are fully separate.
             Switching accounts never mixes your data.
           </Text>
         </View>

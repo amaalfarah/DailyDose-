@@ -226,11 +226,10 @@ export default function MedsScreen() {
       <View style={styles.header}>
         <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
         <Text style={styles.headerTitle}>My Medications</Text>
+        <View style={{ width: 80 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionHead}>{displayName}'s medications</Text>
-
         {medications.map((med) => (
           <View key={med.id} style={styles.medRow}>
             <View style={[styles.medIcon, { backgroundColor: med.color }]}>
@@ -684,7 +683,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  headerTitle: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy },
+  headerTitle: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy, flex: 1, textAlign: 'center' },
   scroll: { padding: 16, paddingBottom: 100 },
   sectionHead: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,

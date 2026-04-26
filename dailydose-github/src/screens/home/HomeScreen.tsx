@@ -14,6 +14,12 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 const WEEK_DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
+function toMinutes(t: string): number {
+  const [time, period] = (t ?? '').split(' ');
+  const [h, m] = time.split(':').map(Number);
+  return ((h % 12) + (period === 'PM' ? 12 : 0)) * 60 + (m || 0);
+}
+
 export default function HomeScreen() {
   const { medications, toggleDoseTaken } = useMedStore();
   const { checkTrialExpiry } = useSettingsStore();
@@ -34,8 +40,14 @@ export default function HomeScreen() {
   const upcomingDoses = medications
     .filter((m) => m.isActive)
     .flatMap((m) =>
-      m.dosesTakenToday.map((taken, i) => ({ med: m, taken, doseIndex: i }))
+      m.dosesTakenToday.map((taken, i) => ({
+        med: m,
+        taken,
+        doseIndex: i,
+        time: m.reminderTimes?.[i] ?? m.reminderTime,
+      }))
     )
+    .sort((a, b) => toMinutes(a.time) - toMinutes(b.time))
     .slice(0, 4);
 
   return (
@@ -109,8 +121,11 @@ export default function HomeScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.medName}>{med.name}</Text>
                   <Text style={styles.medTime}>
-                    {taken ? `${med.reminderTime} ✓` : `Next dose · ${med.reminderTime}`}
+                    {med.dosage} · {med.reminderTime}{taken ? ' ✓' : ''}
                   </Text>
+                  {med.coverName ? (
+                    <Text style={styles.medCoverName}>{med.coverName.toLowerCase()}</Text>
+                  ) : null}
                 </View>
                 <View style={[styles.checkCircle, taken && styles.checkCircleDone]}>
                   {taken && <Text style={{ color: '#fff', fontSize: 11 }}>✓</Text>}
@@ -188,6 +203,7 @@ const styles = StyleSheet.create({
   medIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   medName: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy },
   medTime: { fontSize: fontSizes.xs, color: colors.muted, marginTop: 1 },
+  medCoverName: { fontSize: fontSizes.xs - 1, color: colors.mintD, marginTop: 1 },
   checkCircle: {
     width: 24, height: 24, borderRadius: 12,
     borderWidth: 2, borderColor: colors.border,

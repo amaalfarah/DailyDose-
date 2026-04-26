@@ -5,14 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
-import { useAuthStore } from '../../store/useAuthStore';
 
 export default function InviteSentScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { caregiverName = '', caregiverEmail = '' } = route.params || {};
-  const { sharedPatientName } = useAuthStore();
-  const patientName = sharedPatientName || 'Patient';
   const initials = caregiverName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
@@ -20,7 +17,7 @@ export default function InviteSentScreen() {
       <View style={s.center}>
         <Text style={s.icon}>✉️</Text>
         <Text style={s.title}>Invite sent!</Text>
-        <Text style={s.sub}>An invite link has been sent to <Text style={s.bold}>{caregiverName}</Text>. Once they sign up, they'll be able to access {patientName}'s medication account.</Text>
+        <Text style={s.sub}>An invite link has been sent to <Text style={s.bold}>{caregiverName}</Text>. Once they sign up, they'll be able to help manage your medications.</Text>
       </View>
       <View style={s.body}>
         <View style={s.card}>

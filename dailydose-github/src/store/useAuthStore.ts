@@ -27,9 +27,7 @@ interface AuthStore {
   hasAcceptedTerms: boolean;
   hasStartedTrial: boolean;
   activeAccount: 'mine' | 'shared';
-  sharedPatientName: string;
   sharedAccountOwnerName: string;
-  setSharedAccountOwnerName: (name: string) => void;
   pendingInviteToken: string | null;
   caregivers: Caregiver[];
 
@@ -39,6 +37,7 @@ interface AuthStore {
   acceptTerms: () => void;
   startTrial: () => void;
   switchAccount: (type: 'mine' | 'shared') => void;
+  setSharedAccountOwnerName: (name: string) => void;
   addCaregiver: (cg: Caregiver) => void;
   acceptInvite: (token: string, user: User) => void;
   setPendingInviteToken: (token: string | null) => void;
@@ -53,15 +52,20 @@ export const useAuthStore = create<AuthStore>()(
       hasAcceptedTerms: false,
       hasStartedTrial: false,
       activeAccount: 'mine',
-      sharedPatientName: '',
       sharedAccountOwnerName: '',
       pendingInviteToken: null,
       caregivers: [],
 
-      login: (user) => set({ user }),
+      login: (user) => set({ user, activeAccount: 'mine' }),
 
       logout: () =>
-        set({ user: null, hasAcceptedTerms: false, hasStartedTrial: false }),
+        set({
+          user: null,
+          hasAcceptedTerms: false,
+          hasStartedTrial: false,
+          activeAccount: 'mine',
+          sharedAccountOwnerName: '',
+        }),
 
       setPendingUser: (name, email) => set({ pendingName: name, pendingEmail: email }),
 
@@ -81,6 +85,7 @@ export const useAuthStore = create<AuthStore>()(
         if (cg) {
           set((s) => ({
             user,
+            activeAccount: 'mine',
             caregivers: s.caregivers.map((c) =>
               c.inviteToken === token ? { ...c, status: 'accepted' } : c
             ),

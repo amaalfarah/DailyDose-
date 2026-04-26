@@ -3,22 +3,20 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function AccountSwitcherScreen() {
   const navigation = useNavigation<any>();
-  const { switchAccount, user, sharedPatientName, sharedAccountOwnerName } = useAuthStore();
+  const { switchAccount, user, sharedAccountOwnerName } = useAuthStore();
   const myInitials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const ownerName = sharedAccountOwnerName || 'Shared';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
-  const patientName = sharedPatientName || 'Patient';
 
   function goToMine() {
     switchAccount('mine');
-    navigation.navigate('MyDashboard');
+    navigation.navigate('Home');
   }
 
   function goToShared() {
@@ -56,32 +54,34 @@ export default function AccountSwitcherScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Shared Account */}
-        <TouchableOpacity style={[styles.card, styles.cardShared]} onPress={goToShared}>
-          <View style={styles.cardTop}>
-            <View style={[styles.cardAvatar, styles.cardAvatarShared]}>
-              <Text style={[styles.cardAvatarText, { color: colors.blueD }]}>{ownerInitials}</Text>
+        {/* Shared Account — only shown if a caregiver relationship exists */}
+        {ownerName !== 'Shared' && (
+          <TouchableOpacity style={[styles.card, styles.cardShared]} onPress={goToShared}>
+            <View style={styles.cardTop}>
+              <View style={[styles.cardAvatar, styles.cardAvatarShared]}>
+                <Text style={[styles.cardAvatarText, { color: colors.blueD }]}>{ownerInitials}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardLabel, { color: colors.blueD }]}>
+                  Shared · Caregiver access
+                </Text>
+                <Text style={styles.cardName}>{ownerName}'s Account</Text>
+              </View>
+              <Text style={styles.cardArrow}>›</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.cardLabel, { color: colors.blueD }]}>
-                Shared · Caregiver access
-              </Text>
-              <Text style={styles.cardName}>{ownerName}'s Account</Text>
+            <View style={styles.chips}>
+              <Chip label={`${ownerName}'s medications`} color="blue" />
+              <Chip label="Mark doses taken" color="blue" />
+              <Chip label="View only · Edit locked" color="amber" />
             </View>
-            <Text style={styles.cardArrow}>›</Text>
-          </View>
-          <View style={styles.chips}>
-            <Chip label={`${patientName}'s schedule`} color="blue" />
-            <Chip label="Mark doses taken" color="blue" />
-            <Chip label="View only · Edit locked" color="amber" />
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
 
         {/* Privacy note */}
         <View style={styles.privacyNote}>
           <Text style={styles.privacyTitle}>🔒 Privacy & separation</Text>
           <Text style={styles.privacyText}>
-            Your personal medications and {ownerName}'s account data are fully separate.
+            Your personal medications{sharedAccountOwnerName ? ` and ${sharedAccountOwnerName}'s account data` : ''} are fully separate.
             Switching accounts never mixes your data.
           </Text>
         </View>

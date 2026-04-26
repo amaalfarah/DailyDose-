@@ -41,13 +41,11 @@ export function buildInviteLink(token: string): string {
  */
 export async function shareInviteLink(
   token: string,
-  caregiverName: string,
-  patientName: string
+  caregiverName: string
 ): Promise<void> {
   const link = buildInviteLink(token);
   const message =
-    `Hi ${caregiverName}! ${patientName}'s account holder has invited you to ` +
-    `help manage their medications on DailyDose+.\n\nAccept your invite:\n${link}`;
+    `Hi ${caregiverName}! You've been invited to help manage medications on DailyDose+.\n\nAccept your invite:\n${link}`;
 
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {

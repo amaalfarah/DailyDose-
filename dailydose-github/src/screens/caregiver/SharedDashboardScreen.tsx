@@ -12,9 +12,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 export default function SharedDashboardScreen() {
   const navigation = useNavigation<any>();
   const { medications, toggleDoseTaken } = useMedStore();
-  const { sharedPatientName, sharedAccountOwnerName } = useAuthStore();
+  const { sharedAccountOwnerName } = useAuthStore();
   const ownerName = sharedAccountOwnerName || 'Shared';
-  const patientName = sharedPatientName || 'Patient';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const totalDoses = medications.reduce((s, m) => s + m.totalDosesToday, 0);
   const takenDoses = medications.reduce((s, m) => s + m.dosesTakenToday.filter(Boolean).length, 0);
@@ -39,7 +38,7 @@ export default function SharedDashboardScreen() {
         </View>
 
         <Text style={s.greetSmall}>Managing account for</Text>
-        <Text style={s.greetBig}>{patientName} 👦</Text>
+        <Text style={s.greetBig}>{ownerName}</Text>
 
         {/* Permission warning */}
         <View style={s.permWarn}>
@@ -52,13 +51,13 @@ export default function SharedDashboardScreen() {
 
         {/* Progress card */}
         <View style={s.progressCard}>
-          <Text style={s.cardLabel}>{patientName}'s progress today</Text>
+          <Text style={s.cardLabel}>{ownerName}'s progress today</Text>
           <Text style={s.cardBig}>{takenDoses} <Text style={s.cardTotal}>/ {totalDoses}</Text></Text>
           <Text style={s.cardSub}>{totalDoses - takenDoses} more dose{totalDoses - takenDoses !== 1 ? 's' : ''} today</Text>
           <View style={s.pbar}><View style={[s.pfill, { width: `${totalDoses > 0 ? (takenDoses / totalDoses) * 100 : 0}%` as any }]} /></View>
         </View>
 
-        <Text style={s.sectionHead}>{patientName}'s doses today</Text>
+        <Text style={s.sectionHead}>{ownerName}'s doses today</Text>
         {medications.map((med) =>
           med.dosesTakenToday.map((taken, di) => (
             <TouchableOpacity

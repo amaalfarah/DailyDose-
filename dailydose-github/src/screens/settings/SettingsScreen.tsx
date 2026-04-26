@@ -26,7 +26,7 @@ export default function SettingsScreen() {
     doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates,
     toggleSetting,
   } = useSettingsStore();
-  const { user, sharedPatientName, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
 
   function handleLogout() {
@@ -112,7 +112,7 @@ export default function SettingsScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Add caregiver</Text>
-            <Text style={styles.rowSub}>Let family monitor {sharedPatientName ? `${sharedPatientName}'s` : 'your'} meds</Text>
+            <Text style={styles.rowSub}>Let family help manage your medications</Text>
           </View>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>

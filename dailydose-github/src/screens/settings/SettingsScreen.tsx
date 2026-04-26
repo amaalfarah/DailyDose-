@@ -26,10 +26,10 @@ export default function SettingsScreen() {
     doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates,
     toggleSetting,
   } = useSettingsStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, savedCaregiverCode, setSavedCaregiverCode } = useAuthStore();
   const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const [codeExpanded, setCodeExpanded] = useState(false);
-  const [caregiverCode, setCaregiverCode] = useState('');
+  const [caregiverCode, setCaregiverCode] = useState(savedCaregiverCode);
   const [codeError, setCodeError] = useState('');
 
   function handleLogout() {
@@ -43,8 +43,8 @@ export default function SettingsScreen() {
       return;
     }
     setCodeError('');
-    setCaregiverCode('');
     setCodeExpanded(false);
+    setSavedCaregiverCode(trimmed);
     navigation.navigate('CaregiverSignup', { token: trimmed });
   }
 
@@ -139,7 +139,9 @@ export default function SettingsScreen() {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Enter caregiver code</Text>
-            <Text style={styles.rowSub}>Got a code? Link to someone's account</Text>
+            <Text style={styles.rowSub}>
+              {savedCaregiverCode ? `Code saved: ${savedCaregiverCode}` : "Got a code? Link to someone's account"}
+            </Text>
           </View>
           <Text style={styles.arrow}>{codeExpanded ? '⌄' : '›'}</Text>
         </TouchableOpacity>

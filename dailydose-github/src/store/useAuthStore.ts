@@ -60,10 +60,7 @@ export const useAuthStore = create<AuthStore>()(
       pendingInviteToken: null,
       caregivers: [],
 
-      login: (user) => {
-        useMedStore.getState().clearAll();
-        set({ user, activeAccount: 'mine' });
-      },
+      login: (user) => set({ user, activeAccount: 'mine' }),
 
       logout: () => {
         useMedStore.getState().clearAll();

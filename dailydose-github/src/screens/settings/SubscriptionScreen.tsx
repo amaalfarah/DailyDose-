@@ -5,7 +5,7 @@ import {
   TextInput, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
@@ -39,7 +39,9 @@ function formatExpiry(raw: string) {
 
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
-  const { subscribe, isSubscribed, savedCard, cancelSubscription } = useSettingsStore();
+  const route = useRoute();
+  const fromTrial = (route.params as any)?.fromTrial ?? false;
+  const { subscribe, isSubscribed, savedCard, cancelSubscription, openTrialModal } = useSettingsStore();
 
   const [step, setStep] = useState<'plan' | 'card'>('plan');
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
@@ -53,6 +55,7 @@ export default function SubscriptionScreen() {
   function handleBack() {
     if (step === 'card') { setStep('plan'); return; }
     navigation.goBack();
+    if (fromTrial) { openTrialModal(); }
   }
 
   function handleCancel() {

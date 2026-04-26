@@ -69,7 +69,7 @@ export type SettingsStackParams = {
 
 export type RootStackParams = {
   Main: undefined;
-  Subscription: undefined;
+  Subscription: { fromTrial?: boolean } | undefined;
 };
 
 const AuthStack = createStackNavigator<AuthStackParams>();

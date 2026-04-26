@@ -75,7 +75,7 @@ export default function TrialModal() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.btnSecondary}
-              onPress={() => { dismissTrialModal(); navigateTo('Subscription'); }}
+              onPress={() => { dismissTrialModal(); navigateTo('Subscription', { fromTrial: true }); }}
             >
               <Text style={styles.btnSecondaryText}>Subscribe Now — $5/month</Text>
             </TouchableOpacity>

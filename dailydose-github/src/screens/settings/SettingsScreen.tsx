@@ -1,8 +1,8 @@
 // screens/settings/SettingsScreen.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  Switch, StyleSheet, Alert,
+  Switch, StyleSheet, Alert, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -28,9 +28,24 @@ export default function SettingsScreen() {
   } = useSettingsStore();
   const { user, logout } = useAuthStore();
   const initials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
+  const [codeExpanded, setCodeExpanded] = useState(false);
+  const [caregiverCode, setCaregiverCode] = useState('');
+  const [codeError, setCodeError] = useState('');
 
   function handleLogout() {
     logout();
+  }
+
+  function handleApplyCode() {
+    const trimmed = caregiverCode.trim();
+    if (!trimmed) {
+      setCodeError('Please enter a caregiver code.');
+      return;
+    }
+    setCodeError('');
+    setCaregiverCode('');
+    setCodeExpanded(false);
+    navigation.navigate('CaregiverSignup', { token: trimmed });
   }
 
   function handleLanguageChange(lang: AppLanguage) {
@@ -116,6 +131,36 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
+        {/* Caregiver Code */}
+        <TouchableOpacity
+          style={[styles.row, codeExpanded && styles.rowExpanded]}
+          onPress={() => { setCodeExpanded(!codeExpanded); setCodeError(''); }}
+          activeOpacity={0.8}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Enter caregiver code</Text>
+            <Text style={styles.rowSub}>Got a code? Link to someone's account</Text>
+          </View>
+          <Text style={styles.arrow}>{codeExpanded ? '⌄' : '›'}</Text>
+        </TouchableOpacity>
+        {codeExpanded && (
+          <View style={styles.codePanel}>
+            <TextInput
+              style={[styles.codeInput, codeError ? styles.codeInputError : null]}
+              placeholder="Paste or type code here"
+              placeholderTextColor="#b0bec5"
+              value={caregiverCode}
+              onChangeText={(v) => { setCaregiverCode(v); setCodeError(''); }}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {codeError ? <Text style={styles.codeError}>{codeError}</Text> : null}
+            <TouchableOpacity style={styles.codeApplyBtn} onPress={handleApplyCode}>
+              <Text style={styles.codeApplyText}>Apply Code</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <TouchableOpacity
           style={styles.row}
           onPress={() => navigation.navigate('AccountSwitcher')}
@@ -226,6 +271,24 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: fontSizes.base, fontFamily: fonts.medium, color: colors.navy },
   rowSub: { fontSize: fontSizes.xs, color: colors.muted, marginTop: 1 },
   arrow: { fontSize: 20, color: colors.muted },
+  rowExpanded: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderBottomWidth: 0, marginBottom: 0 },
+  codePanel: {
+    backgroundColor: colors.white, borderWidth: 1.5, borderTopWidth: 0,
+    borderColor: colors.border, borderBottomLeftRadius: 12, borderBottomRightRadius: 12,
+    padding: 12, marginBottom: 7,
+  },
+  codeInput: {
+    backgroundColor: colors.bg, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy, marginBottom: 4,
+  },
+  codeInputError: { borderColor: colors.rose },
+  codeError: { fontSize: fontSizes.xs, color: colors.rose, marginBottom: 8, marginLeft: 2 },
+  codeApplyBtn: {
+    backgroundColor: colors.mint, borderRadius: 10,
+    paddingVertical: 10, alignItems: 'center', marginTop: 4,
+  },
+  codeApplyText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: '#fff' },
   avatar: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.mintL,

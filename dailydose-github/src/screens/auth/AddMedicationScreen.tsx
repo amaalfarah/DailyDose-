@@ -69,12 +69,30 @@ export default function AddMedicationScreen() {
   const [dosageError, setDosageError] = useState(false);
   const [timeErrors, setTimeErrors]   = useState<boolean[]>([false]);
 
-  function formatHour(raw: string): string {
-    const digits = raw.replace(/\D/g, '');
+  function formatTimeInput(raw: string): string {
+    const digits = raw.replace(/\D/g, '').slice(0, 4);
     if (!digits) return '';
-    const h = parseInt(digits, 10);
-    const clamped = Math.min(Math.max(h, 1), 12);
-    return `${clamped}:00`;
+    if (digits.length === 1) return digits;
+    const first = parseInt(digits[0]);
+    if (first >= 2) return `${digits[0]}:${digits.slice(1, 3)}`;
+    if (first === 0) return `${digits[0]}:${digits.slice(1, 3)}`;
+    // first digit is 1
+    const second = parseInt(digits[1]);
+    if (second <= 2) {
+      if (digits.length === 2) return digits; // "10", "11", "12" — wait for minutes
+      return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+    }
+    return `${digits[0]}:${digits.slice(1, 3)}`; // "1:3x"
+  }
+
+  function clampTime(val: string): string {
+    if (!val) return '';
+    const parts = val.includes(':') ? val.split(':') : [val, '0'];
+    let h = parseInt(parts[0]) || 1;
+    let m = parseInt(parts[1] || '0') || 0;
+    h = Math.min(Math.max(h, 1), 12);
+    m = Math.min(Math.max(m, 0), 59);
+    return `${h}:${String(m).padStart(2, '0')}`;
   }
 
   function reminderCount(f: typeof FREQUENCIES[number]) {
@@ -110,7 +128,7 @@ export default function AddMedicationScreen() {
     setTimeErrors(newTimeErrors);
     if (nameInvalid || dosageInvalid || newTimeErrors.some(Boolean)) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
-    const builtTimes = reminderHours.map((h, i) => `${formatHour(h)} ${reminderPeriods[i]}`);
+    const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
     addMedication({
       name: name.trim(),
@@ -226,18 +244,17 @@ export default function AddMedicationScreen() {
             <View style={s.timeRow}>
               <TextInput
                 style={[s.inp, s.timeInp, timeErrors[i] && s.inpError]}
-                placeholder="e.g. 8"
+                placeholder="e.g. 2:30"
                 placeholderTextColor="#b0bec5"
                 keyboardType="numeric"
                 value={hour}
                 onChangeText={(t) => {
-                  const digits = t.replace(/\D/g, '');
-                  const clamped = digits === '' ? '' : String(Math.min(parseInt(digits, 10), 12));
-                  setHours(prev => prev.map((h, j) => j === i ? clamped : h));
-                  if (clamped.trim()) setTimeErrors(prev => prev.map((e, j) => j === i ? false : e));
+                  const formatted = formatTimeInput(t);
+                  setHours(prev => prev.map((h, j) => j === i ? formatted : h));
+                  if (formatted.trim()) setTimeErrors(prev => prev.map((e, j) => j === i ? false : e));
                 }}
                 onBlur={() => {
-                  if (hour.trim()) setHours(prev => prev.map((h, j) => j === i ? formatHour(h) : h));
+                  if (hour.trim()) setHours(prev => prev.map((h, j) => j === i ? clampTime(h) : h));
                 }}
               />
               <View style={s.periodWrapper}>

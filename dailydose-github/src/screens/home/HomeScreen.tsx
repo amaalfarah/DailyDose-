@@ -104,7 +104,7 @@ export default function HomeScreen() {
         {upcomingDoses.length > 0 ? (
           <>
             <Text style={styles.sectionHead}>Upcoming doses</Text>
-            {upcomingDoses.map(({ med, taken, doseIndex }) => (
+            {upcomingDoses.map(({ med, taken, doseIndex, time }) => (
               <TouchableOpacity
                 key={`${med.id}-${doseIndex}`}
                 style={[styles.medRow, taken && styles.medRowDone]}
@@ -121,7 +121,7 @@ export default function HomeScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.medName}>{med.name}</Text>
                   <Text style={styles.medTime}>
-                    {med.dosage} · {med.reminderTime}{taken ? ' ✓' : ''}
+                    {med.dosage} · {time}{taken ? ' ✓' : ''}
                   </Text>
                   {med.coverName ? (
                     <Text style={styles.medCoverName}>{med.coverName.toLowerCase()}</Text>

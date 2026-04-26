@@ -1,5 +1,5 @@
 // screens/home/HomeScreen.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
@@ -26,6 +26,10 @@ export default function HomeScreen() {
   const { isOnTrial, daysRemaining } = useTrialStatus();
   const { user, pendingName } = useAuthStore();
   const displayName = user?.name || pendingName || 'there';
+
+  // Mon=0 … Sun=6
+  const todayIndex = (new Date().getDay() + 6) % 7;
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   useEffect(() => {
     checkTrialExpiry();
@@ -59,9 +63,6 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>MS</Text>
-          </View>
         </View>
 
         <Text style={styles.greetSmall}>Good morning,</Text>
@@ -86,18 +87,35 @@ export default function HomeScreen() {
           {/* Week streak */}
           <View style={styles.weekRow}>
             {WEEK_DAYS.map((d, i) => (
-              <View
+              <TouchableOpacity
                 key={i}
+                activeOpacity={0.7}
                 style={[
                   styles.weekDay,
-                  i < 2 && styles.weekDone,
-                  i === 2 && styles.weekToday,
+                  i < todayIndex && styles.weekDone,
+                  i === todayIndex && styles.weekToday,
+                  selectedDay === i && styles.weekSelected,
                 ]}
+                onPress={() => setSelectedDay(selectedDay === i ? null : i)}
               >
                 <Text style={styles.weekDayText}>{d}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
+
+          {selectedDay !== null && (
+            <View style={styles.dayTooltip}>
+              <Text style={styles.dayTooltipText}>
+                {selectedDay === todayIndex
+                  ? takenDoses === 0 && totalDoses === 0
+                    ? 'No medications scheduled'
+                    : `${takenDoses} of ${totalDoses} dose${totalDoses !== 1 ? 's' : ''} taken`
+                  : selectedDay < todayIndex
+                  ? 'No history recorded yet'
+                  : 'Upcoming day'}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Upcoming doses */}
@@ -160,14 +178,8 @@ const styles = StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 32 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy, letterSpacing: -0.4 },
-  avatar: {
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: colors.mintL,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.mintD },
-  greetSmall: { fontSize: fontSizes.sm, color: colors.muted, marginBottom: 2 },
-  greetBig: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy, marginBottom: 14 },
+greetSmall: { fontSize: fontSizes.sm, color: colors.muted, marginBottom: 2, textAlign: 'center' },
+  greetBig: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy, marginBottom: 14, textAlign: 'center' },
   progressCard: {
     backgroundColor: colors.mint,
     borderRadius: 18, padding: 18, marginBottom: 18,
@@ -189,7 +201,13 @@ const styles = StyleSheet.create({
   },
   weekDone: { backgroundColor: 'rgba(255,255,255,0.25)' },
   weekToday: { backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  weekSelected: { backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1.5, borderColor: '#fff' },
   weekDayText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: '#fff' },
+  dayTooltip: {
+    marginTop: 10, backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, alignSelf: 'center',
+  },
+  dayTooltipText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#fff' },
   sectionHead: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,

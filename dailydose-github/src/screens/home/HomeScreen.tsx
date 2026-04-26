@@ -31,6 +31,9 @@ export default function HomeScreen() {
   const todayIndex = (new Date().getDay() + 6) % 7;
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning,' : hour < 18 ? 'Good afternoon,' : 'Good evening,';
+
   useEffect(() => {
     checkTrialExpiry();
   }, []);
@@ -64,7 +67,7 @@ export default function HomeScreen() {
           <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
         </View>
 
-        <Text style={styles.greetSmall}>Good morning,</Text>
+        <Text style={styles.greetSmall}>{greeting}</Text>
         <Text style={styles.greetBig}>Hello {displayName}</Text>
 
         {/* Progress card */}

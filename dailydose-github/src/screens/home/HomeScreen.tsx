@@ -51,8 +51,7 @@ export default function HomeScreen() {
         time: m.reminderTimes?.[i] ?? m.reminderTime,
       }))
     )
-    .sort((a, b) => toMinutes(a.time) - toMinutes(b.time))
-    .slice(0, 4);
+    .sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
 
   return (
     <SafeAreaView style={styles.safe}>

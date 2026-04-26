@@ -139,6 +139,18 @@ export default function AddMedicationScreen() {
     });
   }
 
+  function addReminderSlot() {
+    setHours(prev => [...prev, '']);
+    setPeriods(prev => [...prev, 'AM' as const]);
+    setTimeErrors(prev => [...prev, false]);
+  }
+
+  function removeReminderSlot(index: number) {
+    setHours(prev => prev.filter((_, i) => i !== index));
+    setPeriods(prev => prev.filter((_, i) => i !== index));
+    setTimeErrors(prev => prev.filter((_, i) => i !== index));
+  }
+
   function handleSave() {
     const nameInvalid    = !name.trim();
     const dosageInvalid  = !dosageAmount.trim();
@@ -150,7 +162,7 @@ export default function AddMedicationScreen() {
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
-    const doseCount = frequency === 'twice-daily' ? 2 : frequency === '3x-daily' ? 3 : 1;
+    const doseCount = reminderHours.length;
     if (isEditing && medId) {
       updateMedication(medId, {
         name: name.trim(),
@@ -284,8 +296,15 @@ export default function AddMedicationScreen() {
         <Text style={s.lbl}>Reminder time <Text style={{ color: colors.rose }}>Required</Text></Text>
         {reminderHours.map((hour, i) => (
           <View key={i} style={{ zIndex: 19 - i }}>
-            {reminderHours.length > 1 && (
-              <Text style={s.reminderIndexLbl}>Reminder {i + 1}</Text>
+            {(reminderHours.length > 1 || frequency === 'as-needed') && (
+              <View style={s.reminderIndexRow}>
+                <Text style={s.reminderIndexLbl}>Reminder {i + 1}</Text>
+                {frequency === 'as-needed' && reminderHours.length > 1 && (
+                  <TouchableOpacity onPress={() => removeReminderSlot(i)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                    <MaterialCommunityIcons name="close-circle" size={18} color={colors.rose} />
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
             <View style={s.timeRow}>
               <TextInput
@@ -329,6 +348,12 @@ export default function AddMedicationScreen() {
             {timeErrors[i] && <Text style={s.errorText}>Please enter a reminder time to continue.</Text>}
           </View>
         ))}
+        {frequency === 'as-needed' && (
+          <TouchableOpacity style={s.addSlotBtn} onPress={addReminderSlot}>
+            <MaterialCommunityIcons name="plus-circle-outline" size={18} color={colors.mint} />
+            <Text style={s.addSlotText}>Add reminder time</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Preview */}
         <View style={s.preview}>
@@ -455,7 +480,10 @@ const s = StyleSheet.create({
   timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   timeInp: { flex: 1, marginBottom: 0 },
   periodWrapper: { width: 88 },
-  reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, marginBottom: 4 },
+  reminderIndexRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted },
+  addSlotBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, marginBottom: 4 },
+  addSlotText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mint },
   unitDropBtn: {
     height: 46, backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,

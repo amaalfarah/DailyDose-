@@ -172,7 +172,7 @@ export default function MedsScreen() {
   function saveSchedule() {
     if (!selectedMed || editHours.some((h) => !h.trim())) return;
     const builtTimes = editHours.map((h, i) => `${clampTime(h)} ${editPeriods[i]}`);
-    const doseCount = editFreq === 'twice-daily' ? 2 : editFreq === '3x-daily' ? 3 : 1;
+    const doseCount = editHours.length;
     updateMedication(selectedMed.id, {
       frequency: editFreq,
       reminderTime: builtTimes[0],
@@ -197,6 +197,16 @@ export default function MedsScreen() {
       while (next.length < count) next.push('AM' as const);
       return next.slice(0, count);
     });
+  }
+
+  function addEditReminderSlot() {
+    setEditHours((prev) => [...prev, '']);
+    setEditPeriods((prev) => [...prev, 'AM' as const]);
+  }
+
+  function removeEditReminderSlot(index: number) {
+    setEditHours((prev) => prev.filter((_, i) => i !== index));
+    setEditPeriods((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleDelete() {
@@ -541,8 +551,15 @@ export default function MedsScreen() {
               <Text style={styles.sheetSectionLabel}>Reminder Time{editHours.length > 1 ? 's' : ''}</Text>
               {editHours.map((hour, i) => (
                 <View key={i} style={{ zIndex: 19 - i, marginBottom: 10 }}>
-                  {editHours.length > 1 && (
-                    <Text style={styles.reminderIndexLbl}>Reminder {i + 1}</Text>
+                  {(editHours.length > 1 || editFreq === 'as-needed') && (
+                    <View style={styles.reminderIndexRow}>
+                      <Text style={styles.reminderIndexLbl}>Reminder {i + 1}</Text>
+                      {editFreq === 'as-needed' && editHours.length > 1 && (
+                        <TouchableOpacity onPress={() => removeEditReminderSlot(i)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                          <MaterialCommunityIcons name="close-circle" size={18} color={colors.rose} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   )}
                   <View style={styles.timeRow}>
                     <TextInput
@@ -591,6 +608,13 @@ export default function MedsScreen() {
                   </View>
                 </View>
               ))}
+
+              {editFreq === 'as-needed' && (
+                <TouchableOpacity style={styles.addSlotBtn} onPress={addEditReminderSlot}>
+                  <MaterialCommunityIcons name="plus-circle-outline" size={18} color={colors.mint} />
+                  <Text style={styles.addSlotText}>Add reminder time</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity style={styles.saveBtn} onPress={saveSchedule}>
                 <Text style={styles.saveBtnText}>Save Changes</Text>
@@ -858,9 +882,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 11,
     fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy,
   },
-  reminderIndexLbl: {
-    fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, marginBottom: 4,
-  },
+  reminderIndexRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted },
+  addSlotBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10 },
+  addSlotText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mint },
   // Cover name
   coverNameInput: {
     backgroundColor: colors.white,

@@ -197,7 +197,10 @@ export default function AddMedicationScreen() {
     <SafeAreaView style={s.safe}>
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
-          <View style={s.backArr} /><Text style={s.backLabel}>Add medication</Text>
+          <View style={s.backArr}>
+            <MaterialCommunityIcons name="plus" size={16} color={colors.mintD} />
+          </View>
+          <Text style={s.backLabel}>Add medication</Text>
         </TouchableOpacity>
 <Text style={s.note}>Add {displayName}'s daily medications. You can always add or edit later.</Text>
 
@@ -399,7 +402,7 @@ const s = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40, flexGrow: 1 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
-  backArr: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f4f3' },
+  backArr: { width: 28, height: 28, borderRadius: 8, backgroundColor: colors.mintL, alignItems: 'center', justifyContent: 'center' },
   backLabel: { fontSize: 14, fontFamily: fonts.bold, color: colors.navy },
   note: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 14 },
   lbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },

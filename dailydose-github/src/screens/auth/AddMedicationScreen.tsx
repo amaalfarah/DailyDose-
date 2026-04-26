@@ -381,8 +381,11 @@ export default function AddMedicationScreen() {
           <Text style={s.btnText}>{isEditing ? 'Save Changes' : 'Next →'}</Text>
         </TouchableOpacity>
         {!isEditing && (
-          <TouchableOpacity style={s.btnSecondary} onPress={() => navigation.navigate('NotificationSetup')}>
-            <Text style={s.btnSecondaryText}>Skip for now</Text>
+          <TouchableOpacity
+            style={s.btnSecondary}
+            onPress={() => fromTab ? navigation.goBack() : navigation.navigate('NotificationSetup')}
+          >
+            <Text style={s.btnSecondaryText}>{fromTab ? 'Cancel' : 'Skip for now'}</Text>
           </TouchableOpacity>
         )}
         <View style={{ height: 20 }} />

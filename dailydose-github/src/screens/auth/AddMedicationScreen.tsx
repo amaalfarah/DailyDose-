@@ -13,7 +13,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
@@ -47,6 +47,8 @@ const FREQ_LABELS: Record<string, string> = {
 
 export default function AddMedicationScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const fromTab = route.params?.fromTab === true;
   const { addMedication } = useMedStore();
   const { pendingName } = useAuthStore();
   const displayName = pendingName || 'your';
@@ -145,7 +147,11 @@ export default function AddMedicationScreen() {
       dosesTakenToday: frequency === 'twice-daily' ? [false, false] : frequency === '3x-daily' ? [false, false, false] : [false],
       totalDosesToday: frequency === 'twice-daily' ? 2 : frequency === '3x-daily' ? 3 : 1,
     });
-    navigation.navigate('NotificationSetup');
+    if (fromTab) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('NotificationSetup');
+    }
   }
 
   const icons = iconTab === 'med' ? MED_ICONS : NEUTRAL_ICONS;

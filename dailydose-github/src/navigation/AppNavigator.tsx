@@ -48,6 +48,11 @@ export type MainTabParams = {
   Settings: undefined;
 };
 
+export type MedsStackParams = {
+  MedsMain: undefined;
+  AddMedication: { fromTab: true } | undefined;
+};
+
 export type CaregiverStackParams = {
   AccountSwitcher: undefined;
   MyDashboard: undefined;
@@ -74,9 +79,19 @@ export type RootStackParams = {
 
 const AuthStack = createStackNavigator<AuthStackParams>();
 const Tab = createBottomTabNavigator<MainTabParams>();
+const MedsStack = createStackNavigator<MedsStackParams>();
 const CaregiverStack = createStackNavigator<CaregiverStackParams>();
 const SettingsStack = createStackNavigator<SettingsStackParams>();
 const RootStack = createStackNavigator<RootStackParams>();
+
+function MedsNavigator() {
+  return (
+    <MedsStack.Navigator screenOptions={{ headerShown: false }}>
+      <MedsStack.Screen name="MedsMain" component={MedsScreen} />
+      <MedsStack.Screen name="AddMedication" component={AddMedicationScreen} />
+    </MedsStack.Navigator>
+  );
+}
 
 function CaregiverNavigator() {
   return (
@@ -143,7 +158,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Meds" component={MedsScreen} />
+      <Tab.Screen name="Meds" component={MedsNavigator} />
       <Tab.Screen name="History" component={CalendarScreen} />
       <Tab.Screen name="Settings" component={SettingsNavigator} />
     </Tab.Navigator>

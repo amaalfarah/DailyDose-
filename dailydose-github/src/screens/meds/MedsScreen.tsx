@@ -113,7 +113,7 @@ export default function MedsScreen() {
       {/* FAB */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('Meds', { screen: 'AddMedication' })}
+        onPress={() => navigation.navigate('AddMedication', { fromTab: true })}
         activeOpacity={0.85}
       >
         <MaterialCommunityIcons name="plus" size={26} color="#fff" />
@@ -160,7 +160,7 @@ export default function MedsScreen() {
                 iconColor={colors.blueD}
                 label="Edit Icon & Color"
                 sub="Change symbol, color, or cover name"
-                onPress={() => { closeMenu(); navigation.navigate('AddMedication'); }}
+                onPress={() => { closeMenu(); navigation.navigate('AddMedication', { fromTab: true }); }}
               />
 
               {/* Dosage */}

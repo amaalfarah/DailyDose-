@@ -7,6 +7,7 @@ export interface Medication {
   id: string;
   name: string;
   coverName?: string;
+  privacyMode?: boolean;
   dosage: string;
   frequency: 'daily' | 'twice-daily' | '3x-daily' | 'as-needed';
   reminderTime: string;       // "08:00"

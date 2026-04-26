@@ -62,7 +62,7 @@ function formatTimeInput(raw: string): string {
   return `${digits[0]}:${digits.slice(1, 3)}`;
 }
 
-type EditMode = 'icon' | 'dose' | 'schedule' | null;
+type EditMode = 'icon' | 'dose' | 'schedule' | 'coverName' | null;
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
@@ -85,6 +85,9 @@ export default function MedsScreen() {
   const [editDosageUnit, setEditDosageUnit] = useState<'mg' | 'mL'>('mg');
   const [editUnitDropOpen, setEditUnitDropOpen] = useState(false);
 
+  // Cover name edit state
+  const [editCoverName, setEditCoverName] = useState('');
+
   // Schedule edit state
   const [editFreq, setEditFreq] = useState<typeof FREQUENCIES[number]>('daily');
   const [editHours, setEditHours] = useState<string[]>(['']);
@@ -103,6 +106,25 @@ export default function MedsScreen() {
     setShowDeleteConfirm(false);
     setEditUnitDropOpen(false);
     setEditPeriodDropOpen(null);
+  }
+
+  function openEditCoverName() {
+    if (!selectedMed) return;
+    setEditCoverName(selectedMed.coverName ?? '');
+    setSheetVisible(false);
+    setEditMode('coverName');
+  }
+
+  function saveCoverName() {
+    if (!selectedMed) return;
+    updateMedication(selectedMed.id, { coverName: editCoverName.trim() || undefined });
+    closeAll();
+  }
+
+  function handleTogglePrivacy() {
+    if (!selectedMed) return;
+    updateMedication(selectedMed.id, { privacyMode: !selectedMed.privacyMode });
+    setSelectedMed({ ...selectedMed, privacyMode: !selectedMed.privacyMode });
   }
 
   function openEditIcon() {
@@ -267,7 +289,7 @@ export default function MedsScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.sheetBody}>
+            <ScrollView style={styles.sheetBody} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
               <Text style={styles.sheetSectionLabel}>Dosage</Text>
               <SheetAction
                 icon="pill" iconBg={colors.roseL} iconColor={colors.rose}
@@ -286,6 +308,28 @@ export default function MedsScreen() {
                 label="Edit Icon & Color" sub="Change symbol or color"
                 onPress={openEditIcon}
               />
+              <Text style={styles.sheetSectionLabel}>Privacy</Text>
+              <SheetAction
+                icon="eye-off" iconBg="#f5eeff" iconColor="#7a50a0"
+                label={selectedMed.coverName ? 'Edit Cover Name' : 'Add Cover Name'}
+                sub={selectedMed.coverName ? `Cover: ${selectedMed.coverName}` : 'Use a private nickname in notifications'}
+                onPress={openEditCoverName}
+              />
+              <View style={styles.prnRow}>
+                <View style={[styles.sheetActionIcon, { backgroundColor: '#f5eeff' }]}>
+                  <MaterialCommunityIcons name="bell-off" size={16} color="#7a50a0" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetActionLabel}>Hide name in notifications</Text>
+                  <Text style={styles.sheetActionSub}>Always use cover name or generic text</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.toggle, selectedMed.privacyMode && styles.toggleOn]}
+                  onPress={handleTogglePrivacy}
+                >
+                  <View style={[styles.toggleThumb, selectedMed.privacyMode && styles.toggleThumbOn]} />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.sheetSectionLabel}>Status</Text>
               <View style={styles.prnRow}>
                 <View style={[styles.sheetActionIcon, { backgroundColor: colors.amberL }]}>
@@ -332,7 +376,7 @@ export default function MedsScreen() {
                   <Text style={{ color: colors.rose, fontSize: 16 }}>›</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       )}
@@ -558,6 +602,48 @@ export default function MedsScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       )}
+
+      {/* ── Cover Name mini-sheet ── */}
+      {editMode === 'coverName' && selectedMed && (
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeAll}>
+          <TouchableOpacity style={styles.sheet} activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.handle} />
+            <MiniSheetHeader
+              title={selectedMed.coverName ? 'Edit Cover Name' : 'Add Cover Name'}
+              onBack={() => { setEditMode(null); setSheetVisible(true); }}
+              onClose={closeAll}
+            />
+            <View style={[styles.sheetBody, { paddingBottom: 24 }]}>
+              <Text style={styles.sheetSectionLabel}>Cover Name</Text>
+              <TextInput
+                style={styles.coverNameInput}
+                placeholder='e.g. "Morning Vitamin"'
+                placeholderTextColor="#b8cfc8"
+                value={editCoverName}
+                onChangeText={setEditCoverName}
+                autoFocus
+              />
+              <Text style={styles.coverNameHelper}>
+                This name will appear instead of the real medication name in notifications when privacy mode is on.
+              </Text>
+              {selectedMed.coverName ? (
+                <TouchableOpacity
+                  style={styles.removeCoverBtn}
+                  onPress={() => {
+                    updateMedication(selectedMed.id, { coverName: undefined });
+                    closeAll();
+                  }}
+                >
+                  <Text style={styles.removeCoverText}>Remove Cover Name</Text>
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity style={styles.saveBtn} onPress={saveCoverName}>
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -777,6 +863,22 @@ const styles = StyleSheet.create({
   reminderIndexLbl: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, marginBottom: 4,
   },
+  // Cover name
+  coverNameInput: {
+    backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: '#c8e8d8', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 11,
+    fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy,
+    marginBottom: 8,
+  },
+  coverNameHelper: {
+    fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 14,
+  },
+  removeCoverBtn: {
+    borderWidth: 1.5, borderColor: colors.rose, borderRadius: 10,
+    padding: 10, alignItems: 'center', marginBottom: 10,
+  },
+  removeCoverText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.rose },
   // Shared save button
   saveBtn: {
     backgroundColor: colors.mint, borderRadius: 12,

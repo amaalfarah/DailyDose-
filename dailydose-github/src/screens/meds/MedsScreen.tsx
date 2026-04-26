@@ -1,5 +1,5 @@
 // screens/meds/MedsScreen.tsx
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Alert,
@@ -160,7 +160,7 @@ export default function MedsScreen() {
                 iconColor={colors.blueD}
                 label="Edit Icon & Color"
                 sub="Change symbol, color, or cover name"
-                onPress={() => { closeMenu(); navigation.navigate('AddMedication', { fromTab: true }); }}
+                onPress={() => { closeMenu(); navigation.navigate('AddMedication', { fromTab: true, medId: selectedMed.id }); }}
               />
 
               {/* Dosage */}
@@ -171,7 +171,7 @@ export default function MedsScreen() {
                 iconColor={colors.rose}
                 label="Edit Dose"
                 sub={`Current: ${selectedMed.dosage}`}
-                onPress={() => { closeMenu(); Alert.alert('Edit Dose', 'Open dose editor'); }}
+                onPress={() => { closeMenu(); navigation.navigate('AddMedication', { fromTab: true, medId: selectedMed.id }); }}
               />
 
               {/* Schedule */}
@@ -182,7 +182,7 @@ export default function MedsScreen() {
                 iconColor={colors.mintD}
                 label="Edit Schedule"
                 sub="Update times, frequency, or dates"
-                onPress={() => { closeMenu(); Alert.alert('Edit Schedule', 'Open schedule editor'); }}
+                onPress={() => { closeMenu(); navigation.navigate('AddMedication', { fromTab: true, medId: selectedMed.id }); }}
               />
 
               {/* PRN toggle */}

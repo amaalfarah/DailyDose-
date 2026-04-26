@@ -45,31 +45,49 @@ const FREQ_LABELS: Record<string, string> = {
   'as-needed': 'As needed',
 };
 
+function parseDosage(dosage: string): { amount: string; unit: 'mg' | 'mL' } {
+  const match = dosage.match(/^(\d+)(mg|mL)$/);
+  if (match) return { amount: match[1], unit: match[2] as 'mg' | 'mL' };
+  return { amount: dosage.replace(/[^\d]/g, ''), unit: 'mg' };
+}
+
+function parseReminderTime(t: string): { hour: string; period: 'AM' | 'PM' } {
+  const parts = t.split(' ');
+  return { hour: parts[0] || '', period: (parts[1] as 'AM' | 'PM') || 'AM' };
+}
+
 export default function AddMedicationScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fromTab = route.params?.fromTab === true;
-  const { addMedication } = useMedStore();
+  const medId = route.params?.medId as string | undefined;
+  const { addMedication, updateMedication, medications } = useMedStore();
   const { pendingName } = useAuthStore();
   const displayName = pendingName || 'your';
 
-  const [name, setName]           = useState('');
-  const [coverName, setCoverName] = useState('');
-  const [dosageAmount, setDosageAmount] = useState('');
-  const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>('mg');
+  const existingMed = medId ? medications.find((m) => m.id === medId) : undefined;
+  const isEditing = !!existingMed;
+
+  const initDosage = existingMed ? parseDosage(existingMed.dosage) : { amount: '', unit: 'mg' as const };
+  const initTimes = existingMed?.reminderTimes?.map(parseReminderTime) ?? [{ hour: '', period: 'AM' as const }];
+
+  const [name, setName]           = useState(existingMed?.name ?? '');
+  const [coverName, setCoverName] = useState(existingMed?.coverName ?? '');
+  const [dosageAmount, setDosageAmount] = useState(initDosage.amount);
+  const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>(initDosage.unit);
   const [unitDropOpen, setUnitDropOpen] = useState(false);
-  const [frequency, setFreq]            = useState<typeof FREQUENCIES[number]>('daily');
-  const [reminderHours, setHours]       = useState<string[]>(['']);
-  const [reminderPeriods, setPeriods]   = useState<('AM' | 'PM')[]>(['AM']);
+  const [frequency, setFreq]            = useState<typeof FREQUENCIES[number]>(existingMed?.frequency ?? 'daily');
+  const [reminderHours, setHours]       = useState<string[]>(initTimes.map((t) => t.hour));
+  const [reminderPeriods, setPeriods]   = useState<('AM' | 'PM')[]>(initTimes.map((t) => t.period));
   const [periodDropOpen, setPeriodOpen] = useState<number | null>(null);
-  const [selectedColor, setColor] = useState(COLORS[0]);
-  const [selectedIcon, setIcon]   = useState('pill');
-  const [iconTab, setIconTab]     = useState<'med' | 'neutral'>('med');
+  const [selectedColor, setColor] = useState(existingMed?.color ?? COLORS[0]);
+  const [selectedIcon, setIcon]   = useState(existingMed?.iconName ?? 'pill');
+  const [iconTab, setIconTab]     = useState<'med' | 'neutral'>(existingMed?.iconCategory ?? 'med');
   const [privacyMode, setPrivacy] = useState(false);
 
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
-  const [timeErrors, setTimeErrors]   = useState<boolean[]>([false]);
+  const [timeErrors, setTimeErrors]   = useState<boolean[]>(initTimes.map(() => false));
 
   function formatTimeInput(raw: string): string {
     const digits = raw.replace(/\D/g, '').slice(0, 4);
@@ -132,25 +150,44 @@ export default function AddMedicationScreen() {
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
-    addMedication({
-      name: name.trim(),
-      coverName: coverName.trim() || undefined,
-      dosage,
-      frequency,
-      reminderTime,
-      reminderTimes: builtTimes,
-      color: selectedColor,
-      iconName: selectedIcon,
-      iconCategory: iconTab,
-      isPRN: frequency === 'as-needed',
-      isActive: true,
-      dosesTakenToday: frequency === 'twice-daily' ? [false, false] : frequency === '3x-daily' ? [false, false, false] : [false],
-      totalDosesToday: frequency === 'twice-daily' ? 2 : frequency === '3x-daily' ? 3 : 1,
-    });
-    if (fromTab) {
+    const doseCount = frequency === 'twice-daily' ? 2 : frequency === '3x-daily' ? 3 : 1;
+    if (isEditing && medId) {
+      updateMedication(medId, {
+        name: name.trim(),
+        coverName: coverName.trim() || undefined,
+        dosage,
+        frequency,
+        reminderTime,
+        reminderTimes: builtTimes,
+        color: selectedColor,
+        iconName: selectedIcon,
+        iconCategory: iconTab,
+        isPRN: frequency === 'as-needed',
+        dosesTakenToday: new Array(doseCount).fill(false),
+        totalDosesToday: doseCount,
+      });
       navigation.goBack();
     } else {
-      navigation.navigate('NotificationSetup');
+      addMedication({
+        name: name.trim(),
+        coverName: coverName.trim() || undefined,
+        dosage,
+        frequency,
+        reminderTime,
+        reminderTimes: builtTimes,
+        color: selectedColor,
+        iconName: selectedIcon,
+        iconCategory: iconTab,
+        isPRN: frequency === 'as-needed',
+        isActive: true,
+        dosesTakenToday: new Array(doseCount).fill(false),
+        totalDosesToday: doseCount,
+      });
+      if (fromTab) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('NotificationSetup');
+      }
     }
   }
 
@@ -341,11 +378,13 @@ export default function AddMedicationScreen() {
         </View>
 
         <TouchableOpacity style={s.btnPrimary} onPress={handleSave}>
-          <Text style={s.btnText}>Next →</Text>
+          <Text style={s.btnText}>{isEditing ? 'Save Changes' : 'Next →'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.btnSecondary} onPress={() => navigation.navigate('NotificationSetup')}>
-          <Text style={s.btnSecondaryText}>Skip for now</Text>
-        </TouchableOpacity>
+        {!isEditing && (
+          <TouchableOpacity style={s.btnSecondary} onPress={() => navigation.navigate('NotificationSetup')}>
+            <Text style={s.btnSecondaryText}>Skip for now</Text>
+          </TouchableOpacity>
+        )}
         <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>

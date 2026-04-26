@@ -66,7 +66,7 @@ type EditMode = 'icon' | 'dose' | 'schedule' | 'coverName' | null;
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
-  const { medications, deleteMedication, updateMedication } = useMedStore();
+  const { medications, deleteMedication, updateMedication, reorderMedication } = useMedStore();
   const { user, pendingName } = useAuthStore();
   const displayName = user?.name || pendingName || 'there';
 
@@ -239,8 +239,28 @@ export default function MedsScreen() {
       <Text style={styles.headerTitle}>My Medications</Text>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {medications.map((med) => (
+        {medications.map((med, index) => (
           <View key={med.id} style={styles.medRow}>
+            {/* Up / Down reorder buttons */}
+            <View style={styles.reorderBtns}>
+              <TouchableOpacity
+                onPress={() => index > 0 && reorderMedication(index, index - 1)}
+                hitSlop={{ top: 6, bottom: 2, left: 6, right: 6 }}
+                style={{ opacity: index === 0 ? 0.2 : 1 }}
+                disabled={index === 0}
+              >
+                <MaterialCommunityIcons name="chevron-up" size={18} color={colors.muted} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => index < medications.length - 1 && reorderMedication(index, index + 1)}
+                hitSlop={{ top: 2, bottom: 6, left: 6, right: 6 }}
+                style={{ opacity: index === medications.length - 1 ? 0.2 : 1 }}
+                disabled={index === medications.length - 1}
+              >
+                <MaterialCommunityIcons name="chevron-down" size={18} color={colors.muted} />
+              </TouchableOpacity>
+            </View>
+
             <View style={[styles.medIcon, { backgroundColor: med.color }]}>
               <MaterialCommunityIcons name={med.iconName as any} size={18} color={colors.mintD} />
             </View>
@@ -717,6 +737,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white, borderRadius: 14, padding: 12,
     marginBottom: 8, borderWidth: 1.5, borderColor: colors.border,
   },
+  reorderBtns: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginRight: 2 },
   medIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   medInfo: { flex: 1 },
   medName: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy },

@@ -27,6 +27,7 @@ interface MedStore {
   addMedication: (med: Omit<Medication, 'id' | 'createdAt'>) => void;
   updateMedication: (id: string, updates: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
+  reorderMedication: (fromIndex: number, toIndex: number) => void;
   toggleDoseTaken: (medId: string, doseIndex: number) => void;
   markAllUntaken: () => void;
   clearAll: () => void;
@@ -60,6 +61,14 @@ export const useMedStore = create<MedStore>()(
         set((state) => ({
           medications: state.medications.filter((m) => m.id !== id),
         })),
+
+      reorderMedication: (fromIndex, toIndex) =>
+        set((state) => {
+          const list = [...state.medications];
+          const [moved] = list.splice(fromIndex, 1);
+          list.splice(toIndex, 0, moved);
+          return { medications: list };
+        }),
 
       toggleDoseTaken: (medId, doseIndex) =>
         set((state) => ({

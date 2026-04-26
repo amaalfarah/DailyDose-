@@ -10,10 +10,13 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore, Medication } from '../../store/useMedStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
   const { medications, deleteMedication, updateMedication } = useMedStore();
+  const { user, pendingName, sharedPatientName } = useAuthStore();
+  const displayName = user?.name || pendingName || 'there';
   const [selectedMed, setSelectedMed] = useState<Medication | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
 
@@ -69,7 +72,7 @@ export default function MedsScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionHead}>Luis's medications</Text>
+        <Text style={styles.sectionHead}>{displayName}'s medications</Text>
 
         {medications.map((med) => (
           <View key={med.id} style={styles.medRow}>

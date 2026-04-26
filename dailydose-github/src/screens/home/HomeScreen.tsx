@@ -89,32 +89,42 @@ export default function HomeScreen() {
         </View>
 
         {/* Upcoming doses */}
-        <Text style={styles.sectionHead}>Upcoming doses</Text>
-        {upcomingDoses.map(({ med, taken, doseIndex }, i) => (
-          <TouchableOpacity
-            key={`${med.id}-${doseIndex}`}
-            style={[styles.medRow, taken && styles.medRowDone]}
-            onPress={() => toggleDoseTaken(med.id, doseIndex)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.medIcon, { backgroundColor: med.color }]}>
-              <MaterialCommunityIcons
-                name={med.iconName as any}
-                size={18}
-                color={colors.mintD}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.medName}>{med.name}</Text>
-              <Text style={styles.medTime}>
-                {taken ? `${med.reminderTime} ✓` : `Next dose · ${med.reminderTime}`}
-              </Text>
-            </View>
-            <View style={[styles.checkCircle, taken && styles.checkCircleDone]}>
-              {taken && <Text style={{ color: '#fff', fontSize: 11 }}>✓</Text>}
-            </View>
-          </TouchableOpacity>
-        ))}
+        {upcomingDoses.length > 0 ? (
+          <>
+            <Text style={styles.sectionHead}>Upcoming doses</Text>
+            {upcomingDoses.map(({ med, taken, doseIndex }) => (
+              <TouchableOpacity
+                key={`${med.id}-${doseIndex}`}
+                style={[styles.medRow, taken && styles.medRowDone]}
+                onPress={() => toggleDoseTaken(med.id, doseIndex)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.medIcon, { backgroundColor: med.color }]}>
+                  <MaterialCommunityIcons
+                    name={med.iconName as any}
+                    size={18}
+                    color={colors.mintD}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.medName}>{med.name}</Text>
+                  <Text style={styles.medTime}>
+                    {taken ? `${med.reminderTime} ✓` : `Next dose · ${med.reminderTime}`}
+                  </Text>
+                </View>
+                <View style={[styles.checkCircle, taken && styles.checkCircleDone]}>
+                  {taken && <Text style={{ color: '#fff', fontSize: 11 }}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </>
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="pill" size={32} color={colors.mintM} />
+            <Text style={styles.emptyText}>No medications added yet</Text>
+            <Text style={styles.emptySubText}>Add your first medication to get started</Text>
+          </View>
+        )}
         {/* Trial countdown */}
         {isOnTrial && daysRemaining !== null && (
           <View style={styles.trialBanner}>
@@ -184,6 +194,21 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   checkCircleDone: { backgroundColor: colors.mint, borderColor: colors.mint },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 6,
+  },
+  emptyText: {
+    fontSize: fontSizes.base,
+    fontFamily: fonts.bold,
+    color: colors.muted,
+  },
+  emptySubText: {
+    fontSize: fontSizes.sm,
+    fontFamily: fonts.regular,
+    color: colors.muted,
+  },
   trialBanner: {
     flexDirection: 'row',
     alignItems: 'center',

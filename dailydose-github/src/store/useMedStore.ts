@@ -33,54 +33,7 @@ interface MedStore {
 export const useMedStore = create<MedStore>()(
   persist(
     (set) => ({
-      medications: [
-        // Seed data matching the prototype
-        {
-          id: '1',
-          name: 'Amoxicillin 250mg',
-          dosage: '250mg',
-          frequency: '3x-daily',
-          reminderTime: '08:00',
-          color: '#e3f7f0',
-          iconName: 'pill',
-          iconCategory: 'med',
-          isPRN: false,
-          isActive: true,
-          dosesTakenToday: [true, true, false],
-          totalDosesToday: 3,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Cetirizine 5mg',
-          dosage: '5mg',
-          frequency: 'daily',
-          reminderTime: '12:00',
-          color: '#eaf2fb',
-          iconName: 'pill',
-          iconCategory: 'med',
-          isPRN: false,
-          isActive: true,
-          dosesTakenToday: [true],
-          totalDosesToday: 1,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          name: 'Vitamin D3 400IU',
-          dosage: '400IU',
-          frequency: 'daily',
-          reminderTime: '09:00',
-          color: '#fef3e7',
-          iconName: 'star',
-          iconCategory: 'neutral',
-          isPRN: false,
-          isActive: true,
-          dosesTakenToday: [false],
-          totalDosesToday: 1,
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      medications: [],
 
       addMedication: (med) =>
         set((state) => ({

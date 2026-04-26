@@ -19,7 +19,8 @@ export default function CaregiverSignupScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const token = route.params?.token || '';
-  const { acceptInvite } = useAuthStore();
+  const { acceptInvite, sharedPatientName } = useAuthStore();
+  const patientName = sharedPatientName || 'your patient';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
@@ -39,17 +40,17 @@ export default function CaregiverSignupScreen() {
       <ScrollView contentContainerStyle={s.scroll}>
         <View style={s.inviteCard}>
           <Text style={s.inviteTitle}>You've been invited! 🎉</Text>
-          <Text style={s.inviteSub}>Maria Santos has invited you to help manage Luis's medications on DailyDose+.</Text>
+          <Text style={s.inviteSub}>Maria Santos has invited you to help manage {patientName}'s medications on DailyDose+.</Text>
           <View style={s.inviteFrom}>
             <View style={s.inviteAvatar}><Text style={s.inviteAvatarText}>MS</Text></View>
             <View>
               <Text style={s.inviteName}>Maria Santos</Text>
-              <Text style={s.inviteRole}>Invited you to manage Luis's account</Text>
+              <Text style={s.inviteRole}>Invited you to manage {patientName}'s account</Text>
             </View>
           </View>
         </View>
         <View style={s.pill}><Text style={s.pillText}>Step 1 — Create your account</Text></View>
-        <Text style={s.note}>First, create your own personal DailyDose+ account. You'll then get access to Luis's shared account automatically.</Text>
+        <Text style={s.note}>First, create your own personal DailyDose+ account. You'll then get access to {patientName}'s shared account automatically.</Text>
         <Text style={s.lbl}>Your full name</Text>
         <TextInput style={s.inp} placeholder="Sofia Santos" placeholderTextColor="#b0bec5" value={name} onChangeText={setName} autoCapitalize="words" />
         <Text style={s.lbl}>Email</Text>

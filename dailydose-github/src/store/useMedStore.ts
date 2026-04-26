@@ -3,6 +3,13 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+export interface DoseHistoryEntry {
+  medId: string;
+  medName: string;
+  time: string;
+  taken: boolean;
+}
+
 export interface Medication {
   id: string;
   name: string;
@@ -24,6 +31,7 @@ export interface Medication {
 
 interface MedStore {
   medications: Medication[];
+  doseHistory: Record<string, DoseHistoryEntry[]>;
   addMedication: (med: Omit<Medication, 'id' | 'createdAt'>) => void;
   updateMedication: (id: string, updates: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
@@ -37,6 +45,7 @@ export const useMedStore = create<MedStore>()(
   persist(
     (set) => ({
       medications: [],
+      doseHistory: {},
 
       addMedication: (med) =>
         set((state) => ({
@@ -71,14 +80,27 @@ export const useMedStore = create<MedStore>()(
         }),
 
       toggleDoseTaken: (medId, doseIndex) =>
-        set((state) => ({
-          medications: state.medications.map((m) => {
+        set((state) => {
+          const updatedMeds = state.medications.map((m) => {
             if (m.id !== medId) return m;
             const taken = [...m.dosesTakenToday];
             taken[doseIndex] = !taken[doseIndex];
             return { ...m, dosesTakenToday: taken };
-          }),
-        })),
+          });
+          const todayKey = new Date().toISOString().split('T')[0];
+          const todayEntries: DoseHistoryEntry[] = updatedMeds.flatMap((m) =>
+            m.dosesTakenToday.map((taken, i) => ({
+              medId: m.id,
+              medName: m.name,
+              time: m.reminderTimes?.[i] ?? m.reminderTime,
+              taken,
+            }))
+          );
+          return {
+            medications: updatedMeds,
+            doseHistory: { ...state.doseHistory, [todayKey]: todayEntries },
+          };
+        }),
 
       markAllUntaken: () =>
         set((state) => ({

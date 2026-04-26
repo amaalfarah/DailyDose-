@@ -22,6 +22,8 @@ export const colors = {
   amberD:  '#8a4e1a',
   rose:    '#d45d7a',
   roseL:   '#fdedf2',
+  red:     '#e05252',
+  redL:    '#fdeaea',
   blueL:   '#eaf2fb',
   blueD:   '#1a5c9a',
 

@@ -83,7 +83,7 @@ export default function AddMedicationScreen() {
   const [selectedColor, setColor] = useState(existingMed?.color ?? COLORS[0]);
   const [selectedIcon, setIcon]   = useState(existingMed?.iconName ?? 'pill');
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>(existingMed?.iconCategory ?? 'med');
-  const [privacyMode, setPrivacy] = useState(false);
+  const [privacyMode, setPrivacy] = useState(existingMed?.privacyMode ?? false);
 
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
@@ -175,6 +175,7 @@ export default function AddMedicationScreen() {
         iconName: selectedIcon,
         iconCategory: iconTab,
         isPRN: frequency === 'as-needed',
+        privacyMode,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
       });
@@ -191,6 +192,7 @@ export default function AddMedicationScreen() {
         iconName: selectedIcon,
         iconCategory: iconTab,
         isPRN: frequency === 'as-needed',
+        privacyMode,
         isActive: true,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,

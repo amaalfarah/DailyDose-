@@ -115,6 +115,7 @@ export default function SignUpScreen() {
   const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [dob, setDob]                   = useState('');
+  const [caregiverCode, setCaregiverCode] = useState('');
   const [showTC, setShowTC]             = useState(false);
   const [touched, setTouched]           = useState<Record<string, boolean>>({});
   const [usernameStatus, setUsernameStatus] = useState<AsyncStatus>('idle');
@@ -192,7 +193,7 @@ export default function SignUpScreen() {
   }
 
   function handleGoToLogin() {
-    setUsername(''); setEmail(''); setPassword(''); setDob('');
+    setUsername(''); setEmail(''); setPassword(''); setDob(''); setCaregiverCode('');
     setTouched({});
     setUsernameStatus('idle'); setEmailStatus('idle');
     navigation.navigate('Login');
@@ -334,6 +335,30 @@ export default function SignUpScreen() {
               ? <Text style={styles.successText}>Valid date ✓</Text>
               : null}
 
+            {/* Caregiver Code (optional) */}
+            <View style={styles.caregiverLabelRow}>
+              <Text style={[styles.fieldLabel, { marginTop: 0, marginBottom: 0 }]}>Caregiver Code</Text>
+              <Text style={styles.optionalBadge}>Optional</Text>
+            </View>
+            <View style={styles.inputRow}>
+              <MaterialCommunityIcons
+                name="key-outline"
+                size={20}
+                color={colors.muted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter code if you received one"
+                placeholderTextColor="#b0bec5"
+                value={caregiverCode}
+                onChangeText={setCaregiverCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={20}
+              />
+            </View>
+
             {/* Sign up button */}
             <TouchableOpacity style={styles.btnPrimary} onPress={handleSignUp} activeOpacity={0.85}>
               <Text style={styles.btnPrimaryText}>SIGN UP</Text>
@@ -446,6 +471,24 @@ const styles = StyleSheet.create({
   checkingText: {
     fontSize: fontSizes.xs,
     color: colors.muted,
+  },
+
+  caregiverLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  optionalBadge: {
+    fontSize: fontSizes.xs - 1,
+    fontFamily: fonts.medium,
+    color: colors.muted,
+    backgroundColor: '#f0f4f3',
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
 
   btnPrimary: {

@@ -225,9 +225,8 @@ export default function MedsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
-        <Text style={styles.headerTitle}>My Medications</Text>
-        <View style={{ width: 80 }} />
       </View>
+      <Text style={styles.headerTitle}>My Medications</Text>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {medications.map((med) => (
@@ -683,7 +682,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4,
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  headerTitle: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy, flex: 1, textAlign: 'center' },
+  headerTitle: { fontSize: 22, fontFamily: fonts.bold, color: colors.navy, textAlign: 'center', marginTop: 10, marginBottom: 4, paddingHorizontal: 16 },
   scroll: { padding: 16, paddingBottom: 100 },
   sectionHead: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,

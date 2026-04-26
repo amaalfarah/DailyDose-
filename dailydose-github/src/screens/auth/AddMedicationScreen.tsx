@@ -56,10 +56,10 @@ export default function AddMedicationScreen() {
   const [dosageAmount, setDosageAmount] = useState('');
   const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>('mg');
   const [unitDropOpen, setUnitDropOpen] = useState(false);
-  const [frequency, setFreq]      = useState<typeof FREQUENCIES[number]>('daily');
-  const [reminderHour, setHour]         = useState('');
-  const [reminderPeriod, setPeriod]     = useState<'AM' | 'PM'>('AM');
-  const [periodDropOpen, setPeriodOpen] = useState(false);
+  const [frequency, setFreq]            = useState<typeof FREQUENCIES[number]>('daily');
+  const [reminderHours, setHours]       = useState<string[]>(['']);
+  const [reminderPeriods, setPeriods]   = useState<('AM' | 'PM')[]>(['AM']);
+  const [periodDropOpen, setPeriodOpen] = useState<number | null>(null);
   const [selectedColor, setColor] = useState(COLORS[0]);
   const [selectedIcon, setIcon]   = useState('pill');
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>('med');
@@ -67,7 +67,7 @@ export default function AddMedicationScreen() {
 
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
-  const [timeError, setTimeError]     = useState(false);
+  const [timeErrors, setTimeErrors]   = useState<boolean[]>([false]);
 
   function formatHour(raw: string): string {
     const digits = raw.replace(/\D/g, '');
@@ -77,22 +77,48 @@ export default function AddMedicationScreen() {
     return `${clamped}:00`;
   }
 
+  function reminderCount(f: typeof FREQUENCIES[number]) {
+    return f === 'twice-daily' ? 2 : f === '3x-daily' ? 3 : 1;
+  }
+
+  function handleFreqChange(f: typeof FREQUENCIES[number]) {
+    const count = reminderCount(f);
+    setFreq(f);
+    setHours(prev => {
+      const next = [...prev];
+      while (next.length < count) next.push('');
+      return next.slice(0, count);
+    });
+    setPeriods(prev => {
+      const next = [...prev];
+      while (next.length < count) next.push('AM' as const);
+      return next.slice(0, count);
+    });
+    setTimeErrors(prev => {
+      const next = [...prev];
+      while (next.length < count) next.push(false);
+      return next.slice(0, count);
+    });
+  }
+
   function handleSave() {
-    const nameInvalid   = !name.trim();
-    const dosageInvalid = !dosageAmount.trim();
-    const timeInvalid   = !reminderHour.trim();
+    const nameInvalid    = !name.trim();
+    const dosageInvalid  = !dosageAmount.trim();
+    const newTimeErrors  = reminderHours.map(h => !h.trim());
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
-    setTimeError(timeInvalid);
-    if (nameInvalid || dosageInvalid || timeInvalid) return;
+    setTimeErrors(newTimeErrors);
+    if (nameInvalid || dosageInvalid || newTimeErrors.some(Boolean)) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
-    const reminderTime = `${formatHour(reminderHour)} ${reminderPeriod}`;
+    const builtTimes = reminderHours.map((h, i) => `${formatHour(h)} ${reminderPeriods[i]}`);
+    const reminderTime = builtTimes[0];
     addMedication({
       name: name.trim(),
       coverName: coverName.trim() || undefined,
       dosage,
       frequency,
       reminderTime,
+      reminderTimes: builtTimes,
       color: selectedColor,
       iconName: selectedIcon,
       iconCategory: iconTab,
@@ -185,51 +211,61 @@ export default function AddMedicationScreen() {
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
           {FREQUENCIES.map((f) => (
-            <TouchableOpacity key={f} style={[s.chip, frequency === f && s.chipOn]} onPress={() => setFreq(f)}>
+            <TouchableOpacity key={f} style={[s.chip, frequency === f && s.chipOn]} onPress={() => handleFreqChange(f)}>
               <Text style={[s.chipText, frequency === f && s.chipTextOn]}>{FREQ_LABELS[f]}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <Text style={s.lbl}>Reminder time <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <View style={s.timeRow}>
-          <TextInput
-            style={[s.inp, s.timeInp, timeError && s.inpError]}
-            placeholder="e.g. 8"
-            placeholderTextColor="#b0bec5"
-            keyboardType="numeric"
-            value={reminderHour}
-            onChangeText={(t) => {
-              const digits = t.replace(/\D/g, '');
-              const clamped = digits === '' ? '' : String(Math.min(parseInt(digits, 10), 12));
-              setHour(clamped);
-              if (clamped.trim()) setTimeError(false);
-            }}
-            onBlur={() => {
-              if (reminderHour.trim()) setHour(formatHour(reminderHour));
-            }}
-          />
-          <View style={s.periodWrapper}>
-            <TouchableOpacity style={s.unitDropBtn} onPress={() => setPeriodOpen((o) => !o)} activeOpacity={0.8}>
-              <Text style={s.unitDropBtnText}>{reminderPeriod}</Text>
-              <MaterialCommunityIcons name={periodDropOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.navy} />
-            </TouchableOpacity>
-            {periodDropOpen && (
-              <View style={s.unitDropMenu}>
-                {(['AM', 'PM'] as const).map((p) => (
-                  <TouchableOpacity
-                    key={p}
-                    style={[s.unitDropItem, reminderPeriod === p && s.unitDropItemOn]}
-                    onPress={() => { setPeriod(p); setPeriodOpen(false); }}
-                  >
-                    <Text style={[s.unitDropItemText, reminderPeriod === p && s.unitDropItemTextOn]}>{p}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+        {reminderHours.map((hour, i) => (
+          <View key={i} style={{ zIndex: 19 - i }}>
+            {reminderHours.length > 1 && (
+              <Text style={s.reminderIndexLbl}>Reminder {i + 1}</Text>
             )}
+            <View style={s.timeRow}>
+              <TextInput
+                style={[s.inp, s.timeInp, timeErrors[i] && s.inpError]}
+                placeholder="e.g. 8"
+                placeholderTextColor="#b0bec5"
+                keyboardType="numeric"
+                value={hour}
+                onChangeText={(t) => {
+                  const digits = t.replace(/\D/g, '');
+                  const clamped = digits === '' ? '' : String(Math.min(parseInt(digits, 10), 12));
+                  setHours(prev => prev.map((h, j) => j === i ? clamped : h));
+                  if (clamped.trim()) setTimeErrors(prev => prev.map((e, j) => j === i ? false : e));
+                }}
+                onBlur={() => {
+                  if (hour.trim()) setHours(prev => prev.map((h, j) => j === i ? formatHour(h) : h));
+                }}
+              />
+              <View style={s.periodWrapper}>
+                <TouchableOpacity style={s.unitDropBtn} onPress={() => setPeriodOpen(periodDropOpen === i ? null : i)} activeOpacity={0.8}>
+                  <Text style={s.unitDropBtnText}>{reminderPeriods[i]}</Text>
+                  <MaterialCommunityIcons name={periodDropOpen === i ? 'chevron-up' : 'chevron-down'} size={16} color={colors.navy} />
+                </TouchableOpacity>
+                {periodDropOpen === i && (
+                  <View style={s.unitDropMenu}>
+                    {(['AM', 'PM'] as const).map((p) => (
+                      <TouchableOpacity
+                        key={p}
+                        style={[s.unitDropItem, reminderPeriods[i] === p && s.unitDropItemOn]}
+                        onPress={() => {
+                          setPeriods(prev => prev.map((v, j) => j === i ? p : v));
+                          setPeriodOpen(null);
+                        }}
+                      >
+                        <Text style={[s.unitDropItemText, reminderPeriods[i] === p && s.unitDropItemTextOn]}>{p}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+            {timeErrors[i] && <Text style={s.errorText}>Please enter a reminder time to continue.</Text>}
           </View>
-        </View>
-        {timeError && <Text style={s.errorText}>Please enter a reminder time to continue.</Text>}
+        ))}
 
         {/* Preview */}
         <View style={s.preview}>
@@ -348,9 +384,10 @@ const s = StyleSheet.create({
   dosageRow: { flexDirection: 'row', gap: 8, marginBottom: 12, zIndex: 20 },
   dosageAmountInp: { flex: 1, marginBottom: 0 },
   unitDropWrapper: { width: 88, zIndex: 20 },
-  timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12, zIndex: 19 },
+  timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   timeInp: { flex: 1, marginBottom: 0 },
-  periodWrapper: { width: 88, zIndex: 19 },
+  periodWrapper: { width: 88 },
+  reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, marginBottom: 4 },
   unitDropBtn: {
     height: 46, backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,

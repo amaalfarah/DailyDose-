@@ -28,6 +28,7 @@ interface MedStore {
   deleteMedication: (id: string) => void;
   toggleDoseTaken: (medId: string, doseIndex: number) => void;
   markAllUntaken: () => void;
+  clearAll: () => void;
 }
 
 export const useMedStore = create<MedStore>()(
@@ -76,6 +77,8 @@ export const useMedStore = create<MedStore>()(
             dosesTakenToday: new Array(m.totalDosesToday).fill(false),
           })),
         })),
+
+      clearAll: () => set({ medications: [] }),
     }),
     {
       name: 'medications',

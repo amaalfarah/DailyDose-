@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMedStore } from './useMedStore';
 
 export interface User {
   id: string;
@@ -59,9 +60,13 @@ export const useAuthStore = create<AuthStore>()(
       pendingInviteToken: null,
       caregivers: [],
 
-      login: (user) => set({ user, activeAccount: 'mine' }),
+      login: (user) => {
+        useMedStore.getState().clearAll();
+        set({ user, activeAccount: 'mine' });
+      },
 
-      logout: () =>
+      logout: () => {
+        useMedStore.getState().clearAll();
         set({
           user: null,
           hasAcceptedTerms: false,
@@ -70,7 +75,8 @@ export const useAuthStore = create<AuthStore>()(
           sharedAccountOwnerName: '',
           savedCaregiverCode: '',
           pendingInviteToken: null,
-        }),
+        });
+      },
 
       setPendingUser: (name, email) => set({ pendingName: name, pendingEmail: email }),
 

@@ -93,61 +93,41 @@ export default function HomeScreen() {
             <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
           </View>
 
-          {/* Week dot strip */}
+          {/* Interactive week row */}
           <View style={styles.weekRow}>
             {WEEK_LABELS.map((d, i) => (
-              <View key={i} style={[styles.weekDay, i < todayIndex && styles.weekDone, i === todayIndex && styles.weekToday]}>
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.7}
+                style={[
+                  styles.weekDay,
+                  i < todayIndex && styles.weekDone,
+                  i === todayIndex && styles.weekToday,
+                  i === selectedDay && styles.weekSelected,
+                ]}
+                onPress={() => setSelectedDay(i)}
+              >
                 <Text style={styles.weekDayText}>{d}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
-        </View>
 
-        {/* This Week banner */}
-        <View style={styles.weekCard}>
-          <Text style={styles.weekCardTitle}>This Week</Text>
-          <View style={styles.weekBannerRow}>
-            {WEEK_LABELS.map((label, i) => {
-              const hasMeds = medications.some(
-                (m) => m.isActive && (m.daysOfWeek ?? WEEK_KEYS).includes(WEEK_KEYS[i])
-              );
-              const isToday    = i === todayIndex;
-              const isSelected = i === selectedDay;
-              return (
-                <TouchableOpacity
-                  key={i}
-                  activeOpacity={0.75}
-                  style={[
-                    styles.weekBannerDay,
-                    isSelected && styles.weekBannerDaySelected,
-                    isToday && !isSelected && styles.weekBannerDayToday,
-                  ]}
-                  onPress={() => setSelectedDay(i)}
-                >
-                  <Text style={[styles.weekBannerLabel, isSelected && styles.weekBannerLabelOn]}>{label}</Text>
-                  {hasMeds && (
-                    <View style={[styles.weekBannerDot, isSelected && styles.weekBannerDotOn]} />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {medsForDay.length > 0 ? (
-            medsForDay.map((med) => (
+          {/* Meds for selected day */}
+          <View style={styles.weekMedList}>
+            {medsForDay.length > 0 ? medsForDay.map((med) => (
               <View key={med.id} style={styles.weekMedRow}>
                 <View style={[styles.weekMedIcon, { backgroundColor: med.color }]}>
-                  <MaterialCommunityIcons name={med.iconName as any} size={14} color={colors.mintD} />
+                  <MaterialCommunityIcons name={med.iconName as any} size={13} color={colors.mintD} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.weekMedName}>{med.name}</Text>
                   <Text style={styles.weekMedSub}>{med.dosage} · {med.reminderTime}</Text>
                 </View>
               </View>
-            ))
-          ) : (
-            <Text style={styles.weekEmpty}>No medications on this day</Text>
-          )}
+            )) : (
+              <Text style={styles.weekEmpty}>No medications this day</Text>
+            )}
+          </View>
         </View>
 
         {/* Upcoming doses */}
@@ -234,32 +214,13 @@ greetSmall: { fontSize: fontSizes.sm, color: colors.muted, marginBottom: 2, text
   weekDone: { backgroundColor: 'rgba(255,255,255,0.25)' },
   weekToday: { backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   weekDayText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: '#fff' },
-  weekCard: {
-    backgroundColor: colors.white, borderRadius: 16,
-    borderWidth: 1.5, borderColor: colors.border,
-    padding: 14, marginBottom: 18,
-  },
-  weekCardTitle: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.navy, marginBottom: 10 },
-  weekBannerRow: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  weekBannerDay: {
-    flex: 1, alignItems: 'center', paddingVertical: 8,
-    borderRadius: 10, borderWidth: 1.5, borderColor: colors.border,
-    backgroundColor: colors.bg,
-  },
-  weekBannerDaySelected: { backgroundColor: colors.mint, borderColor: colors.mint },
-  weekBannerDayToday: { borderColor: colors.mintM, backgroundColor: colors.mintL },
-  weekBannerLabel: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted },
-  weekBannerLabelOn: { color: '#fff' },
-  weekBannerDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.mintM, marginTop: 3 },
-  weekBannerDotOn: { backgroundColor: 'rgba(255,255,255,0.7)' },
-  weekMedRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border,
-  },
-  weekMedIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  weekMedName: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.navy },
-  weekMedSub: { fontSize: fontSizes.xs - 1, color: colors.muted, marginTop: 1 },
-  weekEmpty: { fontSize: fontSizes.xs, color: colors.muted, textAlign: 'center', paddingVertical: 8 },
+  weekSelected: { backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 1.5, borderColor: '#fff' },
+  weekMedList: { marginTop: 10, gap: 2 },
+  weekMedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5 },
+  weekMedIcon: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
+  weekMedName: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#fff' },
+  weekMedSub: { fontSize: fontSizes.xs - 1, color: 'rgba(255,255,255,0.7)', marginTop: 1 },
+  weekEmpty: { fontSize: fontSizes.xs, color: 'rgba(255,255,255,0.6)', paddingTop: 8 },
   sectionHead: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,

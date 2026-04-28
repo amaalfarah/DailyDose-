@@ -21,6 +21,8 @@ const NEUTRAL_ICONS = [
   { name: 'star' }, { name: 'heart' }, { name: 'white-balance-sunny' },
   { name: 'leaf' }, { name: 'water' }, { name: 'snowflake' },
 ];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const ALL_DAYS = [...DAYS];
 const FREQUENCIES = ['daily', 'twice-daily', '3x-daily', 'as-needed'] as const;
 const FREQ_LABELS: Record<string, string> = {
   daily: 'Daily', 'twice-daily': 'Twice daily',
@@ -93,6 +95,7 @@ export default function MedsScreen() {
   const [editHours, setEditHours] = useState<string[]>(['']);
   const [editPeriods, setEditPeriods] = useState<('AM' | 'PM')[]>(['AM']);
   const [editPeriodDropOpen, setEditPeriodDropOpen] = useState<number | null>(null);
+  const [editDaysOfWeek, setEditDaysOfWeek] = useState<string[]>(ALL_DAYS);
 
   function openMenu(med: Medication) {
     setSelectedMed(med);
@@ -152,6 +155,7 @@ export default function MedsScreen() {
     const times = selectedMed.reminderTimes?.map(parseReminderTime) ?? [{ hour: '', period: 'AM' as const }];
     setEditHours(times.map((t) => t.hour));
     setEditPeriods(times.map((t) => t.period));
+    setEditDaysOfWeek(selectedMed.daysOfWeek ?? ALL_DAYS);
     setEditPeriodDropOpen(null);
     setSheetVisible(false);
     setEditMode('schedule');
@@ -170,13 +174,14 @@ export default function MedsScreen() {
   }
 
   function saveSchedule() {
-    if (!selectedMed || editHours.some((h) => !h.trim())) return;
+    if (!selectedMed || editHours.some((h) => !h.trim()) || editDaysOfWeek.length === 0) return;
     const builtTimes = editHours.map((h, i) => `${clampTime(h)} ${editPeriods[i]}`);
     const doseCount = editHours.length;
     updateMedication(selectedMed.id, {
       frequency: editFreq,
       reminderTime: builtTimes[0],
       reminderTimes: builtTimes,
+      daysOfWeek: editDaysOfWeek,
       isPRN: editFreq === 'as-needed',
       dosesTakenToday: new Array(doseCount).fill(false),
       totalDosesToday: doseCount,
@@ -553,6 +558,26 @@ export default function MedsScreen() {
               onClose={closeAll}
             />
             <ScrollView style={styles.sheetBody} showsVerticalScrollIndicator={false}>
+              <Text style={styles.sheetSectionLabel}>Dates Taken</Text>
+              <View style={styles.dayRow}>
+                {DAYS.map((day) => {
+                  const on = editDaysOfWeek.includes(day);
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      style={[styles.dayChip, on && styles.dayChipOn]}
+                      onPress={() =>
+                        setEditDaysOfWeek((prev) =>
+                          prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+                        )
+                      }
+                    >
+                      <Text style={[styles.dayChipText, on && styles.dayChipTextOn]}>{day}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
               <Text style={styles.sheetSectionLabel}>Frequency</Text>
               <View style={styles.freqChips}>
                 {FREQUENCIES.map((f) => (
@@ -887,6 +912,16 @@ const styles = StyleSheet.create({
   unitMenuItemOn: { backgroundColor: colors.mintL },
   unitMenuItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
   unitMenuItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
+  // Dates Taken day chips
+  dayRow: { flexDirection: 'row', gap: 4, marginBottom: 4 },
+  dayChip: {
+    flex: 1, paddingVertical: 7, borderRadius: 8,
+    borderWidth: 1.5, borderColor: colors.border,
+    alignItems: 'center', backgroundColor: colors.white,
+  },
+  dayChipOn: { backgroundColor: colors.mintL, borderColor: colors.mintM },
+  dayChipText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted },
+  dayChipTextOn: { color: colors.mintD },
   // Schedule edit
   freqChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 },
   freqChip: {

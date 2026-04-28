@@ -89,8 +89,9 @@ export default function AddMedicationScreen() {
   const [privacyMode, setPrivacy] = useState(existingMed?.privacyMode ?? false);
 
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
-  const [nameError, setNameError]     = useState(false);
-  const [dosageError, setDosageError] = useState(false);
+  const [nameError, setNameError]         = useState(false);
+  const [dosageError, setDosageError]     = useState(false);
+  const [coverNameError, setCoverNameError] = useState(false);
 
   // Auto-close when user switches to a different tab while this form is open
   useEffect(() => {
@@ -170,15 +171,17 @@ export default function AddMedicationScreen() {
   }
 
   function handleSave() {
-    const nameInvalid    = !name.trim();
-    const dosageInvalid  = !dosageAmount.trim();
-    const daysInvalid    = daysOfWeek.length === 0;
-    const newTimeErrors  = reminderHours.map(h => !h.trim());
+    const nameInvalid      = !name.trim();
+    const dosageInvalid    = !dosageAmount.trim();
+    const daysInvalid      = daysOfWeek.length === 0;
+    const coverNameInvalid = privacyMode && !coverName.trim();
+    const newTimeErrors    = reminderHours.map(h => !h.trim());
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
     setDaysError(daysInvalid);
+    setCoverNameError(coverNameInvalid);
     setTimeErrors(newTimeErrors);
-    if (nameInvalid || dosageInvalid || daysInvalid || newTimeErrors.some(Boolean)) return;
+    if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || newTimeErrors.some(Boolean)) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
@@ -288,15 +291,27 @@ export default function AddMedicationScreen() {
         {dosageError && <Text style={s.errorText}>Please enter a dosage amount to continue.</Text>}
 
         {/* Cover Name */}
-        <View style={s.coverSection}>
+        <View style={[s.coverSection, coverNameError && s.coverSectionErr]}>
           <View style={s.coverHead}>
             <MaterialCommunityIcons name="eye-off" size={14} color={colors.mintD} />
             <Text style={s.coverTitle}>Cover Name</Text>
-            <View style={s.optionalBadge}><Text style={s.optionalText}>Optional</Text></View>
+            {privacyMode ? (
+              <View style={s.requiredBadge}><Text style={s.optionalText}>Required</Text></View>
+            ) : (
+              <View style={s.optionalBadge}><Text style={s.optionalText}>Optional</Text></View>
+            )}
           </View>
           <Text style={s.coverHelper}>Use a private nickname to hide the real name in notifications.</Text>
-          <TextInput style={s.coverInp} placeholder='e.g. "Morning Vitamin"' placeholderTextColor="#b8cfc8" value={coverName} onChangeText={setCoverName} />
+          <TextInput
+            style={[s.coverInp, coverNameError && s.coverInpErr]}
+            placeholder='e.g. "Morning Vitamin"'
+            placeholderTextColor="#b8cfc8"
+            value={coverName}
+            onChangeText={(t) => { setCoverName(t); if (t.trim()) setCoverNameError(false); }}
+          />
         </View>
+
+        {coverNameError && <Text style={s.errorText}>A cover name is required when hiding medication names.</Text>}
 
         {/* Privacy toggle */}
         <View style={s.privacyRow}>
@@ -305,7 +320,12 @@ export default function AddMedicationScreen() {
             <Text style={s.privacyLabel}>Hide medication names in notifications</Text>
             <Text style={s.privacySub}>Always use cover name or generic text</Text>
           </View>
-          <Switch value={privacyMode} onValueChange={setPrivacy} trackColor={{ false: colors.border, true: colors.mint }} thumbColor="#fff" />
+          <Switch
+            value={privacyMode}
+            onValueChange={(v) => { setPrivacy(v); if (!v) setCoverNameError(false); }}
+            trackColor={{ false: colors.border, true: colors.mint }}
+            thumbColor="#fff"
+          />
         </View>
 
         <Text style={s.lbl}>Days Taken <Text style={{ color: colors.rose }}>Required</Text></Text>
@@ -479,6 +499,9 @@ const s = StyleSheet.create({
   lbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 },
   inp: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy, marginBottom: 12 },
   coverSection: { backgroundColor: '#f0faf5', borderWidth: 1.5, borderColor: '#c8e8d8', borderRadius: 14, padding: 12, marginBottom: 10 },
+  coverSectionErr: { borderColor: colors.rose, backgroundColor: colors.roseL },
+  coverInpErr: { borderColor: colors.rose },
+  requiredBadge: { backgroundColor: colors.rose, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
   coverHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   coverTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.mintD, flex: 1 },
   coverHelper: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 15, marginBottom: 8 },

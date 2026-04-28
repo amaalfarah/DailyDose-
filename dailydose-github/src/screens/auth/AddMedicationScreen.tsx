@@ -89,6 +89,8 @@ export default function AddMedicationScreen() {
   const [privacyMode, setPrivacy] = useState(existingMed?.privacyMode ?? false);
 
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
+  const [refillDate, setRefillDate]   = useState(existingMed?.refillDate ?? '');
+  const [refillDateError, setRefillDateError] = useState('');
   const [nameError, setNameError]         = useState(false);
   const [dosageError, setDosageError]     = useState(false);
   const [coverNameError, setCoverNameError] = useState(false);
@@ -122,6 +124,13 @@ export default function AddMedicationScreen() {
       return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
     }
     return `${digits[0]}:${digits.slice(1, 3)}`; // "1:3x"
+  }
+
+  function formatDateInput(raw: string): string {
+    const digits = raw.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
   }
 
   function clampTime(val: string): string {
@@ -176,12 +185,27 @@ export default function AddMedicationScreen() {
     const daysInvalid      = daysOfWeek.length === 0;
     const coverNameInvalid = privacyMode && !coverName.trim();
     const newTimeErrors    = reminderHours.map(h => !h.trim());
+
+    let refillError = '';
+    if (refillDate.trim()) {
+      const parts = refillDate.split('/');
+      const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (isNaN(d.getTime()) || parts.length !== 3 || parts[2]?.length !== 4) {
+        refillError = 'Please enter a valid date (MM/DD/YYYY).';
+      } else if (d <= today) {
+        refillError = 'Refill date must be in the future.';
+      }
+    }
+
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
     setDaysError(daysInvalid);
     setCoverNameError(coverNameInvalid);
     setTimeErrors(newTimeErrors);
-    if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || newTimeErrors.some(Boolean)) return;
+    setRefillDateError(refillError);
+    if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || newTimeErrors.some(Boolean) || refillError) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
@@ -200,6 +224,7 @@ export default function AddMedicationScreen() {
         daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
+        refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
       });
@@ -219,6 +244,7 @@ export default function AddMedicationScreen() {
         isPRN: frequency === 'as-needed',
         privacyMode,
         isActive: true,
+        refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
       });
@@ -471,6 +497,29 @@ export default function AddMedicationScreen() {
           {iconTab === 'neutral' && <Text style={s.iconHelper}>Choose a neutral icon to keep your medication private in reminders.</Text>}
         </View>
 
+        {/* Refill Date */}
+        <View style={s.refillSection}>
+          <View style={s.refillHead}>
+            <MaterialCommunityIcons name="calendar-refresh" size={14} color={colors.mintD} />
+            <Text style={s.refillTitle}>Refill Date</Text>
+            <View style={s.optionalBadge}><Text style={s.optionalText}>Optional</Text></View>
+          </View>
+          <Text style={s.refillHelper}>We'll remind you 3 days before this date to refill.</Text>
+          <TextInput
+            style={[s.inp, { marginBottom: 0 }, !!refillDateError && s.inpError]}
+            placeholder="MM/DD/YYYY"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={refillDate}
+            maxLength={10}
+            onChangeText={(t) => {
+              setRefillDate(formatDateInput(t));
+              if (refillDateError) setRefillDateError('');
+            }}
+          />
+          {!!refillDateError && <Text style={[s.errorText, { marginTop: 6 }]}>{refillDateError}</Text>}
+        </View>
+
         <TouchableOpacity style={s.btnPrimary} onPress={handleSave}>
           <Text style={s.btnText}>{isEditing ? 'Save Changes' : 'Next →'}</Text>
         </TouchableOpacity>
@@ -562,6 +611,10 @@ const s = StyleSheet.create({
   dayChipErr: { borderColor: colors.rose },
   dayChipText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted },
   dayChipTextOn: { color: colors.mintD },
+  refillSection: { backgroundColor: '#f0faf5', borderWidth: 1.5, borderColor: '#c8e8d8', borderRadius: 14, padding: 12, marginBottom: 14 },
+  refillHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  refillTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.mintD, flex: 1 },
+  refillHelper: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 15, marginBottom: 8 },
   addSlotBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, marginBottom: 4 },
   addSlotText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mint },
   unitDropBtn: {

@@ -25,6 +25,7 @@ export interface Medication {
   daysOfWeek: string[];        // ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] subset
   isPRN: boolean;
   isActive: boolean;
+  refillDate?: string;       // "MM/DD/YYYY"
   dosesTakenToday: boolean[];
   totalDosesToday: number;
   createdAt: string;

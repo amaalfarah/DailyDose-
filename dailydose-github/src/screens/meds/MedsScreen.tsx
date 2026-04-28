@@ -11,6 +11,7 @@ import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore, Medication } from '../../store/useMedStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 const COLORS = ['#e3f7f0', '#fdedf2', '#eaf2fb', '#fef3e7', '#f0eafb', '#fafaea'];
 const MED_ICONS = [
@@ -28,6 +29,17 @@ const FREQ_LABELS: Record<string, string> = {
   daily: 'Daily', 'twice-daily': 'Twice daily',
   '3x-daily': '3× daily', 'as-needed': 'As needed',
 };
+
+function daysUntilRefill(refillDate?: string): number | null {
+  if (!refillDate) return null;
+  const parts = refillDate.split('/');
+  if (parts.length !== 3) return null;
+  const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+  if (isNaN(d.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((d.getTime() - today.getTime()) / 86400000);
+}
 
 function parseDosage(dosage: string): { amount: string; unit: 'mg' | 'mL' } {
   const match = dosage.match(/^(\d+)(mg|mL)$/);
@@ -70,6 +82,7 @@ export default function MedsScreen() {
   const navigation = useNavigation<any>();
   const { medications, deleteMedication, updateMedication, reorderMedication } = useMedStore();
   const { user, pendingName } = useAuthStore();
+  const { refillReminders } = useSettingsStore();
   const displayName = user?.name || pendingName || 'there';
 
   const [selectedMed, setSelectedMed] = useState<Medication | null>(null);
@@ -230,9 +243,6 @@ export default function MedsScreen() {
     closeAll();
   }
 
-  const badgeStyle = (status: string) =>
-    status === 'refillSoon' ? [styles.badge, styles.badgeAmber] : [styles.badge, styles.badgeMint];
-
   const editIcons = editIconTab === 'med' ? MED_ICONS : NEUTRAL_ICONS;
 
   return (
@@ -244,55 +254,72 @@ export default function MedsScreen() {
       <Text style={styles.headerTitle}>My Medications</Text>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {medications.map((med, index) => (
-          <View key={med.id} style={styles.medRow}>
-            {/* Up / Down reorder buttons */}
-            <View style={styles.reorderBtns}>
-              <TouchableOpacity
-                onPress={() => index > 0 && reorderMedication(index, index - 1)}
-                hitSlop={{ top: 6, bottom: 2, left: 6, right: 6 }}
-                style={{ opacity: index === 0 ? 0.2 : 1 }}
-                disabled={index === 0}
-              >
-                <MaterialCommunityIcons name="chevron-up" size={18} color={colors.muted} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => index < medications.length - 1 && reorderMedication(index, index + 1)}
-                hitSlop={{ top: 2, bottom: 6, left: 6, right: 6 }}
-                style={{ opacity: index === medications.length - 1 ? 0.2 : 1 }}
-                disabled={index === medications.length - 1}
-              >
-                <MaterialCommunityIcons name="chevron-down" size={18} color={colors.muted} />
-              </TouchableOpacity>
-            </View>
+        {medications.map((med, index) => {
+          const days = daysUntilRefill(med.refillDate);
+          const isRefillSoon = days !== null && days >= 0 && days <= 3;
+          const showRefillWarning = refillReminders && isRefillSoon;
+          return (
+            <View key={med.id} style={{ marginBottom: 8 }}>
+              <View style={[styles.medRow, { marginBottom: 0 }]}>
+                {/* Up / Down reorder buttons */}
+                <View style={styles.reorderBtns}>
+                  <TouchableOpacity
+                    onPress={() => index > 0 && reorderMedication(index, index - 1)}
+                    hitSlop={{ top: 6, bottom: 2, left: 6, right: 6 }}
+                    style={{ opacity: index === 0 ? 0.2 : 1 }}
+                    disabled={index === 0}
+                  >
+                    <MaterialCommunityIcons name="chevron-up" size={18} color={colors.muted} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => index < medications.length - 1 && reorderMedication(index, index + 1)}
+                    hitSlop={{ top: 2, bottom: 6, left: 6, right: 6 }}
+                    style={{ opacity: index === medications.length - 1 ? 0.2 : 1 }}
+                    disabled={index === medications.length - 1}
+                  >
+                    <MaterialCommunityIcons name="chevron-down" size={18} color={colors.muted} />
+                  </TouchableOpacity>
+                </View>
 
-            <View style={[styles.medIcon, { backgroundColor: med.color }]}>
-              <MaterialCommunityIcons name={med.iconName as any} size={18} color={colors.mintD} />
-            </View>
-            <View style={styles.medInfo}>
-              <Text style={styles.medName}>{med.name}</Text>
-              <Text style={styles.medTime}>
-                {med.dosage} · {med.frequency === '3x-daily' ? '3× daily' : med.frequency}
-              </Text>
-            </View>
-            <View style={styles.medRight}>
-              <View style={med.dosage === '400IU' ? badgeStyle('refillSoon') : badgeStyle('active')}>
-                <Text style={styles.badgeText}>
-                  {med.isPRN ? 'PRN' : med.dosage === '400IU' ? 'Refill soon' : 'Active'}
-                </Text>
+                <View style={[styles.medIcon, { backgroundColor: med.color }]}>
+                  <MaterialCommunityIcons name={med.iconName as any} size={18} color={colors.mintD} />
+                </View>
+                <View style={styles.medInfo}>
+                  <Text style={styles.medName}>{med.name}</Text>
+                  <Text style={styles.medTime}>
+                    {med.dosage} · {med.frequency === '3x-daily' ? '3× daily' : med.frequency}
+                  </Text>
+                </View>
+                <View style={styles.medRight}>
+                  <View style={[styles.badge, isRefillSoon ? styles.badgeAmber : styles.badgeMint]}>
+                    <Text style={[styles.badgeText, isRefillSoon && { color: colors.amberD }]}>
+                      {med.isPRN ? 'PRN' : isRefillSoon ? 'Refill soon' : 'Active'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.dotBtn}
+                    onPress={() => openMenu(med)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                    <View style={styles.dot} />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <TouchableOpacity
-                style={styles.dotBtn}
-                onPress={() => openMenu(med)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-              </TouchableOpacity>
+              {showRefillWarning && (
+                <View style={styles.refillWarning}>
+                  <MaterialCommunityIcons name="calendar-alert" size={13} color={colors.rose} />
+                  <Text style={styles.refillWarningText}>
+                    {days === 0
+                      ? 'Refill due today!'
+                      : `Refill in ${days} day${days !== 1 ? 's' : ''} — ${med.refillDate}`}
+                  </Text>
+                </View>
+              )}
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {/* FAB */}
@@ -958,6 +985,17 @@ const styles = StyleSheet.create({
     padding: 10, alignItems: 'center', marginBottom: 10,
   },
   removeCoverText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.rose },
+  // Refill warning
+  refillWarning: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: colors.roseL, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 5,
+    marginTop: 3,
+    borderWidth: 1, borderColor: '#f5c0cc',
+  },
+  refillWarningText: {
+    fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.rose,
+  },
   // Shared save button
   saveBtn: {
     backgroundColor: colors.mint, borderRadius: 12,

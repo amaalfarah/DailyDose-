@@ -72,15 +72,15 @@ export default function SettingsScreen() {
 
         {/* Profile */}
         <Text style={styles.sectionHead}>Profile</Text>
-        <View style={styles.row}>
+        <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Profile')} activeOpacity={0.8}>
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>{user?.name ?? ''}</Text>
-            <Text style={styles.rowSub}>{user?.email ?? ''}</Text>
+            <Text style={styles.rowSub}>{user?.email || 'Tap to view profile'}</Text>
           </View>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Notifications */}
         <Text style={styles.sectionHead}>Notifications</Text>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 14,
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  headerTitle: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy },
+  headerTitle: { fontSize: 22, fontFamily: fonts.bold, color: colors.navy },
   sectionHead: {
     fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted,
     textTransform: 'uppercase', letterSpacing: 1,

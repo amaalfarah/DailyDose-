@@ -186,7 +186,7 @@ export default function SignUpScreen() {
 
   function handleAcceptTC() {
     setShowTC(false);
-    setPendingUser(username, email);
+    setPendingUser(username, email, dob);
     if (caregiverCode.trim()) {
       setSavedCaregiverCode(caregiverCode.trim());
       setPendingInviteToken(caregiverCode.trim());

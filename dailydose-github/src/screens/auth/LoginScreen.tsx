@@ -78,6 +78,7 @@ export default function LoginScreen() {
       id: Date.now().toString(),
       name: username,
       email: '',
+      dob: '',
       type: 'primary',
     });
   }

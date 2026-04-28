@@ -11,13 +11,14 @@ import { useAuthStore } from '../../store/useAuthStore';
 export default function NotificationSetupScreen() {
   const navigation = useNavigation<any>();
   const { doseReminders, missedDoseAlerts, refillReminders, caregiverUpdates, toggleSetting } = useSettingsStore();
-  const { login, pendingName, pendingEmail } = useAuthStore();
+  const { login, pendingName, pendingEmail, pendingDob } = useAuthStore();
 
   function handleContinue() {
     login({
       id: Date.now().toString(),
       name: pendingName || 'User',
       email: pendingEmail,
+      dob: pendingDob,
       type: 'primary',
     });
   }

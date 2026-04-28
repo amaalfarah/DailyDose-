@@ -8,6 +8,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  dob: string;
   type: 'primary' | 'caregiver';
 }
 
@@ -25,6 +26,7 @@ interface AuthStore {
   user: User | null;
   pendingName: string;
   pendingEmail: string;
+  pendingDob: string;
   hasAcceptedTerms: boolean;
   hasStartedTrial: boolean;
   activeAccount: 'mine' | 'shared';
@@ -35,7 +37,8 @@ interface AuthStore {
 
   login: (user: User) => void;
   logout: () => void;
-  setPendingUser: (name: string, email: string) => void;
+  setPendingUser: (name: string, email: string, dob?: string) => void;
+  updateUser: (updates: Partial<Pick<User, 'name' | 'email' | 'dob'>>) => void;
   acceptTerms: () => void;
   startTrial: () => void;
   switchAccount: (type: 'mine' | 'shared') => void;
@@ -52,6 +55,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       pendingName: '',
       pendingEmail: '',
+      pendingDob: '',
       hasAcceptedTerms: false,
       hasStartedTrial: false,
       activeAccount: 'mine',
@@ -75,7 +79,9 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
 
-      setPendingUser: (name, email) => set({ pendingName: name, pendingEmail: email }),
+      setPendingUser: (name, email, dob = '') => set({ pendingName: name, pendingEmail: email, pendingDob: dob }),
+
+      updateUser: (updates) => set((s) => s.user ? { user: { ...s.user, ...updates } } : {}),
 
       acceptTerms: () => set({ hasAcceptedTerms: true }),
 

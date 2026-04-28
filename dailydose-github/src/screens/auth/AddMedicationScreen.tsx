@@ -316,6 +316,29 @@ export default function AddMedicationScreen() {
         </View>
         {dosageError && <Text style={s.errorText}>Please enter a dosage amount to continue.</Text>}
 
+        {/* Refill Date */}
+        <View style={s.refillSection}>
+          <View style={s.refillHead}>
+            <MaterialCommunityIcons name="calendar-refresh" size={14} color={colors.mintD} />
+            <Text style={s.refillTitle}>Refill Date</Text>
+            <View style={s.optionalBadge}><Text style={s.optionalText}>Optional</Text></View>
+          </View>
+          <Text style={s.refillHelper}>We'll remind you 3 days before this date to refill.</Text>
+          <TextInput
+            style={[s.inp, { marginBottom: 0 }, !!refillDateError && s.inpError]}
+            placeholder="MM/DD/YYYY"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={refillDate}
+            maxLength={10}
+            onChangeText={(t) => {
+              setRefillDate(formatDateInput(t));
+              if (refillDateError) setRefillDateError('');
+            }}
+          />
+          {!!refillDateError && <Text style={[s.errorText, { marginTop: 6 }]}>{refillDateError}</Text>}
+        </View>
+
         {/* Cover Name */}
         <View style={[s.coverSection, coverNameError && s.coverSectionErr]}>
           <View style={s.coverHead}>
@@ -495,29 +518,6 @@ export default function AddMedicationScreen() {
             ))}
           </View>
           {iconTab === 'neutral' && <Text style={s.iconHelper}>Choose a neutral icon to keep your medication private in reminders.</Text>}
-        </View>
-
-        {/* Refill Date */}
-        <View style={s.refillSection}>
-          <View style={s.refillHead}>
-            <MaterialCommunityIcons name="calendar-refresh" size={14} color={colors.mintD} />
-            <Text style={s.refillTitle}>Refill Date</Text>
-            <View style={s.optionalBadge}><Text style={s.optionalText}>Optional</Text></View>
-          </View>
-          <Text style={s.refillHelper}>We'll remind you 3 days before this date to refill.</Text>
-          <TextInput
-            style={[s.inp, { marginBottom: 0 }, !!refillDateError && s.inpError]}
-            placeholder="MM/DD/YYYY"
-            placeholderTextColor="#b0bec5"
-            keyboardType="numeric"
-            value={refillDate}
-            maxLength={10}
-            onChangeText={(t) => {
-              setRefillDate(formatDateInput(t));
-              if (refillDateError) setRefillDateError('');
-            }}
-          />
-          {!!refillDateError && <Text style={[s.errorText, { marginTop: 6 }]}>{refillDateError}</Text>}
         </View>
 
         <TouchableOpacity style={s.btnPrimary} onPress={handleSave}>

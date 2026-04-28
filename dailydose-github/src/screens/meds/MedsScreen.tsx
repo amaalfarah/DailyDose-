@@ -76,7 +76,7 @@ function formatTimeInput(raw: string): string {
   return `${digits[0]}:${digits.slice(1, 3)}`;
 }
 
-type EditMode = 'icon' | 'dose' | 'schedule' | 'coverName' | null;
+type EditMode = 'icon' | 'dose' | 'schedule' | 'coverName' | 'refillDate' | null;
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
@@ -103,6 +103,10 @@ export default function MedsScreen() {
   // Cover name edit state
   const [editCoverName, setEditCoverName] = useState('');
 
+  // Refill date edit state
+  const [editRefillDate, setEditRefillDate] = useState('');
+  const [editRefillDateError, setEditRefillDateError] = useState('');
+
   // Schedule edit state
   const [editFreq, setEditFreq] = useState<typeof FREQUENCIES[number]>('daily');
   const [editHours, setEditHours] = useState<string[]>(['']);
@@ -122,6 +126,41 @@ export default function MedsScreen() {
     setShowDeleteConfirm(false);
     setEditUnitDropOpen(false);
     setEditPeriodDropOpen(null);
+  }
+
+  function formatDateInput(raw: string): string {
+    const digits = raw.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  }
+
+  function openEditRefillDate() {
+    if (!selectedMed) return;
+    setEditRefillDate(selectedMed.refillDate ?? '');
+    setEditRefillDateError('');
+    setSheetVisible(false);
+    setEditMode('refillDate');
+  }
+
+  function saveRefillDate() {
+    if (!selectedMed) return;
+    if (editRefillDate.trim()) {
+      const parts = editRefillDate.split('/');
+      const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (isNaN(d.getTime()) || parts.length !== 3 || parts[2]?.length !== 4) {
+        setEditRefillDateError('Please enter a valid date (MM/DD/YYYY).');
+        return;
+      }
+      if (d <= today) {
+        setEditRefillDateError('Refill date must be in the future.');
+        return;
+      }
+    }
+    updateMedication(selectedMed.id, { refillDate: editRefillDate.trim() || undefined });
+    closeAll();
   }
 
   function openEditCoverName() {
@@ -361,6 +400,12 @@ export default function MedsScreen() {
                 icon="calendar-clock" iconBg={colors.mintL} iconColor={colors.mintD}
                 label="Edit Schedule" sub="Update times or frequency"
                 onPress={openEditSchedule}
+              />
+              <SheetAction
+                icon="calendar-refresh" iconBg={colors.amberL} iconColor={colors.amberD}
+                label="Edit Refill Date"
+                sub={selectedMed.refillDate ? `Current: ${selectedMed.refillDate}` : 'Set a refill reminder date'}
+                onPress={openEditRefillDate}
               />
               <Text style={styles.sheetSectionLabel}>Appearance</Text>
               <SheetAction
@@ -732,6 +777,58 @@ export default function MedsScreen() {
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity style={styles.saveBtn} onPress={saveCoverName}>
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
+      {/* ── Edit Refill Date mini-sheet ── */}
+      {editMode === 'refillDate' && selectedMed && (
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeAll}>
+          <TouchableOpacity style={styles.sheet} activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.handle} />
+            <MiniSheetHeader
+              title="Edit Refill Date"
+              onBack={() => { setEditMode(null); setSheetVisible(true); }}
+              onClose={closeAll}
+            />
+            <View style={[styles.sheetBody, { paddingBottom: 24 }]}>
+              <Text style={styles.sheetSectionLabel}>Refill Date</Text>
+              <TextInput
+                style={[styles.doseInput, !!editRefillDateError && { borderColor: colors.rose }]}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#b0bec5"
+                keyboardType="numeric"
+                value={editRefillDate}
+                maxLength={10}
+                onChangeText={(t) => {
+                  setEditRefillDate(formatDateInput(t));
+                  if (editRefillDateError) setEditRefillDateError('');
+                }}
+                autoFocus
+              />
+              {!!editRefillDateError && (
+                <Text style={{ fontSize: fontSizes.xs, color: colors.rose, marginTop: 4, marginBottom: 8 }}>
+                  {editRefillDateError}
+                </Text>
+              )}
+              <Text style={styles.coverNameHelper}>
+                We'll show a reminder on the Meds page for the 3 days leading up to this date.
+              </Text>
+              {selectedMed.refillDate ? (
+                <TouchableOpacity
+                  style={styles.removeCoverBtn}
+                  onPress={() => {
+                    updateMedication(selectedMed.id, { refillDate: undefined });
+                    closeAll();
+                  }}
+                >
+                  <Text style={styles.removeCoverText}>Remove Refill Date</Text>
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity style={styles.saveBtn} onPress={saveRefillDate}>
                 <Text style={styles.saveBtnText}>Save Changes</Text>
               </TouchableOpacity>
             </View>

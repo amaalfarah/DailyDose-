@@ -558,7 +558,7 @@ export default function MedsScreen() {
               onClose={closeAll}
             />
             <ScrollView style={styles.sheetBody} showsVerticalScrollIndicator={false}>
-              <Text style={styles.sheetSectionLabel}>Dates Taken</Text>
+              <Text style={styles.sheetSectionLabel}>Days Taken</Text>
               <View style={styles.dayRow}>
                 {DAYS.map((day) => {
                   const on = editDaysOfWeek.includes(day);

@@ -295,7 +295,7 @@ export default function AddMedicationScreen() {
           <Switch value={privacyMode} onValueChange={setPrivacy} trackColor={{ false: colors.border, true: colors.mint }} thumbColor="#fff" />
         </View>
 
-        <Text style={s.lbl}>Dates Taken <Text style={{ color: colors.rose }}>Required</Text></Text>
+        <Text style={s.lbl}>Days Taken <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.dayRow}>
           {DAYS.map((day) => {
             const on = daysOfWeek.includes(day);

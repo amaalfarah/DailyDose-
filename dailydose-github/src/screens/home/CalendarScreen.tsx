@@ -10,6 +10,18 @@ import { useMedStore } from '../../store/useMedStore';
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_KEYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// "2:30 PM" → minutes since midnight
+function parseTimeToMinutes(timeStr: string): number {
+  const parts = timeStr.trim().split(' ');
+  const [hourStr, minStr] = (parts[0] ?? '').split(':');
+  const period = parts[1] ?? 'AM';
+  let hour = parseInt(hourStr) || 0;
+  const min = parseInt(minStr ?? '0') || 0;
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+  return hour * 60 + min;
+}
+
 export default function CalendarScreen() {
   const { medications, doseHistory } = useMedStore();
   const today = new Date();
@@ -68,14 +80,18 @@ export default function CalendarScreen() {
     if (scheduledMeds.length === 0) return [];
 
     if (isToday) {
+      const nowMinutes = today.getHours() * 60 + today.getMinutes();
       return scheduledMeds.flatMap((m) =>
-        m.dosesTakenToday.map((taken, i) => ({
-          medId: m.id,
-          medName: m.name,
-          time: m.reminderTimes?.[i] ?? m.reminderTime,
-          taken,
-          upcoming: false,
-        }))
+        m.dosesTakenToday.map((taken, i) => {
+          const time = m.reminderTimes?.[i] ?? m.reminderTime;
+          return {
+            medId: m.id,
+            medName: m.name,
+            time,
+            taken,
+            upcoming: !taken && parseTimeToMinutes(time) > nowMinutes,
+          };
+        })
       );
     }
 
@@ -112,10 +128,13 @@ export default function CalendarScreen() {
     });
   };
 
+  const byTime = (a: { time: string }, b: { time: string }) =>
+    parseTimeToMinutes(a.time) - parseTimeToMinutes(b.time);
+
   const selectedLog = getLogForDay(selectedDay);
-  const takenLog = selectedLog.filter((e) => e.taken);
-  const notTakenLog = selectedLog.filter((e) => !e.taken && !e.upcoming);
-  const upcomingLog = selectedLog.filter((e) => e.upcoming);
+  const takenLog    = selectedLog.filter((e) => e.taken).sort(byTime);
+  const notTakenLog = selectedLog.filter((e) => !e.taken && !e.upcoming).sort(byTime);
+  const upcomingLog = selectedLog.filter((e) => e.upcoming).sort(byTime);
 
   const selectedDateLabel = new Date(viewYear, viewMonth, selectedDay)
     .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });

@@ -88,7 +88,7 @@ export default function AddMedicationScreen() {
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>(existingMed?.iconCategory ?? 'med');
   const [privacyMode, setPrivacy] = useState(existingMed?.privacyMode ?? false);
 
-  const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(ALL_DAYS);
+  const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
   const [daysError, setDaysError]     = useState(false);

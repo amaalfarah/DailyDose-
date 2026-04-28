@@ -155,7 +155,7 @@ export default function MedsScreen() {
     const times = selectedMed.reminderTimes?.map(parseReminderTime) ?? [{ hour: '', period: 'AM' as const }];
     setEditHours(times.map((t) => t.hour));
     setEditPeriods(times.map((t) => t.period));
-    setEditDaysOfWeek(selectedMed.daysOfWeek ?? ALL_DAYS);
+    setEditDaysOfWeek(selectedMed.daysOfWeek ?? []);
     setEditPeriodDropOpen(null);
     setSheetVisible(false);
     setEditMode('schedule');

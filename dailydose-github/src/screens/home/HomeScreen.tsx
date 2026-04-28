@@ -35,8 +35,7 @@ export default function HomeScreen() {
 
   const medsForDay = medications.filter((m) => {
     if (!m.isActive) return false;
-    const days = m.daysOfWeek ?? WEEK_KEYS; // fallback: every day
-    return days.includes(WEEK_KEYS[selectedDay]);
+    return (m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay]);
   });
 
   const hour = new Date().getHours();
@@ -55,8 +54,7 @@ export default function HomeScreen() {
   const upcomingDoses = medications
     .filter((m) => {
       if (!m.isActive) return false;
-      const days = m.daysOfWeek ?? WEEK_KEYS;
-      return days.includes(WEEK_KEYS[selectedDay]);
+      return (m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay]);
     })
     .flatMap((m) =>
       m.dosesTakenToday.map((taken, i) => ({
@@ -121,22 +119,6 @@ export default function HomeScreen() {
             ))}
           </View>
 
-          {/* Meds for selected day */}
-          <View style={styles.weekMedList}>
-            {medsForDay.length > 0 ? medsForDay.map((med) => (
-              <View key={med.id} style={styles.weekMedRow}>
-                <View style={[styles.weekMedIcon, { backgroundColor: med.color }]}>
-                  <MaterialCommunityIcons name={med.iconName as any} size={13} color={colors.mintD} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.weekMedName}>{med.name}</Text>
-                  <Text style={styles.weekMedSub}>{med.dosage} · {med.reminderTime}</Text>
-                </View>
-              </View>
-            )) : (
-              <Text style={styles.weekEmpty}>No medications this day</Text>
-            )}
-          </View>
         </View>
 
         {/* Dose list for selected day */}

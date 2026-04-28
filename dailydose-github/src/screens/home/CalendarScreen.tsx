@@ -55,31 +55,67 @@ export default function CalendarScreen() {
 
   const getLogForDay = (day: number) => {
     const dayKey = getDayKey(day);
+    const isToday = isViewingCurrentMonth && day === today.getDate();
+    const cellDate = new Date(viewYear, viewMonth, day);
+    cellDate.setHours(0, 0, 0, 0);
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isFutureDay = cellDate > todayMidnight;
 
-    if (isViewingCurrentMonth && day === today.getDate()) {
-      return medications
-        .filter((m) => m.isActive && (m.daysOfWeek ?? []).includes(dayKey))
-        .flatMap((m) =>
-          m.dosesTakenToday.map((taken, i) => ({
-            medId: m.id,
-            medName: m.name,
-            time: m.reminderTimes?.[i] ?? m.reminderTime,
-            taken,
-          }))
-        );
+    const scheduledMeds = medications.filter(
+      (m) => m.isActive && (m.daysOfWeek ?? []).includes(dayKey)
+    );
+
+    if (scheduledMeds.length === 0) return [];
+
+    if (isToday) {
+      return scheduledMeds.flatMap((m) =>
+        m.dosesTakenToday.map((taken, i) => ({
+          medId: m.id,
+          medName: m.name,
+          time: m.reminderTimes?.[i] ?? m.reminderTime,
+          taken,
+          upcoming: false,
+        }))
+      );
     }
 
-    const entries = doseHistory[getDateKey(day)] ?? [];
-    return entries.filter((entry) => {
-      const med = medications.find((m) => m.id === entry.medId);
-      if (!med) return true; // show even if med was later deleted
-      return (med.daysOfWeek ?? []).includes(dayKey);
+    if (isFutureDay) {
+      return scheduledMeds.flatMap((m) => {
+        const times = m.reminderTimes?.length
+          ? m.reminderTimes
+          : Array(m.totalDosesToday || 1).fill(m.reminderTime);
+        return times.map((time: string) => ({
+          medId: m.id,
+          medName: m.name,
+          time,
+          taken: false,
+          upcoming: true,
+        }));
+      });
+    }
+
+    // Past day — build from schedule, overlay history for taken status
+    const historyEntries = doseHistory[getDateKey(day)] ?? [];
+    const historyMap = new Map(historyEntries.map((e) => [`${e.medId}-${e.time}`, e.taken]));
+
+    return scheduledMeds.flatMap((m) => {
+      const times = m.reminderTimes?.length
+        ? m.reminderTimes
+        : Array(m.totalDosesToday || 1).fill(m.reminderTime);
+      return times.map((time: string) => ({
+        medId: m.id,
+        medName: m.name,
+        time,
+        taken: historyMap.get(`${m.id}-${time}`) ?? false,
+        upcoming: false,
+      }));
     });
   };
 
   const selectedLog = getLogForDay(selectedDay);
   const takenLog = selectedLog.filter((e) => e.taken);
-  const notTakenLog = selectedLog.filter((e) => !e.taken);
+  const notTakenLog = selectedLog.filter((e) => !e.taken && !e.upcoming);
+  const upcomingLog = selectedLog.filter((e) => e.upcoming);
 
   const selectedDateLabel = new Date(viewYear, viewMonth, selectedDay)
     .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -133,7 +169,7 @@ export default function CalendarScreen() {
                 return (
                   <TouchableOpacity
                     key={ci}
-                    disabled={!d || isFuture}
+                    disabled={!d}
                     onPress={() => d && setSelectedDay(d)}
                     style={[
                       s.cell,
@@ -171,13 +207,11 @@ export default function CalendarScreen() {
         <Text style={s.sectionHead}>{selectedDateLabel}</Text>
 
         {selectedLog.length === 0 ? (
-          <View style={s.emptyCard}>
-            <Text style={s.emptyText}>
-              {hasMedsOnDay(selectedDay)
-                ? 'No doses recorded for this day'
-                : 'No medications scheduled this day'}
-            </Text>
-          </View>
+          hasMedsOnDay(selectedDay) ? (
+            <View style={s.emptyCard}>
+              <Text style={s.emptyText}>No doses recorded for this day</Text>
+            </View>
+          ) : null
         ) : (
           <>
             {takenLog.length > 0 && (
@@ -204,6 +238,21 @@ export default function CalendarScreen() {
                     <View>
                       <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
                       <Text style={[s.logSub, { color: colors.red }]}>Not Taken</Text>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {upcomingLog.length > 0 && (
+              <>
+                <Text style={[s.groupLabel, { color: colors.muted }]}>Upcoming</Text>
+                {upcomingLog.map((entry, i) => (
+                  <View key={i} style={[s.logRow, s.logRowUpcoming]}>
+                    <View style={[s.dot, { backgroundColor: colors.muted }]} />
+                    <View>
+                      <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
+                      <Text style={[s.logSub, { color: colors.muted }]}>Scheduled</Text>
                     </View>
                   </View>
                 ))}
@@ -243,6 +292,7 @@ const s = StyleSheet.create({
   logRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, padding: 10, marginBottom: 7, borderWidth: 1.5 },
   logRowTaken: { backgroundColor: colors.mintL, borderColor: colors.mintM },
   logRowNotTaken: { backgroundColor: colors.redL, borderColor: '#f0b0b0' },
+  logRowUpcoming: { backgroundColor: colors.white, borderColor: colors.border },
   dot: { width: 9, height: 9, borderRadius: 5, marginTop: 3 },
   logTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy },
   logSub: { fontSize: fontSizes.xs, marginTop: 1, fontFamily: fonts.medium },

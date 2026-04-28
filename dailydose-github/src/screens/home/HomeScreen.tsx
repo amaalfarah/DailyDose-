@@ -45,8 +45,8 @@ export default function HomeScreen() {
     checkTrialExpiry();
   }, []);
 
-  const totalDoses = medications.reduce((s, m) => s + m.totalDosesToday, 0);
-  const takenDoses = medications.reduce(
+  const totalDoses = medsForDay.reduce((s, m) => s + m.totalDosesToday, 0);
+  const takenDoses = medsForDay.reduce(
     (s, m) => s + m.dosesTakenToday.filter(Boolean).length, 0
   );
   const progress = totalDoses > 0 ? takenDoses / totalDoses : 0;

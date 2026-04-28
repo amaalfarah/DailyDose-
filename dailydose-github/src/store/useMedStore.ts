@@ -22,6 +22,7 @@ export interface Medication {
   color: string;
   iconName: string;           // MaterialCommunityIcons name
   iconCategory: 'med' | 'neutral';
+  daysOfWeek: string[];        // ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] subset
   isPRN: boolean;
   isActive: boolean;
   dosesTakenToday: boolean[];

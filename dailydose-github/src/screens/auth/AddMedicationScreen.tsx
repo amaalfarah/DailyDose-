@@ -20,6 +20,9 @@ import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const ALL_DAYS = [...DAYS];
+
 const COLORS = ['#e3f7f0', '#fdedf2', '#eaf2fb', '#fef3e7', '#f0eafb', '#fafaea'];
 const MED_ICONS = [
   { name: 'pill', label: 'Pill' },
@@ -85,8 +88,10 @@ export default function AddMedicationScreen() {
   const [iconTab, setIconTab]     = useState<'med' | 'neutral'>(existingMed?.iconCategory ?? 'med');
   const [privacyMode, setPrivacy] = useState(existingMed?.privacyMode ?? false);
 
+  const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(ALL_DAYS);
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
+  const [daysError, setDaysError]     = useState(false);
   const [timeErrors, setTimeErrors]   = useState<boolean[]>(initTimes.map(() => false));
 
   function formatTimeInput(raw: string): string {
@@ -154,11 +159,13 @@ export default function AddMedicationScreen() {
   function handleSave() {
     const nameInvalid    = !name.trim();
     const dosageInvalid  = !dosageAmount.trim();
+    const daysInvalid    = daysOfWeek.length === 0;
     const newTimeErrors  = reminderHours.map(h => !h.trim());
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
+    setDaysError(daysInvalid);
     setTimeErrors(newTimeErrors);
-    if (nameInvalid || dosageInvalid || newTimeErrors.some(Boolean)) return;
+    if (nameInvalid || dosageInvalid || daysInvalid || newTimeErrors.some(Boolean)) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
@@ -174,6 +181,7 @@ export default function AddMedicationScreen() {
         color: selectedColor,
         iconName: selectedIcon,
         iconCategory: iconTab,
+        daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
         dosesTakenToday: new Array(doseCount).fill(false),
@@ -191,6 +199,7 @@ export default function AddMedicationScreen() {
         color: selectedColor,
         iconName: selectedIcon,
         iconCategory: iconTab,
+        daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
         isActive: true,
@@ -285,6 +294,28 @@ export default function AddMedicationScreen() {
           </View>
           <Switch value={privacyMode} onValueChange={setPrivacy} trackColor={{ false: colors.border, true: colors.mint }} thumbColor="#fff" />
         </View>
+
+        <Text style={s.lbl}>Dates Taken <Text style={{ color: colors.rose }}>Required</Text></Text>
+        <View style={s.dayRow}>
+          {DAYS.map((day) => {
+            const on = daysOfWeek.includes(day);
+            return (
+              <TouchableOpacity
+                key={day}
+                style={[s.dayChip, on && s.dayChipOn, daysError && !on && s.dayChipErr]}
+                onPress={() => {
+                  setDaysOfWeek(prev =>
+                    prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+                  );
+                  setDaysError(false);
+                }}
+              >
+                <Text style={[s.dayChipText, on && s.dayChipTextOn]}>{day}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
 
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
@@ -484,6 +515,17 @@ const s = StyleSheet.create({
   periodWrapper: { width: 88 },
   reminderIndexRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted },
+  dayRow: { flexDirection: 'row', gap: 6, marginBottom: 12 },
+  dayChip: {
+    flex: 1, paddingVertical: 8, borderRadius: 10,
+    borderWidth: 1.5, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  dayChipOn: { backgroundColor: colors.mintL, borderColor: colors.mintM },
+  dayChipErr: { borderColor: colors.rose },
+  dayChipText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted },
+  dayChipTextOn: { color: colors.mintD },
   addSlotBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10, marginBottom: 4 },
   addSlotText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mint },
   unitDropBtn: {

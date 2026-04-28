@@ -88,15 +88,19 @@ export const useMedStore = create<MedStore>()(
             taken[doseIndex] = !taken[doseIndex];
             return { ...m, dosesTakenToday: taken };
           });
-          const todayKey = new Date().toISOString().split('T')[0];
-          const todayEntries: DoseHistoryEntry[] = updatedMeds.flatMap((m) =>
-            m.dosesTakenToday.map((taken, i) => ({
-              medId: m.id,
-              medName: m.name,
-              time: m.reminderTimes?.[i] ?? m.reminderTime,
-              taken,
-            }))
-          );
+          const now = new Date();
+          const todayKey = now.toISOString().split('T')[0];
+          const todayDayKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
+          const todayEntries: DoseHistoryEntry[] = updatedMeds
+            .filter((m) => (m.daysOfWeek ?? []).includes(todayDayKey))
+            .flatMap((m) =>
+              m.dosesTakenToday.map((taken, i) => ({
+                medId: m.id,
+                medName: m.name,
+                time: m.reminderTimes?.[i] ?? m.reminderTime,
+                taken,
+              }))
+            );
           return {
             medications: updatedMeds,
             doseHistory: { ...state.doseHistory, [todayKey]: todayEntries },

@@ -8,13 +8,14 @@ import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
 
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const DAY_KEYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen() {
   const { medications, doseHistory } = useMedStore();
   const today = new Date();
 
   const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
 
   const isViewingCurrentMonth =
@@ -24,46 +25,56 @@ export default function CalendarScreen() {
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells: (number | null)[] = Array(firstDay).fill(null);
   for (let i = 1; i <= daysInMonth; i++) cells.push(i);
-  // Pad to a full grid of rows
   while (cells.length % 7 !== 0) cells.push(null);
   const rows: (number | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
 
   const goToPrevMonth = () => {
-    if (viewMonth === 0) {
-      setViewYear((y) => y - 1);
-      setViewMonth(11);
-    } else {
-      setViewMonth((m) => m - 1);
-    }
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
     setSelectedDay(1);
   };
 
   const goToNextMonth = () => {
-    if (viewMonth === 11) {
-      setViewYear((y) => y + 1);
-      setViewMonth(0);
-    } else {
-      setViewMonth((m) => m + 1);
-    }
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
     setSelectedDay(1);
   };
 
   const getDateKey = (day: number) =>
     `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+  const getDayKey = (day: number) =>
+    DAY_KEYS[new Date(viewYear, viewMonth, day).getDay()];
+
+  // Does any active med have this weekday in its schedule?
+  const hasMedsOnDay = (day: number) => {
+    const key = getDayKey(day);
+    return medications.some((m) => m.isActive && (m.daysOfWeek ?? []).includes(key));
+  };
+
   const getLogForDay = (day: number) => {
+    const dayKey = getDayKey(day);
+
     if (isViewingCurrentMonth && day === today.getDate()) {
-      return medications.flatMap((m) =>
-        m.dosesTakenToday.map((taken, i) => ({
-          medId: m.id,
-          medName: m.name,
-          time: m.reminderTimes?.[i] ?? m.reminderTime,
-          taken,
-        }))
-      );
+      return medications
+        .filter((m) => m.isActive && (m.daysOfWeek ?? []).includes(dayKey))
+        .flatMap((m) =>
+          m.dosesTakenToday.map((taken, i) => ({
+            medId: m.id,
+            medName: m.name,
+            time: m.reminderTimes?.[i] ?? m.reminderTime,
+            taken,
+          }))
+        );
     }
-    return doseHistory[getDateKey(day)] ?? [];
+
+    const entries = doseHistory[getDateKey(day)] ?? [];
+    return entries.filter((entry) => {
+      const med = medications.find((m) => m.id === entry.medId);
+      if (!med) return true; // show even if med was later deleted
+      return (med.daysOfWeek ?? []).includes(dayKey);
+    });
   };
 
   const selectedLog = getLogForDay(selectedDay);
@@ -117,6 +128,7 @@ export default function CalendarScreen() {
                 );
                 const isFuture = d !== null && !isToday && !isPast;
                 const isSelected = d === selectedDay;
+                const hasScheduled = d !== null && hasMedsOnDay(d);
 
                 return (
                   <TouchableOpacity
@@ -126,19 +138,27 @@ export default function CalendarScreen() {
                     style={[
                       s.cell,
                       isToday && s.cellToday,
-                      isPast && s.cellDone,
+                      isPast && hasScheduled && s.cellDone,
                       isSelected && s.cellSelectedBorder,
                     ]}
                     activeOpacity={0.7}
                   >
                     {d ? (
-                      <Text style={[
-                        s.cellText,
-                        (isToday || isPast) && { color: '#fff' },
-                        isFuture && s.cellTextFuture,
-                      ]}>
-                        {d}
-                      </Text>
+                      <>
+                        <Text style={[
+                          s.cellText,
+                          (isToday || (isPast && hasScheduled)) && { color: '#fff' },
+                          isFuture && s.cellTextFuture,
+                        ]}>
+                          {d}
+                        </Text>
+                        {hasScheduled && (
+                          <View style={[
+                            s.cellDot,
+                            { backgroundColor: (isToday || (isPast && hasScheduled)) ? 'rgba(255,255,255,0.7)' : colors.mint },
+                          ]} />
+                        )}
+                      </>
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -152,7 +172,11 @@ export default function CalendarScreen() {
 
         {selectedLog.length === 0 ? (
           <View style={s.emptyCard}>
-            <Text style={s.emptyText}>No doses recorded for this day</Text>
+            <Text style={s.emptyText}>
+              {hasMedsOnDay(selectedDay)
+                ? 'No doses recorded for this day'
+                : 'No medications scheduled this day'}
+            </Text>
           </View>
         ) : (
           <>
@@ -211,6 +235,7 @@ const s = StyleSheet.create({
   cellSelectedBorder: { borderColor: colors.navy },
   cellText: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: '#999' },
   cellTextFuture: { color: '#ccc' },
+  cellDot: { width: 4, height: 4, borderRadius: 2, marginTop: 1 },
   sectionHead: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
   groupLabel: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.mint, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6, marginTop: 4 },
   emptyCard: { backgroundColor: colors.white, borderRadius: 12, padding: 16, alignItems: 'center', borderWidth: 1.5, borderColor: colors.border },

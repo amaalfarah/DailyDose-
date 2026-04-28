@@ -12,9 +12,10 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { useAuthStore } from '../../store/useAuthStore';
 
-const WEEK_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEK_LABELS     = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 // Mon-first order to match (getDay()+6)%7 index
-const WEEK_KEYS   = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEK_KEYS       = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEK_FULL_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function toMinutes(t: string): number {
   const [time, period] = (t ?? '').split(' ');
@@ -52,7 +53,11 @@ export default function HomeScreen() {
   const progress = totalDoses > 0 ? takenDoses / totalDoses : 0;
 
   const upcomingDoses = medications
-    .filter((m) => m.isActive)
+    .filter((m) => {
+      if (!m.isActive) return false;
+      const days = m.daysOfWeek ?? WEEK_KEYS;
+      return days.includes(WEEK_KEYS[selectedDay]);
+    })
     .flatMap((m) =>
       m.dosesTakenToday.map((taken, i) => ({
         med: m,
@@ -62,6 +67,10 @@ export default function HomeScreen() {
       }))
     )
     .sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
+
+  const doseSectionLabel = selectedDay === todayIndex
+    ? 'Upcoming doses'
+    : `${WEEK_FULL_NAMES[selectedDay]} Doses`;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -130,16 +139,16 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Upcoming doses */}
+        {/* Dose list for selected day */}
         {upcomingDoses.length > 0 ? (
           <>
-            <Text style={styles.sectionHead}>Upcoming doses</Text>
+            <Text style={styles.sectionHead}>{doseSectionLabel}</Text>
             {upcomingDoses.map(({ med, taken, doseIndex, time }) => (
               <TouchableOpacity
                 key={`${med.id}-${doseIndex}`}
                 style={[styles.medRow, taken && styles.medRowDone]}
-                onPress={() => toggleDoseTaken(med.id, doseIndex)}
-                activeOpacity={0.7}
+                onPress={() => selectedDay === todayIndex ? toggleDoseTaken(med.id, doseIndex) : undefined}
+                activeOpacity={selectedDay === todayIndex ? 0.7 : 1}
               >
                 <View style={[styles.medIcon, { backgroundColor: med.color }]}>
                   <MaterialCommunityIcons
@@ -157,17 +166,25 @@ export default function HomeScreen() {
                     <Text style={styles.medCoverName}>{med.coverName.toLowerCase()}</Text>
                   ) : null}
                 </View>
-                <View style={[styles.checkCircle, taken && styles.checkCircleDone]}>
-                  {taken && <Text style={{ color: '#fff', fontSize: 11 }}>✓</Text>}
-                </View>
+                {selectedDay === todayIndex && (
+                  <View style={[styles.checkCircle, taken && styles.checkCircleDone]}>
+                    {taken && <Text style={{ color: '#fff', fontSize: 11 }}>✓</Text>}
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </>
-        ) : (
+        ) : medications.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="pill" size={32} color={colors.mintM} />
             <Text style={styles.emptyText}>No medications added yet</Text>
             <Text style={styles.emptySubText}>Add your first medication to get started</Text>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="calendar-blank" size={32} color={colors.mintM} />
+            <Text style={styles.emptyText}>No medications this day</Text>
+            <Text style={styles.emptySubText}>Nothing scheduled for {WEEK_FULL_NAMES[selectedDay]}</Text>
           </View>
         )}
         {/* Trial countdown */}

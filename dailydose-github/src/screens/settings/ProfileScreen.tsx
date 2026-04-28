@@ -38,9 +38,13 @@ function validateDob(v: string): string {
   return '';
 }
 
+function generateCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
-  const { user, updateUser } = useAuthStore();
+  const { user, updateUser, setPendingVerificationCode, pendingVerificationCode } = useAuthStore();
 
   const [editing, setEditing] = useState<EditField>(null);
 
@@ -54,12 +58,20 @@ export default function ProfileScreen() {
   const [showNewPw, setShowNewPw]         = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
+  // Email verification step
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [enteredCode, setEnteredCode]   = useState('');
+  const [codeError, setCodeError]       = useState('');
+
   function cancelEdit() {
     setEditing(null);
     setDraftUsername(user?.name ?? '');
     setDraftEmail(user?.email ?? '');
     setDraftDob(user?.dob ?? '');
     setCurrentPw(''); setNewPw(''); setConfirmPw('');
+    setAwaitingVerification(false);
+    setEnteredCode(''); setCodeError('');
+    setPendingVerificationCode(null);
   }
 
   function saveUsername() {
@@ -82,8 +94,28 @@ export default function ProfileScreen() {
       Alert.alert('Invalid', 'Enter a valid email address.');
       return;
     }
-    updateUser({ email: trimmed });
-    setEditing(null);
+    const code = generateCode();
+    setPendingVerificationCode(code);
+    updateUser({ email: trimmed, emailVerified: false });
+    setAwaitingVerification(true);
+    Alert.alert(
+      'Verification Email Sent',
+      `A 6-digit code has been sent to ${trimmed}.\n\nYour code: ${code}`,
+      [{ text: 'OK' }]
+    );
+  }
+
+  function submitVerificationCode() {
+    if (enteredCode.trim() === pendingVerificationCode) {
+      updateUser({ emailVerified: true });
+      setPendingVerificationCode(null);
+      setAwaitingVerification(false);
+      setEnteredCode(''); setCodeError('');
+      setEditing(null);
+      Alert.alert('Verified', 'Your email has been verified.');
+    } else {
+      setCodeError('Incorrect code. Please try again.');
+    }
   }
 
   function saveDob() {
@@ -102,6 +134,9 @@ export default function ProfileScreen() {
     setEditing(null);
   }
 
+  const initials =
+    (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2) || 'U';
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
@@ -118,9 +153,7 @@ export default function ProfileScreen() {
         {/* Avatar */}
         <View style={s.avatarWrap}>
           <View style={s.avatar}>
-            <Text style={s.avatarText}>
-              {(user?.name ?? 'U').slice(0, 2).toUpperCase()}
-            </Text>
+            <Text style={s.avatarText}>{initials}</Text>
           </View>
           <Text style={s.avatarName}>{user?.name ?? ''}</Text>
         </View>
@@ -153,41 +186,60 @@ export default function ProfileScreen() {
           icon="email-outline"
           isEditing={editing === 'email'}
           displayValue={user?.email || '—'}
-          onEdit={() => { setDraftEmail(user?.email ?? ''); setEditing('email'); }}
+          badge={
+            user?.email
+              ? user.emailVerified
+                ? { text: 'Verified', color: colors.mint, bg: colors.mintL }
+                : { text: 'Unverified', color: colors.amber, bg: colors.amberL }
+              : undefined
+          }
+          onEdit={() => {
+            setDraftEmail(user?.email ?? '');
+            setAwaitingVerification(false);
+            setEnteredCode(''); setCodeError('');
+            setEditing('email');
+          }}
           onCancel={cancelEdit}
           onSave={saveEmail}
+          saveLabel={awaitingVerification ? undefined : 'Send Code'}
         >
-          <TextInput
-            style={s.input}
-            value={draftEmail}
-            onChangeText={setDraftEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="Enter email"
-            placeholderTextColor="#b0bec5"
-          />
-        </Field>
-
-        {/* Date of Birth */}
-        <Field
-          label="Date of Birth"
-          icon="calendar-outline"
-          isEditing={editing === 'dob'}
-          displayValue={user?.dob || '—'}
-          onEdit={() => { setDraftDob(user?.dob ?? ''); setEditing('dob'); }}
-          onCancel={cancelEdit}
-          onSave={saveDob}
-        >
-          <TextInput
-            style={s.input}
-            value={draftDob}
-            onChangeText={(t) => setDraftDob(formatDob(t))}
-            keyboardType="numeric"
-            placeholder="MM/DD/YYYY"
-            placeholderTextColor="#b0bec5"
-            maxLength={10}
-          />
+          {!awaitingVerification ? (
+            <TextInput
+              style={s.input}
+              value={draftEmail}
+              onChangeText={setDraftEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="Enter email"
+              placeholderTextColor="#b0bec5"
+            />
+          ) : (
+            <View>
+              <Text style={s.verifyHint}>
+                Enter the 6-digit code sent to{' '}
+                <Text style={{ color: colors.navy, fontFamily: fonts.medium }}>{user?.email}</Text>
+              </Text>
+              <TextInput
+                style={[s.input, codeError ? s.inputError : null]}
+                value={enteredCode}
+                onChangeText={(v) => { setEnteredCode(v); setCodeError(''); }}
+                keyboardType="number-pad"
+                maxLength={6}
+                placeholder="000000"
+                placeholderTextColor="#b0bec5"
+              />
+              {codeError ? <Text style={s.codeError}>{codeError}</Text> : null}
+              <View style={s.editActions}>
+                <TouchableOpacity style={s.cancelBtn} onPress={cancelEdit}>
+                  <Text style={s.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.saveBtn} onPress={submitVerificationCode}>
+                  <Text style={s.saveText}>Verify</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </Field>
 
         {/* Password */}
@@ -254,20 +306,43 @@ export default function ProfileScreen() {
           </View>
         </Field>
 
+        {/* Date of Birth */}
+        <Field
+          label="Date of Birth"
+          icon="calendar-outline"
+          isEditing={editing === 'dob'}
+          displayValue={user?.dob || '—'}
+          onEdit={() => { setDraftDob(user?.dob ?? ''); setEditing('dob'); }}
+          onCancel={cancelEdit}
+          onSave={saveDob}
+        >
+          <TextInput
+            style={s.input}
+            value={draftDob}
+            onChangeText={(t) => setDraftDob(formatDob(t))}
+            keyboardType="numeric"
+            placeholder="MM/DD/YYYY"
+            placeholderTextColor="#b0bec5"
+            maxLength={10}
+          />
+        </Field>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 function Field({
-  label, icon, isEditing, displayValue, editLabel = 'Edit',
-  onEdit, onCancel, onSave, children,
+  label, icon, isEditing, displayValue, editLabel = 'Edit', saveLabel = 'Save',
+  badge, onEdit, onCancel, onSave, children,
 }: {
   label: string;
   icon: string;
   isEditing: boolean;
   displayValue: string;
   editLabel?: string;
+  saveLabel?: string;
+  badge?: { text: string; color: string; bg: string };
   onEdit: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -280,21 +355,41 @@ function Field({
           <MaterialCommunityIcons name={icon as any} size={18} color={colors.mint} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={s.fieldLabel}>{label}</Text>
+          <View style={s.labelRow}>
+            <Text style={s.fieldLabel}>{label}</Text>
+            {badge && (
+              <View style={[s.badge, { backgroundColor: badge.bg }]}>
+                <Text style={[s.badgeText, { color: badge.color }]}>{badge.text}</Text>
+              </View>
+            )}
+          </View>
           {!isEditing && <Text style={s.fieldValue}>{displayValue}</Text>}
         </View>
       </View>
       {isEditing ? (
         <View style={s.editArea}>
           {children}
-          <View style={s.editActions}>
-            <TouchableOpacity style={s.cancelBtn} onPress={onCancel}>
-              <Text style={s.cancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.saveBtn} onPress={onSave}>
-              <Text style={s.saveText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Password and email-verify fields manage their own action rows */}
+          {label !== 'Email' && (
+            <View style={s.editActions}>
+              <TouchableOpacity style={s.cancelBtn} onPress={onCancel}>
+                <Text style={s.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.saveBtn} onPress={onSave}>
+                <Text style={s.saveText}>{saveLabel}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {label === 'Email' && saveLabel === 'Send Code' && (
+            <View style={s.editActions}>
+              <TouchableOpacity style={s.cancelBtn} onPress={onCancel}>
+                <Text style={s.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.saveBtn} onPress={onSave}>
+                <Text style={s.saveText}>Send Code</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       ) : (
         <TouchableOpacity style={s.editBtn} onPress={onEdit} activeOpacity={0.75}>
@@ -325,8 +420,7 @@ const s = StyleSheet.create({
   avatar: {
     width: 72, height: 72, borderRadius: 36,
     backgroundColor: colors.mintL, alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10,
-    borderWidth: 2, borderColor: colors.mintM,
+    marginBottom: 10, borderWidth: 2, borderColor: colors.mintM,
   },
   avatarText: { fontSize: 26, fontFamily: fonts.bold, color: colors.mintD },
   avatarName: { fontSize: fontSizes.lg, fontFamily: fonts.bold, color: colors.navy },
@@ -341,10 +435,15 @@ const s = StyleSheet.create({
     width: 34, height: 34, borderRadius: 10,
     backgroundColor: colors.mintL, alignItems: 'center', justifyContent: 'center',
   },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   fieldLabel: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,
-    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2,
+    textTransform: 'uppercase', letterSpacing: 0.8,
   },
+  badge: {
+    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
+  },
+  badgeText: { fontSize: fontSizes.xs - 1, fontFamily: fonts.bold },
   fieldValue: { fontSize: fontSizes.base + 1, fontFamily: fonts.medium, color: colors.navy },
 
   editBtn: {
@@ -363,8 +462,15 @@ const s = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 9,
     fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy,
   },
+  inputError: { borderColor: colors.rose },
   pwRow: { flexDirection: 'row', alignItems: 'center' },
   eyeBtn: { marginLeft: 8 },
+
+  verifyHint: {
+    fontSize: fontSizes.xs + 1, color: colors.muted,
+    marginBottom: 8, lineHeight: 16,
+  },
+  codeError: { fontSize: fontSizes.xs, color: colors.rose, marginTop: 4, marginLeft: 2 },
 
   editActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
   cancelBtn: {

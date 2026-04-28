@@ -19,6 +19,7 @@ export default function NotificationSetupScreen() {
       name: pendingName || 'User',
       email: pendingEmail,
       dob: pendingDob,
+      emailVerified: false,
       type: 'primary',
     });
   }

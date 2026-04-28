@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   dob: string;
+  emailVerified: boolean;
   type: 'primary' | 'caregiver';
 }
 
@@ -33,12 +34,14 @@ interface AuthStore {
   sharedAccountOwnerName: string;
   savedCaregiverCode: string;
   pendingInviteToken: string | null;
+  pendingVerificationCode: string | null;
   caregivers: Caregiver[];
 
   login: (user: User) => void;
   logout: () => void;
   setPendingUser: (name: string, email: string, dob?: string) => void;
-  updateUser: (updates: Partial<Pick<User, 'name' | 'email' | 'dob'>>) => void;
+  updateUser: (updates: Partial<Pick<User, 'name' | 'email' | 'dob' | 'emailVerified'>>) => void;
+  setPendingVerificationCode: (code: string | null) => void;
   acceptTerms: () => void;
   startTrial: () => void;
   switchAccount: (type: 'mine' | 'shared') => void;
@@ -62,6 +65,7 @@ export const useAuthStore = create<AuthStore>()(
       sharedAccountOwnerName: '',
       savedCaregiverCode: '',
       pendingInviteToken: null,
+      pendingVerificationCode: null,
       caregivers: [],
 
       login: (user) => set({ user, activeAccount: 'mine' }),
@@ -111,6 +115,8 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setPendingInviteToken: (token) => set({ pendingInviteToken: token }),
+
+      setPendingVerificationCode: (code) => set({ pendingVerificationCode: code }),
     }),
     {
       name: 'auth',

@@ -79,6 +79,7 @@ export default function LoginScreen() {
       name: username,
       email: '',
       dob: '',
+      emailVerified: false,
       type: 'primary',
     });
   }

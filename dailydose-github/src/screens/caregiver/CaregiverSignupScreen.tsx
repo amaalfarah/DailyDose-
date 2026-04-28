@@ -31,7 +31,7 @@ export default function CaregiverSignupScreen() {
   function handleCreate() {
     setEmailTouched(true);
     if (validateEmail(email)) return;
-    acceptInvite(token, { id: Date.now().toString(), name: name || 'Sofia Santos', email, type: 'caregiver' });
+    acceptInvite(token, { id: Date.now().toString(), name: name || 'Sofia Santos', email, dob: '', emailVerified: false, type: 'caregiver' });
     navigation.navigate('AccountSwitcher');
   }
 

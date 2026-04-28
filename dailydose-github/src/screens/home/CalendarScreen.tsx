@@ -29,6 +29,7 @@ export default function CalendarScreen() {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   const isViewingCurrentMonth =
     viewYear === today.getFullYear() && viewMonth === today.getMonth();
@@ -236,45 +237,123 @@ export default function CalendarScreen() {
             {takenLog.length > 0 && (
               <>
                 <Text style={s.groupLabel}>Taken</Text>
-                {takenLog.map((entry, i) => (
-                  <View key={i} style={[s.logRow, s.logRowTaken]}>
-                    <View style={[s.dot, { backgroundColor: colors.mint }]} />
-                    <View>
-                      <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
-                      <Text style={[s.logSub, { color: colors.mint }]}>Taken ✓</Text>
-                    </View>
-                  </View>
-                ))}
+                {takenLog.map((entry, i) => {
+                  const cardKey = `taken-${entry.medId}-${entry.time}`;
+                  const expanded = expandedCard === cardKey;
+                  const med = medications.find((m) => m.id === entry.medId);
+                  return (
+                    <TouchableOpacity key={i} activeOpacity={0.8} onPress={() => setExpandedCard(expanded ? null : cardKey)} style={[s.logRow, s.logRowTaken]}>
+                      <View style={[s.dot, { backgroundColor: colors.mint, marginTop: 4 }]} />
+                      <View style={{ flex: 1 }}>
+                        <View style={s.cardHeader}>
+                          <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
+                          <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.mint} />
+                        </View>
+                        <Text style={[s.logSub, { color: colors.mint }]}>Taken ✓</Text>
+                        {expanded && med && (
+                          <View style={s.cardDetail}>
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Dosage</Text>
+                              <Text style={s.detailValue}>{med.dosage}</Text>
+                            </View>
+                            {med.coverName ? (
+                              <View style={s.detailRow}>
+                                <Text style={s.detailLabel}>Cover Name</Text>
+                                <Text style={s.detailValue}>{med.coverName}</Text>
+                              </View>
+                            ) : null}
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Hide in notifications</Text>
+                              <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </>
             )}
 
             {notTakenLog.length > 0 && (
               <>
                 <Text style={[s.groupLabel, { color: colors.red }]}>Not Taken</Text>
-                {notTakenLog.map((entry, i) => (
-                  <View key={i} style={[s.logRow, s.logRowNotTaken]}>
-                    <View style={[s.dot, { backgroundColor: colors.red }]} />
-                    <View>
-                      <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
-                      <Text style={[s.logSub, { color: colors.red }]}>Not Taken</Text>
-                    </View>
-                  </View>
-                ))}
+                {notTakenLog.map((entry, i) => {
+                  const cardKey = `nottaken-${entry.medId}-${entry.time}`;
+                  const expanded = expandedCard === cardKey;
+                  const med = medications.find((m) => m.id === entry.medId);
+                  return (
+                    <TouchableOpacity key={i} activeOpacity={0.8} onPress={() => setExpandedCard(expanded ? null : cardKey)} style={[s.logRow, s.logRowNotTaken]}>
+                      <View style={[s.dot, { backgroundColor: colors.red, marginTop: 4 }]} />
+                      <View style={{ flex: 1 }}>
+                        <View style={s.cardHeader}>
+                          <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
+                          <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.red} />
+                        </View>
+                        <Text style={[s.logSub, { color: colors.red }]}>Not Taken</Text>
+                        {expanded && med && (
+                          <View style={s.cardDetail}>
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Dosage</Text>
+                              <Text style={s.detailValue}>{med.dosage}</Text>
+                            </View>
+                            {med.coverName ? (
+                              <View style={s.detailRow}>
+                                <Text style={s.detailLabel}>Cover Name</Text>
+                                <Text style={s.detailValue}>{med.coverName}</Text>
+                              </View>
+                            ) : null}
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Hide in notifications</Text>
+                              <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </>
             )}
 
             {upcomingLog.length > 0 && (
               <>
                 <Text style={[s.groupLabel, { color: colors.muted }]}>Upcoming</Text>
-                {upcomingLog.map((entry, i) => (
-                  <View key={i} style={[s.logRow, s.logRowUpcoming]}>
-                    <View style={[s.dot, { backgroundColor: colors.muted }]} />
-                    <View>
-                      <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
-                      <Text style={[s.logSub, { color: colors.muted }]}>Scheduled</Text>
-                    </View>
-                  </View>
-                ))}
+                {upcomingLog.map((entry, i) => {
+                  const cardKey = `upcoming-${entry.medId}-${entry.time}`;
+                  const expanded = expandedCard === cardKey;
+                  const med = medications.find((m) => m.id === entry.medId);
+                  return (
+                    <TouchableOpacity key={i} activeOpacity={0.8} onPress={() => setExpandedCard(expanded ? null : cardKey)} style={[s.logRow, s.logRowUpcoming]}>
+                      <View style={[s.dot, { backgroundColor: colors.muted, marginTop: 4 }]} />
+                      <View style={{ flex: 1 }}>
+                        <View style={s.cardHeader}>
+                          <Text style={s.logTitle}>{entry.medName} · {entry.time}</Text>
+                          <MaterialCommunityIcons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.muted} />
+                        </View>
+                        <Text style={[s.logSub, { color: colors.muted }]}>Scheduled</Text>
+                        {expanded && med && (
+                          <View style={s.cardDetail}>
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Dosage</Text>
+                              <Text style={s.detailValue}>{med.dosage}</Text>
+                            </View>
+                            {med.coverName ? (
+                              <View style={s.detailRow}>
+                                <Text style={s.detailLabel}>Cover Name</Text>
+                                <Text style={s.detailValue}>{med.coverName}</Text>
+                              </View>
+                            ) : null}
+                            <View style={s.detailRow}>
+                              <Text style={s.detailLabel}>Hide in notifications</Text>
+                              <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </>
             )}
           </>
@@ -289,7 +368,7 @@ const s = StyleSheet.create({
   scroll: { padding: 16 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  title: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy, textAlign: 'center', marginBottom: 10 },
+  title: { fontSize: fontSizes.xxl, fontFamily: fonts.bold, color: colors.navy, textAlign: 'center', marginBottom: 10 },
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 14, gap: 12 },
   monthLabel: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy, minWidth: 140, textAlign: 'center' },
   navBtn: { padding: 4, borderRadius: 8 },
@@ -313,6 +392,11 @@ const s = StyleSheet.create({
   logRowNotTaken: { backgroundColor: colors.redL, borderColor: '#f0b0b0' },
   logRowUpcoming: { backgroundColor: colors.white, borderColor: colors.border },
   dot: { width: 9, height: 9, borderRadius: 5, marginTop: 3 },
-  logTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  logTitle: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.navy, flex: 1 },
   logSub: { fontSize: fontSizes.xs, marginTop: 1, fontFamily: fonts.medium },
+  cardDetail: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)', gap: 6 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  detailLabel: { fontSize: fontSizes.xs, color: colors.muted, fontFamily: fonts.medium },
+  detailValue: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.navy },
 });

@@ -24,6 +24,10 @@ export default function CalendarScreen() {
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const cells: (number | null)[] = Array(firstDay).fill(null);
   for (let i = 1; i <= daysInMonth; i++) cells.push(i);
+  // Pad to a full grid of rows
+  while (cells.length % 7 !== 0) cells.push(null);
+  const rows: (number | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
 
   const goToPrevMonth = () => {
     if (viewMonth === 0) {
@@ -85,8 +89,13 @@ export default function CalendarScreen() {
             <MaterialCommunityIcons name="chevron-left" size={22} color={colors.navy} />
           </TouchableOpacity>
           <Text style={s.monthLabel}>{monthLabel} {viewYear}</Text>
-          <TouchableOpacity onPress={goToNextMonth} style={s.navBtn} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="chevron-right" size={22} color={colors.navy} />
+          <TouchableOpacity
+            onPress={goToNextMonth}
+            style={s.navBtn}
+            activeOpacity={0.7}
+            disabled={isViewingCurrentMonth}
+          >
+            <MaterialCommunityIcons name="chevron-right" size={22} color={isViewingCurrentMonth ? colors.border : colors.navy} />
           </TouchableOpacity>
         </View>
 
@@ -97,41 +106,45 @@ export default function CalendarScreen() {
 
         {/* Calendar grid */}
         <View style={s.grid}>
-          {cells.map((d, i) => {
-            const isToday = isViewingCurrentMonth && d === today.getDate();
-            const isPast = d !== null && (
-              viewYear < today.getFullYear() ||
-              (viewYear === today.getFullYear() && viewMonth < today.getMonth()) ||
-              (isViewingCurrentMonth && d < today.getDate())
-            );
-            const isFuture = d !== null && !isToday && !isPast;
-            const isSelected = d === selectedDay;
+          {rows.map((row, ri) => (
+            <View key={ri} style={s.gridRow}>
+              {row.map((d, ci) => {
+                const isToday = isViewingCurrentMonth && d === today.getDate();
+                const isPast = d !== null && (
+                  viewYear < today.getFullYear() ||
+                  (viewYear === today.getFullYear() && viewMonth < today.getMonth()) ||
+                  (isViewingCurrentMonth && d < today.getDate())
+                );
+                const isFuture = d !== null && !isToday && !isPast;
+                const isSelected = d === selectedDay;
 
-            return (
-              <TouchableOpacity
-                key={i}
-                disabled={!d || isFuture}
-                onPress={() => d && setSelectedDay(d)}
-                style={[
-                  s.cell,
-                  isToday && s.cellToday,
-                  isPast && s.cellDone,
-                  isSelected && s.cellSelectedBorder,
-                ]}
-                activeOpacity={0.7}
-              >
-                {d ? (
-                  <Text style={[
-                    s.cellText,
-                    (isToday || isPast) && { color: '#fff' },
-                    isFuture && s.cellTextFuture,
-                  ]}>
-                    {d}
-                  </Text>
-                ) : null}
-              </TouchableOpacity>
-            );
-          })}
+                return (
+                  <TouchableOpacity
+                    key={ci}
+                    disabled={!d || isFuture}
+                    onPress={() => d && setSelectedDay(d)}
+                    style={[
+                      s.cell,
+                      isToday && s.cellToday,
+                      isPast && s.cellDone,
+                      isSelected && s.cellSelectedBorder,
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    {d ? (
+                      <Text style={[
+                        s.cellText,
+                        (isToday || isPast) && { color: '#fff' },
+                        isFuture && s.cellTextFuture,
+                      ]}>
+                        {d}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
         </View>
 
         {/* Day detail */}
@@ -190,7 +203,8 @@ const s = StyleSheet.create({
   navBtn: { padding: 4, borderRadius: 8 },
   dayHeaders: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 4 },
   dayHeader: { fontSize: fontSizes.xs, color: colors.muted, fontFamily: fonts.bold, width: 36, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 20 },
+  grid: { marginBottom: 20 },
+  gridRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 4 },
   cell: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
   cellToday: { backgroundColor: colors.navy },
   cellDone: { backgroundColor: colors.mint },

@@ -12,10 +12,10 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { useAuthStore } from '../../store/useAuthStore';
 
-const WEEK_LABELS     = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-// Mon-first order to match (getDay()+6)%7 index
-const WEEK_KEYS       = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const WEEK_FULL_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const WEEK_LABELS     = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+// Sun-first order to match getDay() (0=Sun … 6=Sat)
+const WEEK_KEYS       = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEK_FULL_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function toMinutes(t: string): number {
   const [time, period] = (t ?? '').split(' ');
@@ -30,7 +30,7 @@ export default function HomeScreen() {
   const { user, pendingName } = useAuthStore();
   const displayName = user?.name || pendingName || 'there';
 
-  const todayIndex = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
+  const todayIndex = new Date().getDay(); // Sun=0 … Sat=6
   const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
 
   const medsForDay = medications.filter((m) => {

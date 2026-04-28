@@ -367,7 +367,7 @@ export default function AddMedicationScreen() {
           <MaterialCommunityIcons name="lock" size={16} color="#7a50a0" />
           <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={s.privacyLabel}>Hide medication names in notifications</Text>
-            <Text style={s.privacySub}>Always use cover name or generic text</Text>
+            <Text style={s.privacySub}>Always use cover name</Text>
           </View>
           <Switch
             value={privacyMode}

@@ -10,7 +10,7 @@
 // - Privacy toggle (hide name in notifications)
 // Reference: s1-2 in DailyDose_Code.html
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -91,6 +91,19 @@ export default function AddMedicationScreen() {
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
   const [nameError, setNameError]     = useState(false);
   const [dosageError, setDosageError] = useState(false);
+
+  // Auto-close when user switches to a different tab while this form is open
+  useEffect(() => {
+    if (!fromTab) return;
+    const unsubscribe = navigation.addListener('blur', () => {
+      const parentState = navigation.getParent()?.getState();
+      const activeTab = parentState?.routes[parentState.index ?? 0]?.name;
+      if (activeTab !== 'Meds') {
+        navigation.goBack();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, fromTab]);
   const [daysError, setDaysError]     = useState(false);
   const [timeErrors, setTimeErrors]   = useState<boolean[]>(initTimes.map(() => false));
 

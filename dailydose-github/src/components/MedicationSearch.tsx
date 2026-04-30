@@ -223,11 +223,6 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
                           {med.dosageForm}
                         </Text>
                       )}
-                      {med.rxcui && (
-                        <Text style={s.suggestionMetaText} numberOfLines={1}>
-                          RxCUI: {med.rxcui}
-                        </Text>
-                      )}
                     </View>
                   </View>
                   {selectedMed?.rxcui === med.rxcui && (

@@ -132,19 +132,24 @@ export async function searchMedications(
           .slice(0, limit)
           .map((candidate: any) => {
             if (!candidate || !candidate.name || !candidate.rxcui) return null;
-            
+
             // Skip obvious internal codes for longer queries
             if (query.length >= 3 && candidate.name.match(/^[A-Z]{2}-\d+/)) return null;
-            
+
+            const rawName = candidate.name;
+            const brandName = extractBrandName(rawName);
+            const genericName = extractGenericName(rawName);
+            const displayName = buildMedicationLabel(rawName, genericName, brandName);
+
             return {
               id: candidate.rxcui,
-              displayName: candidate.name,
-              standardizedName: candidate.name.toLowerCase().trim(),
+              displayName,
+              standardizedName: rawName.toLowerCase().trim(),
               rxcui: candidate.rxcui,
-              strength: extractStrength(candidate.name),
-              dosageForm: extractDosageForm(candidate.name),
-              brandName: extractBrandName(candidate.name),
-              genericName: extractGenericName(candidate.name),
+              strength: extractStrength(rawName),
+              dosageForm: extractDosageForm(rawName),
+              brandName,
+              genericName,
             };
           })
           .filter((result): result is MedicationSearchResult => result !== null);
@@ -362,14 +367,13 @@ function extractDosageForm(name: string): string | undefined {
  * Extract brand name from medication name (simplified heuristic)
  */
 function extractBrandName(name: string): string | undefined {
-  // This is a simplified approach - in a real implementation,
-  // you'd want to use RxNorm's brand name API
-  const words = name.split(' ');
-  if (words.length > 1) {
-    // Often brand names are capitalized or in parentheses
-    const brandMatch = name.match(/\(([A-Z][a-z]+)\)/);
-    if (brandMatch) return brandMatch[1];
-  }
+  // Prefer bracketed or parenthesized brand names, e.g. [Tylenol] or (Tylenol)
+  const bracketMatch = name.match(/\[([^\]]+)\]/);
+  if (bracketMatch) return bracketMatch[1];
+
+  const parenMatch = name.match(/\(([^)]+)\)/);
+  if (parenMatch) return parenMatch[1];
+
   return undefined;
 }
 
@@ -377,14 +381,35 @@ function extractBrandName(name: string): string | undefined {
  * Extract generic name from medication name (simplified heuristic)
  */
 function extractGenericName(name: string): string | undefined {
-  // This is a simplified approach - in a real implementation,
-  // you'd want to use RxNorm's generic name API
-  const words = name.split(' ');
-  if (words.length > 1) {
-    // Generic names are usually lowercase
+  const cleaned = name.replace(/\[([^\]]+)\]/g, '').replace(/\(([^)]+)\)/g, '').trim();
+  const words = cleaned.split(/\s+/);
+  if (words.length > 0) {
     return words[0].toLowerCase();
   }
-  return name.toLowerCase();
+  return undefined;
+}
+
+function buildMedicationLabel(
+  name: string,
+  genericName?: string,
+  brandName?: string
+): string {
+  const strength = extractStrength(name);
+  const dosageForm = extractDosageForm(name);
+  const cleanName = name.replace(/\[([^\]]+)\]/g, '').replace(/\(([^)]+)\)/g, '').trim();
+  const normalizedName = cleanName.replace(/\s+/g, ' ');
+  const genericLabel = genericName ? capitalizeWord(genericName) : undefined;
+  const labelBase = genericLabel || normalizedName;
+  const parts = [labelBase, strength, dosageForm].filter(Boolean);
+  const baseLabel = parts.join(' ').trim();
+  if (!baseLabel) {
+    return name;
+  }
+  return brandName ? `${baseLabel} (${brandName})` : baseLabel;
+}
+
+function capitalizeWord(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 /**

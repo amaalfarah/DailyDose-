@@ -161,10 +161,17 @@ export async function searchMedications(
       }
     }
 
-    // Remove duplicates based on rxcui
-    const uniqueResults = allResults.filter((result, index, self) =>
-      index === self.findIndex(r => r.rxcui === result.rxcui)
-    );
+    // Remove duplicates by normalized display name, preferring more specific labels
+    const uniqueResultsByName = new Map<string, MedicationSearchResult>();
+    for (const result of allResults) {
+      const nameKey = result.displayName.toLowerCase().trim();
+      const current = uniqueResultsByName.get(nameKey);
+      if (!current || isMoreSpecific(result, current)) {
+        uniqueResultsByName.set(nameKey, result);
+      }
+    }
+
+    const uniqueResults = Array.from(uniqueResultsByName.values());
 
     // If we have results, apply fuzzy search to rank them
     if (uniqueResults.length > 0) {
@@ -410,6 +417,27 @@ function buildMedicationLabel(
 
 function capitalizeWord(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+function isMoreSpecific(
+  current: MedicationSearchResult,
+  existing: MedicationSearchResult
+): boolean {
+  const currentScore = (current.strength ? 1 : 0) + (current.dosageForm ? 1 : 0);
+  const existingScore = (existing.strength ? 1 : 0) + (existing.dosageForm ? 1 : 0);
+
+  if (currentScore !== existingScore) {
+    return currentScore > existingScore;
+  }
+
+  if (current.brandName && !existing.brandName) {
+    return true;
+  }
+  if (!current.brandName && existing.brandName) {
+    return false;
+  }
+
+  return false;
 }
 
 /**

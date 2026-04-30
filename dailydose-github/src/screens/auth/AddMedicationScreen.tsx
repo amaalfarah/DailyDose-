@@ -11,7 +11,7 @@
 // Reference: s1-2 in DailyDose_Code.html
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +19,14 @@ import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { useMedStore } from '../../store/useMedStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import MedicationSearch from '../../components/MedicationSearch';
+import DrugInteractionModal from '../../components/DrugInteractionModal';
+import {
+  MedicationSearchResult,
+  checkDrugInteractions,
+  generateDrugsComLink,
+  DrugInteraction,
+} from '../../services/medicationApi';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 const ALL_DAYS = [...DAYS];
@@ -75,6 +83,13 @@ export default function AddMedicationScreen() {
   const initTimes = existingMed?.reminderTimes?.map(parseReminderTime) ?? [{ hour: '', period: 'AM' as const }];
 
   const [name, setName]           = useState(existingMed?.name ?? '');
+  const [standardizedName, setStandardizedName] = useState(existingMed?.standardizedName ?? '');
+  const [rxcui, setRxcui] = useState(existingMed?.rxcui ?? '');
+  const [selectedMedication, setSelectedMedication] = useState<MedicationSearchResult | null>(null);
+  const [showInteractionModal, setShowInteractionModal] = useState(false);
+  const [pendingInteraction, setPendingInteraction] = useState<DrugInteraction | null>(null);
+  const [isCheckingInteractions, setIsCheckingInteractions] = useState(false);
+  const [drugsComLink, setDrugsComLink] = useState<string | null>(null);
   const [coverName, setCoverName] = useState(existingMed?.coverName ?? '');
   const [dosageAmount, setDosageAmount] = useState(initDosage.amount);
   const [dosageUnit, setDosageUnit]     = useState<'mg' | 'mL'>(initDosage.unit);
@@ -179,6 +194,72 @@ export default function AddMedicationScreen() {
     setTimeErrors(prev => prev.filter((_, i) => i !== index));
   }
 
+  /**
+   * Handle medication selection from autocomplete
+   * Checks for drug interactions with existing medications
+   */
+  const handleMedicationSelect = async (med: MedicationSearchResult | null) => {
+    if (!med) {
+      setName('');
+      setStandardizedName('');
+      setRxcui('');
+      setSelectedMedication(null);
+      setDrugsComLink(null);
+      return;
+    }
+
+    setName(med.displayName);
+    setStandardizedName(med.standardizedName);
+    setRxcui(med.rxcui);
+    setSelectedMedication(med);
+    setDrugsComLink(generateDrugsComLink(med.displayName));
+
+    // Check for interactions with existing medications
+    if (med.rxcui && !isEditing) {
+      setIsCheckingInteractions(true);
+      try {
+        for (const existingMed of medications) {
+          if (existingMed.rxcui) {
+            const interaction = await checkDrugInteractions(med.rxcui, existingMed.rxcui);
+            if (interaction) {
+              setPendingInteraction(interaction);
+              setShowInteractionModal(true);
+              break;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking interactions:', error);
+      } finally {
+        setIsCheckingInteractions(false);
+      }
+    }
+  };
+
+  /**
+   * Handle manual medication entry (when API search fails)
+   */
+  const handleManualMedicationEntry = (manualName: string) => {
+    setName(manualName);
+    setStandardizedName(manualName.toLowerCase());
+    setRxcui('');
+    setSelectedMedication(null);
+    setDrugsComLink(generateDrugsComLink(manualName));
+  };
+
+  /**
+   * Open Drugs.com details in external browser
+   */
+  const handleViewDetails = async () => {
+    if (drugsComLink) {
+      try {
+        await Linking.openURL(drugsComLink);
+      } catch (error) {
+        console.error('Failed to open link:', error);
+      }
+    }
+  };
+
   function handleSave() {
     const nameInvalid      = !name.trim();
     const dosageInvalid    = !dosageAmount.trim();
@@ -213,6 +294,8 @@ export default function AddMedicationScreen() {
     if (isEditing && medId) {
       updateMedication(medId, {
         name: name.trim(),
+        standardizedName,
+        rxcui,
         coverName: coverName.trim() || undefined,
         dosage,
         frequency,
@@ -232,6 +315,8 @@ export default function AddMedicationScreen() {
     } else {
       addMedication({
         name: name.trim(),
+        standardizedName,
+        rxcui,
         coverName: coverName.trim() || undefined,
         dosage,
         frequency,
@@ -270,14 +355,27 @@ export default function AddMedicationScreen() {
 <Text style={s.note}>Add {displayName}'s daily medications. You can always add or edit later.</Text>
 
         <Text style={s.lbl}>Medication name <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TextInput
-          style={[s.inp, nameError && s.inpError]}
-          placeholder="e.g. Amoxicillin 250mg"
-          placeholderTextColor="#b0bec5"
+        <MedicationSearch
           value={name}
-          onChangeText={(t) => { setName(t); if (t.trim()) setNameError(false); }}
+          onSelect={handleMedicationSelect}
+          onManuallEnter={handleManualMedicationEntry}
+          placeholder="Search medications or type name..."
+          error={nameError}
         />
         {nameError && <Text style={s.errorText}>Please enter a medication name to continue.</Text>}
+
+        {/* Drugs.com Link */}
+        {selectedMedication && drugsComLink && (
+          <TouchableOpacity
+            style={s.viewDetailsBtn}
+            onPress={handleViewDetails}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name="information-outline" size={16} color={colors.mint} />
+            <Text style={s.viewDetailsText}>View Details on Drugs.com</Text>
+            <MaterialCommunityIcons name="external-link" size={14} color={colors.mint} />
+          </TouchableOpacity>
+        )}
 
         <Text style={s.lbl}>Dosage <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.dosageRow}>
@@ -533,6 +631,17 @@ export default function AddMedicationScreen() {
         )}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Drug Interaction Modal */}
+      <DrugInteractionModal
+        visible={showInteractionModal}
+        interaction={pendingInteraction}
+        onProceed={() => setShowInteractionModal(false)}
+        onCancel={() => {
+          setShowInteractionModal(false);
+          handleMedicationSelect(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -598,6 +707,24 @@ const s = StyleSheet.create({
   timeRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   timeInp: { flex: 1, marginBottom: 0 },
   periodWrapper: { width: 88 },
+  viewDetailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    backgroundColor: '#f0faf8',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.mint,
+  },
+  viewDetailsText: {
+    flex: 1,
+    fontSize: fontSizes.body,
+    fontFamily: fonts.medium,
+    color: colors.mint,
+    marginHorizontal: 8,
+  },
   reminderIndexRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted },
   dayRow: { flexDirection: 'row', gap: 6, marginBottom: 12 },

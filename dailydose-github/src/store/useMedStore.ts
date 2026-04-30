@@ -12,20 +12,24 @@ export interface DoseHistoryEntry {
 
 export interface Medication {
   id: string;
-  name: string;
+  name: string;                       // Display name
   coverName?: string;
   privacyMode?: boolean;
+  // Standardized medication info (for API consistency)
+  standardizedName?: string;          // Normalized name from API
+  rxcui?: string;                     // RxNorm Concept Unique Identifier
+  ndc?: string;                       // National Drug Code
   dosage: string;
   frequency: 'daily' | 'twice-daily' | '3x-daily' | 'as-needed';
-  reminderTime: string;       // "08:00"
-  reminderTimes?: string[];   // multiple times for twice/3x daily
+  reminderTime: string;               // "08:00"
+  reminderTimes?: string[];           // multiple times for twice/3x daily
   color: string;
-  iconName: string;           // MaterialCommunityIcons name
+  iconName: string;                   // MaterialCommunityIcons name
   iconCategory: 'med' | 'neutral';
-  daysOfWeek: string[];        // ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] subset
+  daysOfWeek: string[];               // ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] subset
   isPRN: boolean;
   isActive: boolean;
-  refillDate?: string;       // "MM/DD/YYYY"
+  refillDate?: string;                // "MM/DD/YYYY"
   dosesTakenToday: boolean[];
   totalDosesToday: number;
   createdAt: string;

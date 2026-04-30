@@ -113,7 +113,7 @@ export async function searchMedications(
 
       try {
         const response = await fetch(
-          `https://rxnav.nlm.nih.gov/REST/drugs.json?name=${encodeURIComponent(synonym)}`,
+          `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(synonym)}&maxEntries=${limit}`,
           { signal }
         );
 
@@ -121,35 +121,30 @@ export async function searchMedications(
 
         const data = await response.json();
 
-        if (!data.drugGroup || !data.drugGroup.conceptGroup || !Array.isArray(data.drugGroup.conceptGroup)) {
-          continue;
-        }
-
-        // Extract concepts from all concept groups
-        const concepts: any[] = [];
-        data.drugGroup.conceptGroup.forEach((group: any) => {
-          if (group && group.conceptProperties && Array.isArray(group.conceptProperties)) {
-            concepts.push(...group.conceptProperties);
-          }
-        });
-
-        if (concepts.length === 0) continue;
+        if (!data.approximateGroup || !data.approximateGroup.candidate) continue;
 
         // Map RxNorm results to our format
-        const results: MedicationSearchResult[] = concepts
+        const candidates = Array.isArray(data.approximateGroup.candidate) 
+          ? data.approximateGroup.candidate 
+          : [data.approximateGroup.candidate];
+        
+        const results: MedicationSearchResult[] = candidates
           .slice(0, limit)
-          .map((concept: any) => {
-            if (!concept || !concept.name || !concept.rxcui) return null;
-
+          .map((candidate: any) => {
+            if (!candidate || !candidate.name || !candidate.rxcui) return null;
+            
+            // Skip obvious internal codes for longer queries
+            if (query.length >= 3 && candidate.name.match(/^[A-Z]{2}-\d+/)) return null;
+            
             return {
-              id: concept.rxcui,
-              displayName: concept.name,
-              standardizedName: concept.name.toLowerCase().trim(),
-              rxcui: concept.rxcui,
-              strength: extractStrength(concept.name),
-              dosageForm: extractDosageForm(concept.name),
-              brandName: extractBrandName(concept.name),
-              genericName: extractGenericName(concept.name),
+              id: candidate.rxcui,
+              displayName: candidate.name,
+              standardizedName: candidate.name.toLowerCase().trim(),
+              rxcui: candidate.rxcui,
+              strength: extractStrength(candidate.name),
+              dosageForm: extractDosageForm(candidate.name),
+              brandName: extractBrandName(candidate.name),
+              genericName: extractGenericName(candidate.name),
             };
           })
           .filter((result): result is MedicationSearchResult => result !== null);

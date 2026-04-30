@@ -78,9 +78,10 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
       abortControllerRef.current = controller;
       try {
         const results = await searchMedications(query, 8, controller.signal);
-        setSuggestions(results.slice(0, 8));
+        const validResults = results.filter(med => med && med.displayName && med.rxcui);
+        setSuggestions(validResults.slice(0, 8));
         setShowDropdown(true);
-        setShowManualEntry(results.length === 0);
+        setShowManualEntry(validResults.length === 0);
         setApiError(false);
       } catch (error: any) {
         if (error?.name === 'AbortError') {
@@ -190,7 +191,9 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
             </View>
           ) : suggestions.length > 0 ? (
             <ScrollView style={s.suggestionsList} nestedScrollEnabled>
-              {suggestions.map((med) => (
+              {suggestions
+                .filter(med => med && med.displayName && med.rxcui)
+                .map((med) => (
                 <TouchableOpacity
                   key={med.rxcui}
                   style={[

@@ -121,29 +121,38 @@ export async function searchMedications(
 
         const data = await response.json();
 
-        if (!data.drugGroup || !data.drugGroup.conceptGroup) continue;
+        if (!data.drugGroup || !data.drugGroup.conceptGroup || !Array.isArray(data.drugGroup.conceptGroup)) {
+          continue;
+        }
 
         // Extract concepts from all concept groups
         const concepts: any[] = [];
         data.drugGroup.conceptGroup.forEach((group: any) => {
-          if (group.conceptProperties) {
+          if (group && group.conceptProperties && Array.isArray(group.conceptProperties)) {
             concepts.push(...group.conceptProperties);
           }
         });
 
+        if (concepts.length === 0) continue;
+
         // Map RxNorm results to our format
         const results: MedicationSearchResult[] = concepts
           .slice(0, limit)
-          .map((concept: any) => ({
-            id: concept.rxcui,
-            displayName: concept.name,
-            standardizedName: concept.name.toLowerCase().trim(),
-            rxcui: concept.rxcui,
-            strength: extractStrength(concept.name),
-            dosageForm: extractDosageForm(concept.name),
-            brandName: extractBrandName(concept.name),
-            genericName: extractGenericName(concept.name),
-          }));
+          .map((concept: any) => {
+            if (!concept || !concept.name || !concept.rxcui) return null;
+
+            return {
+              id: concept.rxcui,
+              displayName: concept.name,
+              standardizedName: concept.name.toLowerCase().trim(),
+              rxcui: concept.rxcui,
+              strength: extractStrength(concept.name),
+              dosageForm: extractDosageForm(concept.name),
+              brandName: extractBrandName(concept.name),
+              genericName: extractGenericName(concept.name),
+            };
+          })
+          .filter((result): result is MedicationSearchResult => result !== null);
 
         allResults = [...allResults, ...results];
       } catch (error) {
@@ -159,28 +168,39 @@ export async function searchMedications(
 
     // If we have results, apply fuzzy search to rank them
     if (uniqueResults.length > 0) {
-      const fuse = createFuzzySearch(uniqueResults);
-      const fuzzyResults = fuse.search(normalizedQuery);
+      try {
+        const fuse = createFuzzySearch(uniqueResults);
+        const fuzzyResults = fuse.search(normalizedQuery);
 
-      // Convert Fuse results back to our format with scores
-      const scoredResults = fuzzyResults.map(result => ({
-        ...result.item,
-        score: result.score,
-      }));
+        // Convert Fuse results back to our format with scores
+        const scoredResults = fuzzyResults.map(result => ({
+          ...result.item,
+          score: result.score,
+        }));
 
-      // Return top results, preferring exact matches and high-scoring fuzzy matches
-      return scoredResults
-        .sort((a, b) => {
-          // Prioritize exact matches
-          const aExact = a.displayName.toLowerCase().includes(normalizedQuery);
-          const bExact = b.displayName.toLowerCase().includes(normalizedQuery);
-          if (aExact && !bExact) return -1;
-          if (!aExact && bExact) return 1;
+        // Return top results, preferring exact matches and high-scoring fuzzy matches
+        return scoredResults
+          .sort((a, b) => {
+            // Prioritize exact matches
+            const aExact = a.displayName.toLowerCase().includes(normalizedQuery);
+            const bExact = b.displayName.toLowerCase().includes(normalizedQuery);
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
 
-          // Then sort by fuzzy score
-          return (a.score || 1) - (b.score || 1);
-        })
-        .slice(0, limit);
+            // Then sort by fuzzy score
+            return (a.score || 1) - (b.score || 1);
+          })
+          .slice(0, limit);
+      } catch (error) {
+        console.error('Fuzzy search error:', error);
+        // Fall back to simple filtering if fuzzy search fails
+        return uniqueResults
+          .filter(result =>
+            result.displayName.toLowerCase().includes(normalizedQuery) ||
+            result.standardizedName.includes(normalizedQuery)
+          )
+          .slice(0, limit);
+      }
     }
 
     // If no results from API, return empty array for manual entry fallback

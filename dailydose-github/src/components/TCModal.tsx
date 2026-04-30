@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { colors } from '../theme/colors';
 import { fonts, fontSizes } from '../theme/typography';
+import ContactSupportModal from './ContactSupportModal';
 
 interface Props {
   visible: boolean;
@@ -42,6 +43,7 @@ const sections = [
 
 export default function TCModal({ visible, onDecline, onAccept }: Props) {
   const [checked, setChecked] = useState(false);
+  const [showContactSupport, setShowContactSupport] = useState(false);
 
   function handleClose() {
     setChecked(false);
@@ -115,8 +117,23 @@ export default function TCModal({ visible, onDecline, onAccept }: Props) {
             </TouchableOpacity>
           </View>
 
+          {/* Contact & Support Button */}
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={() => setShowContactSupport(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.contactButtonText}>Contact & Support</Text>
+          </TouchableOpacity>
+
         </Pressable>
       </Pressable>
+
+      {/* Contact Support Modal */}
+      <ContactSupportModal
+        visible={showContactSupport}
+        onClose={() => setShowContactSupport(false)}
+      />
     </Modal>
   );
 }
@@ -212,4 +229,17 @@ const styles = StyleSheet.create({
   },
   btnAcceptDisabled: { opacity: 0.4 },
   btnAcceptText: { fontSize: fontSizes.base, fontFamily: fonts.bold, color: colors.white },
+  contactButton: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    backgroundColor: colors.mintL,
+  },
+  contactButtonText: {
+    fontSize: fontSizes.base,
+    fontFamily: fonts.medium,
+    color: colors.mint,
+  },
 });

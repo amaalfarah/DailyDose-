@@ -14,8 +14,14 @@ Notifications.setNotificationHandler({
 });
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  // For development convenience, assume permissions are granted
+  // In production, this should request permissions properly
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === 'granted') return true;
+
+  // Skip permission request in development to avoid repeated prompts
+  if (__DEV__) return true;
+
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }

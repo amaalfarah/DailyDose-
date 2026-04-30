@@ -113,7 +113,7 @@ export async function searchMedications(
 
       try {
         const response = await fetch(
-          `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(synonym)}&maxEntries=${limit}`,
+          `https://rxnav.nlm.nih.gov/REST/drugs.json?name=${encodeURIComponent(synonym)}`,
           { signal }
         );
 
@@ -121,20 +121,28 @@ export async function searchMedications(
 
         const data = await response.json();
 
-        if (!data.approximateGroup || !data.approximateGroup.candidate) continue;
+        if (!data.drugGroup || !data.drugGroup.conceptGroup) continue;
+
+        // Extract concepts from all concept groups
+        const concepts: any[] = [];
+        data.drugGroup.conceptGroup.forEach((group: any) => {
+          if (group.conceptProperties) {
+            concepts.push(...group.conceptProperties);
+          }
+        });
 
         // Map RxNorm results to our format
-        const results: MedicationSearchResult[] = data.approximateGroup.candidate
+        const results: MedicationSearchResult[] = concepts
           .slice(0, limit)
-          .map((candidate: any) => ({
-            id: candidate.rxcui,
-            displayName: candidate.name,
-            standardizedName: candidate.name.toLowerCase().trim(),
-            rxcui: candidate.rxcui,
-            strength: extractStrength(candidate.name),
-            dosageForm: extractDosageForm(candidate.name),
-            brandName: extractBrandName(candidate.name),
-            genericName: extractGenericName(candidate.name),
+          .map((concept: any) => ({
+            id: concept.rxcui,
+            displayName: concept.name,
+            standardizedName: concept.name.toLowerCase().trim(),
+            rxcui: concept.rxcui,
+            strength: extractStrength(concept.name),
+            dosageForm: extractDosageForm(concept.name),
+            brandName: extractBrandName(concept.name),
+            genericName: extractGenericName(concept.name),
           }));
 
         allResults = [...allResults, ...results];

@@ -3,6 +3,8 @@
  * Handles API calls to FDA openFDA and RxNorm APIs for medication lookup and validation
  */
 
+import Fuse from 'fuse.js';
+
 export interface MedicationSearchResult {
   id: string;                    // Unique identifier (RxCUI)
   displayName: string;           // User-friendly name from API
@@ -11,6 +13,9 @@ export interface MedicationSearchResult {
   ndc?: string;                  // National Drug Code
   strength?: string;             // Dosage strength info
   dosageForm?: string;           // e.g., "TABLET", "CAPSULE"
+  brandName?: string;            // Brand name if available
+  genericName?: string;          // Generic name if available
+  score?: number;                // Fuzzy search relevance score
 }
 
 export interface DrugInteraction {
@@ -18,6 +23,69 @@ export interface DrugInteraction {
   drug2: string;
   description: string;
   severity: 'Major' | 'Moderate' | 'Minor';
+}
+
+// Common brand-generic name mappings
+const BRAND_GENERIC_MAP: Record<string, string[]> = {
+  'tylenol': ['acetaminophen'],
+  'acetaminophen': ['tylenol'],
+  'advil': ['ibuprofen'],
+  'motrin': ['ibuprofen'],
+  'ibuprofen': ['advil', 'motrin'],
+  'aspirin': ['bayer'],
+  'bayer': ['aspirin'],
+  'aleve': ['naproxen'],
+  'naproxen': ['aleve'],
+  'zantac': ['ranitidine'],
+  'ranitidine': ['zantac'],
+  'prilosec': ['omeprazole'],
+  'omeprazole': ['prilosec'],
+  'lipitor': ['atorvastatin'],
+  'atorvastatin': ['lipitor'],
+  'singulair': ['montelukast'],
+  'montelukast': ['singulair'],
+  'nexium': ['esomeprazole'],
+  'esomeprazole': ['nexium'],
+  'plavix': ['clopidogrel'],
+  'clopidogrel': ['plavix'],
+};
+
+/**
+ * Normalize search query for better matching
+ */
+function normalizeQuery(query: string): string {
+  return query
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' ');   // Normalize whitespace
+}
+
+/**
+ * Get synonym suggestions for a query
+ */
+function getSynonyms(query: string): string[] {
+  const normalized = normalizeQuery(query);
+  const synonyms = BRAND_GENERIC_MAP[normalized] || [];
+  return [normalized, ...synonyms];
+}
+
+/**
+ * Create fuzzy search instance for medication results
+ */
+function createFuzzySearch(results: MedicationSearchResult[]): Fuse<MedicationSearchResult> {
+  return new Fuse(results, {
+    keys: [
+      { name: 'displayName', weight: 0.7 },
+      { name: 'standardizedName', weight: 0.6 },
+      { name: 'brandName', weight: 0.5 },
+      { name: 'genericName', weight: 0.5 },
+    ],
+    threshold: 0.4, // More lenient matching
+    includeScore: true,
+    shouldSort: true,
+    minMatchCharLength: 2,
+  });
 }
 
 /**
@@ -29,43 +97,91 @@ export async function searchMedications(
   limit: number = 10,
   signal?: AbortSignal
 ): Promise<MedicationSearchResult[]> {
-  if (!query.trim() || query.length < 2) {
+  const normalizedQuery = normalizeQuery(query);
+
+  if (normalizedQuery.length < 2) {
     return [];
   }
 
   try {
-    // Using RxNorm API for medication search
-    const response = await fetch(
-      `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=${limit}`,
-      { signal }
+    const synonyms = getSynonyms(normalizedQuery);
+    let allResults: MedicationSearchResult[] = [];
+
+    // Search for each synonym to get broader results
+    for (const synonym of synonyms.slice(0, 3)) { // Limit to first 3 synonyms
+      if (signal?.aborted) break;
+
+      try {
+        const response = await fetch(
+          `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(synonym)}&maxEntries=${limit}`,
+          { signal }
+        );
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+
+        if (!data.approximateGroup || !data.approximateGroup.candidate) continue;
+
+        // Map RxNorm results to our format
+        const results: MedicationSearchResult[] = data.approximateGroup.candidate
+          .slice(0, limit)
+          .map((candidate: any) => ({
+            id: candidate.rxcui,
+            displayName: candidate.name,
+            standardizedName: candidate.name.toLowerCase().trim(),
+            rxcui: candidate.rxcui,
+            strength: extractStrength(candidate.name),
+            dosageForm: extractDosageForm(candidate.name),
+            brandName: extractBrandName(candidate.name),
+            genericName: extractGenericName(candidate.name),
+          }));
+
+        allResults = [...allResults, ...results];
+      } catch (error) {
+        // Continue with other synonyms if one fails
+        continue;
+      }
+    }
+
+    // Remove duplicates based on rxcui
+    const uniqueResults = allResults.filter((result, index, self) =>
+      index === self.findIndex(r => r.rxcui === result.rxcui)
     );
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
+    // If we have results, apply fuzzy search to rank them
+    if (uniqueResults.length > 0) {
+      const fuse = createFuzzySearch(uniqueResults);
+      const fuzzyResults = fuse.search(normalizedQuery);
 
-    const data = await response.json();
-
-    if (!data.approximateGroup || !data.approximateGroup.candidate) {
-      return [];
-    }
-
-    // Map RxNorm results to our format
-    const results: MedicationSearchResult[] = data.approximateGroup.candidate
-      .slice(0, limit)
-      .map((candidate: any) => ({
-        id: candidate.rxcui,
-        displayName: candidate.name,
-        standardizedName: candidate.name.toLowerCase().trim(),
-        rxcui: candidate.rxcui,
-        strength: extractStrength(candidate.name),
-        dosageForm: extractDosageForm(candidate.name),
+      // Convert Fuse results back to our format with scores
+      const scoredResults = fuzzyResults.map(result => ({
+        ...result.item,
+        score: result.score,
       }));
 
-    return results;
-  } catch (error) {
+      // Return top results, preferring exact matches and high-scoring fuzzy matches
+      return scoredResults
+        .sort((a, b) => {
+          // Prioritize exact matches
+          const aExact = a.displayName.toLowerCase().includes(normalizedQuery);
+          const bExact = b.displayName.toLowerCase().includes(normalizedQuery);
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+
+          // Then sort by fuzzy score
+          return (a.score || 1) - (b.score || 1);
+        })
+        .slice(0, limit);
+    }
+
+    // If no results from API, return empty array for manual entry fallback
+    return [];
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      return [];
+    }
     console.error('Medication search error:', error);
-    // Return empty array on error to allow fallback to manual entry
     return [];
   }
 }
@@ -217,6 +333,35 @@ function extractDosageForm(name: string): string | undefined {
   const lowerName = name.toLowerCase();
   const found = forms.find((form) => lowerName.includes(form));
   return found ? found.charAt(0).toUpperCase() + found.slice(1) : undefined;
+}
+
+/**
+ * Extract brand name from medication name (simplified heuristic)
+ */
+function extractBrandName(name: string): string | undefined {
+  // This is a simplified approach - in a real implementation,
+  // you'd want to use RxNorm's brand name API
+  const words = name.split(' ');
+  if (words.length > 1) {
+    // Often brand names are capitalized or in parentheses
+    const brandMatch = name.match(/\(([A-Z][a-z]+)\)/);
+    if (brandMatch) return brandMatch[1];
+  }
+  return undefined;
+}
+
+/**
+ * Extract generic name from medication name (simplified heuristic)
+ */
+function extractGenericName(name: string): string | undefined {
+  // This is a simplified approach - in a real implementation,
+  // you'd want to use RxNorm's generic name API
+  const words = name.split(' ');
+  if (words.length > 1) {
+    // Generic names are usually lowercase
+    return words[0].toLowerCase();
+  }
+  return name.toLowerCase();
 }
 
 /**

@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -78,8 +77,8 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
       const controller = new AbortController();
       abortControllerRef.current = controller;
       try {
-        const results = await searchMedications(query, 7, controller.signal);
-        setSuggestions(results.slice(0, 7));
+        const results = await searchMedications(query, 8, controller.signal);
+        setSuggestions(results.slice(0, 8));
         setShowDropdown(true);
         setShowManualEntry(results.length === 0);
         setApiError(false);

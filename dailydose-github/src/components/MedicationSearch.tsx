@@ -13,7 +13,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -44,57 +43,68 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
   const [selectedMed, setSelectedMed] = useState<MedicationSearchResult | null>(null);
   const [apiError, setApiError] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  const dropdownAnimRef = useRef(new Animated.Value(0)).current;
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setSearchQuery(value);
+  }, [value]);
 
   // Fetch suggestions when query changes
   useEffect(() => {
+    const query = searchQuery.trim();
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (searchQuery.trim().length < 2) {
+    if (query.length < 3) {
       setSuggestions([]);
       setShowDropdown(false);
+      setShowManualEntry(false);
+      setApiError(false);
+      setIsLoading(false);
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
       return;
     }
 
     setIsLoading(true);
     setApiError(false);
+    setShowManualEntry(false);
 
     searchTimeoutRef.current = setTimeout(async () => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       try {
-        const results = await searchMedications(searchQuery, 8);
-        setSuggestions(results);
-        setShowDropdown(results.length > 0 || searchQuery.trim().length > 0);
+        const results = await searchMedications(query, 7, controller.signal);
+        setSuggestions(results.slice(0, 7));
+        setShowDropdown(true);
+        setShowManualEntry(results.length === 0);
         setApiError(false);
-
-        // If no results, show manual entry option
-        if (results.length === 0 && searchQuery.trim().length > 0) {
-          setShowManualEntry(true);
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          return;
         }
-      } catch (error) {
         console.error('Search error:', error);
+        setSuggestions([]);
+        setShowDropdown(true);
         setApiError(true);
         setShowManualEntry(true);
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
-    }, 300); // 300ms debounce
+    }, 400);
 
     return () => {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
     };
   }, [searchQuery]);
-
-  // Animate dropdown
-  useEffect(() => {
-    Animated.timing(dropdownAnimRef, {
-      toValue: showDropdown ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [showDropdown]);
 
   const handleSelectMedication = (med: MedicationSearchResult) => {
     setSelectedMed(med);
@@ -134,7 +144,7 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
           placeholderTextColor="#b0bec5"
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onFocus={() => searchQuery.trim().length >= 2 && setShowDropdown(true)}
+          onFocus={() => searchQuery.trim().length >= 3 && setShowDropdown(true)}
           editable={!disabled}
           autoComplete="off"
           autoCorrect={false}
@@ -180,10 +190,10 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
               <Text style={s.loadingText}>Searching medications...</Text>
             </View>
           ) : suggestions.length > 0 ? (
-            <ScrollView style={s.suggestionsList} scrollEnabled={suggestions.length > 5}>
-              {suggestions.map((med, index) => (
+            <ScrollView style={s.suggestionsList} nestedScrollEnabled>
+              {suggestions.map((med) => (
                 <TouchableOpacity
-                  key={`${med.rxcui}-${index}`}
+                  key={med.rxcui}
                   style={[
                     s.suggestionItem,
                     selectedMed?.rxcui === med.rxcui && s.suggestionItemSelected,
@@ -227,7 +237,11 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          ) : null}
+          ) : (
+            <View style={s.noResultsContainer}>
+              <Text style={s.noResultsText}>No results found. You can add this manually.</Text>
+            </View>
+          )}
 
           {/* Manual Entry Option */}
           {showManualEntry && searchQuery.trim().length > 0 && (
@@ -273,6 +287,7 @@ const s = StyleSheet.create({
   container: {
     position: 'relative',
     marginBottom: 12,
+    overflow: 'visible',
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -341,6 +356,7 @@ const s = StyleSheet.create({
     borderColor: '#e3e6eb',
     maxHeight: 280,
     zIndex: 1000,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -412,6 +428,19 @@ const s = StyleSheet.create({
     color: colors.mintD,
     marginLeft: 8,
     flex: 1,
+  },
+  noResultsContainer: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    minHeight: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noResultsText: {
+    fontSize: fontSizes.small,
+    fontFamily: fonts.regular,
+    color: '#7a90a0',
+    textAlign: 'center',
   },
   helperContainer: {
     flexDirection: 'row',

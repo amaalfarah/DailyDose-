@@ -26,7 +26,8 @@ export interface DrugInteraction {
  */
 export async function searchMedications(
   query: string,
-  limit: number = 10
+  limit: number = 10,
+  signal?: AbortSignal
 ): Promise<MedicationSearchResult[]> {
   if (!query.trim() || query.length < 2) {
     return [];
@@ -35,7 +36,8 @@ export async function searchMedications(
   try {
     // Using RxNorm API for medication search
     const response = await fetch(
-      `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=${limit}`
+      `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(query)}&maxEntries=${limit}`,
+      { signal }
     );
 
     if (!response.ok) {

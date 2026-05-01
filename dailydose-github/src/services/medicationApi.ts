@@ -139,7 +139,10 @@ export async function searchMedications(
             const rawName = candidate.name;
             const brandName = extractBrandName(rawName);
             const genericName = extractGenericName(rawName);
-            const displayName = buildMedicationLabel(rawName, genericName, brandName);
+            
+            // For autocomplete, use only the ingredient/generic name without strength or form
+            // This avoids showing duplicates like "Metformin", "Metformin 500mg", "Metformin tablet"
+            const displayName = genericName ? capitalizeWord(genericName) : rawName;
 
             return {
               id: candidate.rxcui,
@@ -161,12 +164,12 @@ export async function searchMedications(
       }
     }
 
-    // Remove duplicates by normalized display name, preferring more specific labels
+    // Remove duplicates by normalized display name, preferring entries with RxCUI
+    // Since we now only show ingredient names, this will collapse all strength/form variants
     const uniqueResultsByName = new Map<string, MedicationSearchResult>();
     for (const result of allResults) {
       const nameKey = result.displayName.toLowerCase().trim();
-      const current = uniqueResultsByName.get(nameKey);
-      if (!current || isMoreSpecific(result, current)) {
+      if (!uniqueResultsByName.has(nameKey)) {
         uniqueResultsByName.set(nameKey, result);
       }
     }
@@ -396,48 +399,8 @@ function extractGenericName(name: string): string | undefined {
   return undefined;
 }
 
-function buildMedicationLabel(
-  name: string,
-  genericName?: string,
-  brandName?: string
-): string {
-  const strength = extractStrength(name);
-  const dosageForm = extractDosageForm(name);
-  const cleanName = name.replace(/\[([^\]]+)\]/g, '').replace(/\(([^)]+)\)/g, '').trim();
-  const normalizedName = cleanName.replace(/\s+/g, ' ');
-  const genericLabel = genericName ? capitalizeWord(genericName) : undefined;
-  const labelBase = genericLabel || normalizedName;
-  const parts = [labelBase, strength, dosageForm].filter(Boolean);
-  const baseLabel = parts.join(' ').trim();
-  if (!baseLabel) {
-    return name;
-  }
-  return brandName ? `${baseLabel} (${brandName})` : baseLabel;
-}
-
 function capitalizeWord(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
-}
-
-function isMoreSpecific(
-  current: MedicationSearchResult,
-  existing: MedicationSearchResult
-): boolean {
-  const currentScore = (current.strength ? 1 : 0) + (current.dosageForm ? 1 : 0);
-  const existingScore = (existing.strength ? 1 : 0) + (existing.dosageForm ? 1 : 0);
-
-  if (currentScore !== existingScore) {
-    return currentScore > existingScore;
-  }
-
-  if (current.brandName && !existing.brandName) {
-    return true;
-  }
-  if (!current.brandName && existing.brandName) {
-    return false;
-  }
-
-  return false;
 }
 
 /**

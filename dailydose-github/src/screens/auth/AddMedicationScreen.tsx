@@ -11,9 +11,9 @@
 // Reference: s1-2 in DailyDose_Code.html
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch, Linking, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -514,56 +514,62 @@ export default function AddMedicationScreen() {
 
         <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
         <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)}>
-          <Text style={s.dateBtnText}>{startDate.toDateString()}</Text>
+          <Text style={s.dateBtnText}>
+            {startDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit' 
+            })}
+          </Text>
           <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
         </TouchableOpacity>
-        {showStartPicker && (
-          <DateTimePicker
-            value={startDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, selectedDate) => {
-              setShowStartPicker(false);
-              if (selectedDate) {
-                setStartDate(selectedDate);
-                setStartDateError('');
-                if (endDate && selectedDate > endDate) {
-                  setEndDateError('End date cannot be before start date.');
-                } else {
-                  setEndDateError('');
-                }
-              }
-            }}
-          />
-        )}
+        <DateTimePickerModal
+          isVisible={showStartPicker}
+          mode="date"
+          date={startDate}
+          onConfirm={(selectedDate) => {
+            setShowStartPicker(false);
+            setStartDate(selectedDate);
+            setStartDateError('');
+            if (endDate && selectedDate > endDate) {
+              setEndDateError('End date cannot be before start date.');
+            } else {
+              setEndDateError('');
+            }
+          }}
+          onCancel={() => setShowStartPicker(false)}
+        />
         {startDateError && <Text style={s.errorText}>{startDateError}</Text>}
 
         <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
         <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)}>
-          <Text style={s.dateBtnText}>{endDate ? endDate.toDateString() : 'No end date (ongoing)'}</Text>
+          <Text style={s.dateBtnText}>
+            {endDate 
+              ? endDate.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: '2-digit', 
+                  day: '2-digit' 
+                })
+              : 'No end date (ongoing)'
+            }
+          </Text>
           <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
         </TouchableOpacity>
-        {showEndPicker && (
-          <DateTimePicker
-            value={endDate || new Date()}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, selectedDate) => {
-              setShowEndPicker(false);
-              if (selectedDate) {
-                setEndDate(selectedDate);
-                if (selectedDate < startDate) {
-                  setEndDateError('End date cannot be before start date.');
-                } else {
-                  setEndDateError('');
-                }
-              } else {
-                setEndDate(undefined);
-                setEndDateError('');
-              }
-            }}
-          />
-        )}
+        <DateTimePickerModal
+          isVisible={showEndPicker}
+          mode="date"
+          date={endDate || new Date()}
+          onConfirm={(selectedDate) => {
+            setShowEndPicker(false);
+            setEndDate(selectedDate);
+            if (selectedDate < startDate) {
+              setEndDateError('End date cannot be before start date.');
+            } else {
+              setEndDateError('');
+            }
+          }}
+          onCancel={() => setShowEndPicker(false)}
+        />
         {endDateError && <Text style={s.errorText}>{endDateError}</Text>}
 
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>

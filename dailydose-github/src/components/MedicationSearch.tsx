@@ -133,12 +133,6 @@ const MedicationSearch: React.FC<MedicationSearchProps> = ({
   return (
     <View style={s.container}>
       <View style={[s.inputWrapper, error && s.inputWrapperError]}>
-        <MaterialCommunityIcons
-          name="pill-multiple"
-          size={18}
-          color={error ? colors.rose : colors.mintD}
-          style={s.inputIcon}
-        />
         <TextInput
           style={[s.input, error && s.inputError]}
           placeholder={placeholder}
@@ -302,9 +296,6 @@ const s = StyleSheet.create({
   inputWrapperError: {
     borderColor: colors.rose,
     backgroundColor: '#fff5f5',
-  },
-  inputIcon: {
-    marginRight: 8,
   },
   input: {
     flex: 1,

@@ -17,6 +17,8 @@ CREATE TABLE public.medications (
   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
   supply_count    INTEGER,                     -- number of pills remaining
   refill_threshold INTEGER DEFAULT 7,         -- alert when supply <= this
+  start_date      DATE NOT NULL DEFAULT CURRENT_DATE,  -- medication start date
+  end_date        DATE,                        -- medication end date (null for ongoing)
   notes           TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -33,3 +35,5 @@ CREATE INDEX idx_medications_active  ON public.medications(user_id, is_active);
 COMMENT ON TABLE public.medications IS 'Medications belonging to a user';
 COMMENT ON COLUMN public.medications.cover_name IS 'Privacy nickname shown in notifications instead of real name';
 COMMENT ON COLUMN public.medications.reminder_times IS 'Array of HH:MM strings for scheduled reminders';
+COMMENT ON COLUMN public.medications.start_date IS 'Date when medication regimen starts';
+COMMENT ON COLUMN public.medications.end_date IS 'Date when medication regimen ends (null for ongoing medications)';

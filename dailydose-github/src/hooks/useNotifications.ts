@@ -38,7 +38,6 @@ export async function scheduleDoseReminder(
   privacyMode: boolean
 ): Promise<string[]> {
   const displayName = getDisplayName(med, privacyMode);
-  const [hour, minute] = med.reminderTime.split(':').map(Number);
   const identifiers: string[] = [];
 
   // Cancel existing for this med
@@ -50,22 +49,42 @@ export async function scheduleDoseReminder(
     ? med.reminderTimes
     : [med.reminderTime];
 
-  for (const time of times) {
-    const [h, m] = time.split(':').map(Number);
-    const id = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'DailyDose+ Reminder 💊',
-        body: `Time to take ${displayName}`,
-        data: { medId: med.id, medName: med.name },
-        sound: true,
-      },
-      trigger: {
-        hour: h,
-        minute: m,
-        repeats: true,
-      },
-    });
-    identifiers.push(id);
+  const startDate = new Date(med.startDate);
+  const endDate = med.endDate ? new Date(med.endDate) : null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future, schedule from start date
+  // If end date is in the past, don't schedule
+  if (endDate && endDate < today) return [];
+  const scheduleStart = startDate > today ? startDate : today;
+
+  // Schedule up to 1 year ahead or until end date
+  const maxDate = endDate ? endDate : new Date(scheduleStart.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+  for (let d = new Date(scheduleStart); d <= maxDate; d.setDate(d.getDate() + 1)) {
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    if (!med.daysOfWeek.includes(dayName)) continue;
+
+    for (const time of times) {
+      const [h, m] = time.split(':').map(Number);
+      const triggerDate = new Date(d);
+      triggerDate.setHours(h, m, 0, 0);
+
+      // Only schedule if in the future
+      if (triggerDate > new Date()) {
+        const id = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'DailyDose+ Reminder 💊',
+            body: `Time to take ${displayName}`,
+            data: { medId: med.id, medName: med.name },
+            sound: true,
+          },
+          trigger: triggerDate,
+        });
+        identifiers.push(id);
+      }
+    }
   }
 
   return identifiers;

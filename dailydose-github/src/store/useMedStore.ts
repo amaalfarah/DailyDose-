@@ -30,6 +30,8 @@ export interface Medication {
   isPRN: boolean;
   isActive: boolean;
   refillDate?: string;                // "MM/DD/YYYY"
+  startDate: string;                  // "YYYY-MM-DD"
+  endDate?: string;                   // "YYYY-MM-DD" (optional)
   dosesTakenToday: boolean[];
   totalDosesToday: number;
   createdAt: string;
@@ -61,6 +63,7 @@ export const useMedStore = create<MedStore>()(
               ...med,
               id: Date.now().toString(),
               createdAt: new Date().toISOString(),
+              startDate: med.startDate || new Date().toISOString().split('T')[0],
             },
           ],
         })),
@@ -87,13 +90,20 @@ export const useMedStore = create<MedStore>()(
 
       toggleDoseTaken: (medId, doseIndex) =>
         set((state) => {
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const med = state.medications.find(m => m.id === medId);
+          if (!med) return state;
+          const start = new Date(med.startDate);
+          const end = med.endDate ? new Date(med.endDate) : null;
+          if (today < start || (end && today > end)) return state;
+
           const updatedMeds = state.medications.map((m) => {
             if (m.id !== medId) return m;
             const taken = [...m.dosesTakenToday];
             taken[doseIndex] = !taken[doseIndex];
             return { ...m, dosesTakenToday: taken };
           });
-          const now = new Date();
           const todayKey = now.toISOString().split('T')[0];
           const todayDayKey = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
           const todayEntries: DoseHistoryEntry[] = updatedMeds
@@ -125,6 +135,19 @@ export const useMedStore = create<MedStore>()(
     {
       name: 'medications',
       storage: createJSONStorage(() => AsyncStorage),
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // Migrate existing medications to have startDate
+          const meds = persistedState?.medications || [];
+          persistedState.medications = meds.map((m: any) => ({
+            ...m,
+            startDate: m.startDate || (m.createdAt ? new Date(m.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+            endDate: m.endDate || undefined,
+          }));
+        }
+        return persistedState;
+      },
+      version: 1,
     }
   )
 );

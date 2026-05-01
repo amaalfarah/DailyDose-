@@ -11,8 +11,9 @@
 // Reference: s1-2 in DailyDose_Code.html
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch, Linking } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -106,6 +107,12 @@ export default function AddMedicationScreen() {
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
   const [refillDate, setRefillDate]   = useState(existingMed?.refillDate ?? '');
   const [refillDateError, setRefillDateError] = useState('');
+  const [startDate, setStartDate] = useState(existingMed?.startDate ? new Date(existingMed.startDate) : new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(existingMed?.endDate ? new Date(existingMed.endDate) : undefined);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [startDateError, setStartDateError] = useState('');
+  const [endDateError, setEndDateError] = useState('');
   const [nameError, setNameError]         = useState(false);
   const [dosageError, setDosageError]     = useState(false);
   const [coverNameError, setCoverNameError] = useState(false);
@@ -265,6 +272,8 @@ export default function AddMedicationScreen() {
     const dosageInvalid    = !dosageAmount.trim();
     const daysInvalid      = daysOfWeek.length === 0;
     const coverNameInvalid = privacyMode && !coverName.trim();
+    const startDateInvalid = !startDate;
+    const endDateInvalid   = endDate && endDate < startDate;
     const newTimeErrors    = reminderHours.map(h => !h.trim());
 
     let refillError = '';
@@ -284,9 +293,11 @@ export default function AddMedicationScreen() {
     setDosageError(dosageInvalid);
     setDaysError(daysInvalid);
     setCoverNameError(coverNameInvalid);
+    setStartDateError(startDateInvalid ? 'Start date is required.' : '');
+    setEndDateError(endDateInvalid ? 'End date cannot be before start date.' : '');
     setTimeErrors(newTimeErrors);
     setRefillDateError(refillError);
-    if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || newTimeErrors.some(Boolean) || refillError) return;
+    if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || startDateInvalid || endDateInvalid || newTimeErrors.some(Boolean) || refillError) return;
     const dosage = `${dosageAmount.trim()}${dosageUnit}`;
     const builtTimes = reminderHours.map((h, i) => `${clampTime(h)} ${reminderPeriods[i]}`);
     const reminderTime = builtTimes[0];
@@ -307,6 +318,8 @@ export default function AddMedicationScreen() {
         daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
@@ -329,6 +342,8 @@ export default function AddMedicationScreen() {
         isPRN: frequency === 'as-needed',
         privacyMode,
         isActive: true,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
@@ -496,6 +511,60 @@ export default function AddMedicationScreen() {
           })}
         </View>
         {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
+
+        <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)}>
+          <Text style={s.dateBtnText}>{startDate.toDateString()}</Text>
+          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) {
+                setStartDate(selectedDate);
+                setStartDateError('');
+                if (endDate && selectedDate > endDate) {
+                  setEndDateError('End date cannot be before start date.');
+                } else {
+                  setEndDateError('');
+                }
+              }
+            }}
+          />
+        )}
+        {startDateError && <Text style={s.errorText}>{startDateError}</Text>}
+
+        <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)}>
+          <Text style={s.dateBtnText}>{endDate ? endDate.toDateString() : 'No end date (ongoing)'}</Text>
+          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) {
+                setEndDate(selectedDate);
+                if (selectedDate < startDate) {
+                  setEndDateError('End date cannot be before start date.');
+                } else {
+                  setEndDateError('');
+                }
+              } else {
+                setEndDate(undefined);
+                setEndDateError('');
+              }
+            }}
+          />
+        )}
+        {endDateError && <Text style={s.errorText}>{endDateError}</Text>}
 
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
@@ -759,4 +828,6 @@ const s = StyleSheet.create({
   unitDropItemOn: { backgroundColor: colors.mintL },
   unitDropItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
   unitDropItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
+  dateBtn: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  dateBtnText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
 });

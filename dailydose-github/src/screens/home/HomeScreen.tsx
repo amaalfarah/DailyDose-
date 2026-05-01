@@ -30,12 +30,20 @@ export default function HomeScreen() {
   const { user, pendingName } = useAuthStore();
   const displayName = user?.name || pendingName || 'there';
 
-  const todayIndex = new Date().getDay(); // Sun=0 … Sat=6
+  const today = new Date();
+  const todayIndex = today.getDay(); // Sun=0 … Sat=6
   const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
+
+  const selectedDate = new Date(today);
+  selectedDate.setDate(today.getDate() + (selectedDay - todayIndex));
+  selectedDate.setHours(0, 0, 0, 0);
 
   const medsForDay = medications.filter((m) => {
     if (!m.isActive) return false;
-    return (m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay]);
+    if (!(m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay])) return false;
+    const start = new Date(m.startDate);
+    const end = m.endDate ? new Date(m.endDate) : null;
+    return selectedDate >= start && (!end || selectedDate <= end);
   });
 
   const hour = new Date().getHours();
@@ -54,7 +62,10 @@ export default function HomeScreen() {
   const upcomingDoses = medications
     .filter((m) => {
       if (!m.isActive) return false;
-      return (m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay]);
+      if (!(m.daysOfWeek ?? []).includes(WEEK_KEYS[selectedDay])) return false;
+      const start = new Date(m.startDate);
+      const end = m.endDate ? new Date(m.endDate) : null;
+      return selectedDate >= start && (!end || selectedDate <= end);
     })
     .flatMap((m) =>
       m.dosesTakenToday.map((taken, i) => ({

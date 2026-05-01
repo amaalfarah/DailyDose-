@@ -60,10 +60,17 @@ export default function CalendarScreen() {
   const getDayKey = (day: number) =>
     DAY_KEYS[new Date(viewYear, viewMonth, day).getDay()];
 
-  // Does any active med have this weekday in its schedule?
+  // Does any active med have this weekday in its schedule and date within range?
   const hasMedsOnDay = (day: number) => {
     const key = getDayKey(day);
-    return medications.some((m) => m.isActive && (m.daysOfWeek ?? []).includes(key));
+    const cellDate = new Date(viewYear, viewMonth, day);
+    cellDate.setHours(0, 0, 0, 0);
+    return medications.some((m) => {
+      if (!m.isActive || !(m.daysOfWeek ?? []).includes(key)) return false;
+      const start = new Date(m.startDate);
+      const end = m.endDate ? new Date(m.endDate) : null;
+      return cellDate >= start && (!end || cellDate <= end);
+    });
   };
 
   const getLogForDay = (day: number) => {
@@ -75,7 +82,12 @@ export default function CalendarScreen() {
     const isFutureDay = cellDate > todayMidnight;
 
     const scheduledMeds = medications.filter(
-      (m) => m.isActive && (m.daysOfWeek ?? []).includes(dayKey)
+      (m) => {
+        if (!m.isActive || !(m.daysOfWeek ?? []).includes(dayKey)) return false;
+        const start = new Date(m.startDate);
+        const end = m.endDate ? new Date(m.endDate) : null;
+        return cellDate >= start && (!end || cellDate <= end);
+      }
     );
 
     if (scheduledMeds.length === 0) return [];

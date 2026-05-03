@@ -154,21 +154,17 @@ export default function MedsScreen() {
       const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const formatInvalid =
+      if (
         parts.length !== 3 ||
         parts[0]?.length !== 2 ||
         parts[1]?.length !== 2 ||
-        parts[2]?.length !== 4 ||
-        isNaN(d.getTime());
-      const rangeInvalid =
-        mm < 1 || mm > 12 ||
-        dd < 1 || dd > 31 ||
-        yyyy < currentYear ||
-        yyyy > currentYear + 10;
-      if (formatInvalid || rangeInvalid) {
-        setEditRefillDateError('Enter a valid date in MM/DD/YYYY format.');
-        return;
-      }
+        parts[2]?.length !== 4
+      ) { setEditRefillDateError('Enter a complete date in MM/DD/YYYY format.'); return; }
+      if (isNaN(mm) || mm < 1 || mm > 12) { setEditRefillDateError('Month must be between 01 and 12.'); return; }
+      if (isNaN(dd) || dd < 1 || dd > 31) { setEditRefillDateError('Day must be between 01 and 31.'); return; }
+      if (isNaN(yyyy) || yyyy < currentYear) { setEditRefillDateError('Year must be this year or later.'); return; }
+      if (yyyy > currentYear + 10) { setEditRefillDateError('Refill date can be at most 10 years in the future.'); return; }
+      if (isNaN(d.getTime())) { setEditRefillDateError('Enter a valid date in MM/DD/YYYY format.'); return; }
       if (d <= today) {
         setEditRefillDateError('Refill date must be in the future.');
         return;

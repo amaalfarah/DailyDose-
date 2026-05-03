@@ -233,25 +233,24 @@ export default function AddMedicationScreen() {
   function validateRefillDate(value: string): string {
     if (!value.trim()) return '';
     const parts = value.split('/');
+    if (
+      parts.length !== 3 ||
+      parts[0]?.length !== 2 ||
+      parts[1]?.length !== 2 ||
+      parts[2]?.length !== 4
+    ) return 'Enter a complete date in MM/DD/YYYY format.';
     const mm = parseInt(parts[0], 10);
     const dd = parseInt(parts[1], 10);
     const yyyy = parseInt(parts[2], 10);
     const currentYear = new Date().getFullYear();
+    if (isNaN(mm) || mm < 1 || mm > 12) return 'Month must be between 01 and 12.';
+    if (isNaN(dd) || dd < 1 || dd > 31) return 'Day must be between 01 and 31.';
+    if (isNaN(yyyy) || yyyy < currentYear) return 'Year must be this year or later.';
+    if (yyyy > currentYear + 10) return 'Refill date can be at most 10 years in the future.';
     const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+    if (isNaN(d.getTime())) return 'Enter a valid date in MM/DD/YYYY format.';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const formatInvalid =
-      parts.length !== 3 ||
-      parts[0]?.length !== 2 ||
-      parts[1]?.length !== 2 ||
-      parts[2]?.length !== 4 ||
-      isNaN(d.getTime());
-    const rangeInvalid =
-      mm < 1 || mm > 12 ||
-      dd < 1 || dd > 31 ||
-      yyyy < currentYear ||
-      yyyy > currentYear + 10;
-    if (formatInvalid || rangeInvalid) return 'Enter a valid date in MM/DD/YYYY format.';
     if (d <= today) return 'Refill date must be in the future.';
     return '';
   }

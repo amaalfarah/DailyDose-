@@ -279,11 +279,26 @@ export default function AddMedicationScreen() {
     let refillError = '';
     if (refillDate.trim()) {
       const parts = refillDate.split('/');
+      const mm = parseInt(parts[0], 10);
+      const dd = parseInt(parts[1], 10);
+      const yyyy = parseInt(parts[2], 10);
+      const currentYear = new Date().getFullYear();
       const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (isNaN(d.getTime()) || parts.length !== 3 || parts[2]?.length !== 4) {
-        refillError = 'Please enter a valid date (MM/DD/YYYY).';
+      const formatInvalid =
+        parts.length !== 3 ||
+        parts[0]?.length !== 2 ||
+        parts[1]?.length !== 2 ||
+        parts[2]?.length !== 4 ||
+        isNaN(d.getTime());
+      const rangeInvalid =
+        mm < 1 || mm > 12 ||
+        dd < 1 || dd > 31 ||
+        yyyy < currentYear ||
+        yyyy > currentYear + 10;
+      if (formatInvalid || rangeInvalid) {
+        refillError = 'Enter a valid date in MM/DD/YYYY format.';
       } else if (d <= today) {
         refillError = 'Refill date must be in the future.';
       }

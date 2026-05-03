@@ -76,7 +76,7 @@ function formatTimeInput(raw: string): string {
   return `${digits[0]}:${digits.slice(1, 3)}`;
 }
 
-type EditMode = 'icon' | 'dose' | 'schedule' | 'coverName' | 'refillDate' | null;
+type EditMode = 'icon' | 'dose' | 'schedule' | 'dates' | 'coverName' | 'refillDate' | null;
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
@@ -102,6 +102,12 @@ export default function MedsScreen() {
 
   // Cover name edit state
   const [editCoverName, setEditCoverName] = useState('');
+
+  // Dates edit state
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [editStartDateError, setEditStartDateError] = useState('');
+  const [editEndDateError, setEditEndDateError] = useState('');
 
   // Refill date edit state
   const [editRefillDate, setEditRefillDate] = useState('');
@@ -171,6 +177,51 @@ export default function MedsScreen() {
       }
     }
     updateMedication(selectedMed.id, { refillDate: editRefillDate.trim() || undefined });
+    closeAll();
+  }
+
+  function isoToMMDDYYYY(iso: string): string {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${m}/${d}/${y}`;
+  }
+
+  function parseMMDDYYYY(text: string): Date | null {
+    const parts = text.split('/');
+    if (parts.length !== 3 || parts[0].length !== 2 || parts[1].length !== 2 || parts[2].length !== 4) return null;
+    const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function mmddyyyyToISO(text: string): string {
+    const [m, d, y] = text.split('/');
+    return `${y}-${m}-${d}`;
+  }
+
+  function openEditDates() {
+    if (!selectedMed) return;
+    setEditStartDate(isoToMMDDYYYY(selectedMed.startDate ?? ''));
+    setEditEndDate(isoToMMDDYYYY(selectedMed.endDate ?? ''));
+    setEditStartDateError('');
+    setEditEndDateError('');
+    setSheetVisible(false);
+    setEditMode('dates');
+  }
+
+  function saveDates() {
+    if (!selectedMed) return;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const parsedStart = parseMMDDYYYY(editStartDate);
+    const parsedEnd = editEndDate.trim() ? parseMMDDYYYY(editEndDate) : null;
+    const startErr = !parsedStart ? 'Enter a complete date in MM/DD/YYYY format.' : parsedStart > today ? 'Start date must be today or in the past.' : '';
+    const endErr = editEndDate.trim() && (!parsedEnd ? 'Enter a complete date in MM/DD/YYYY format.' : parsedStart && parsedEnd && parsedEnd <= parsedStart ? 'End date must be after the start date.' : '') || '';
+    setEditStartDateError(startErr);
+    setEditEndDateError(endErr);
+    if (startErr || endErr) return;
+    updateMedication(selectedMed.id, {
+      startDate: mmddyyyyToISO(editStartDate),
+      endDate: editEndDate.trim() ? mmddyyyyToISO(editEndDate) : undefined,
+    });
     closeAll();
   }
 
@@ -411,6 +462,12 @@ export default function MedsScreen() {
                 icon="calendar-clock" iconBg={colors.mintL} iconColor={colors.mintD}
                 label="Edit Schedule" sub="Update times or frequency"
                 onPress={openEditSchedule}
+              />
+              <SheetAction
+                icon="calendar-range" iconBg={colors.blueL} iconColor={colors.blueD}
+                label="Edit Dates"
+                sub={selectedMed.startDate ? `Start: ${isoToMMDDYYYY(selectedMed.startDate)}${selectedMed.endDate ? '  ·  End: ' + isoToMMDDYYYY(selectedMed.endDate) : ''}` : 'Set start and end date'}
+                onPress={openEditDates}
               />
               <SheetAction
                 icon="calendar-refresh" iconBg={colors.amberL} iconColor={colors.amberD}
@@ -753,6 +810,68 @@ export default function MedsScreen() {
         </TouchableOpacity>
       )}
 
+      {/* ── Edit Dates mini-sheet ── */}
+      {editMode === 'dates' && selectedMed && (
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeAll}>
+          <TouchableOpacity style={styles.sheet} activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.handle} />
+            <MiniSheetHeader
+              title="Edit Dates"
+              onBack={() => { setEditMode(null); setSheetVisible(true); }}
+              onClose={closeAll}
+            />
+            <View style={[styles.sheetBody, { paddingBottom: 24 }]}>
+              <Text style={styles.sheetSectionLabel}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
+              <TextInput
+                style={[styles.dateInput, !!editStartDateError && styles.dateInputError]}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#b0bec5"
+                keyboardType="numeric"
+                value={editStartDate}
+                maxLength={10}
+                onChangeText={(t) => {
+                  const digits = t.replace(/\D/g, '').slice(0, 8);
+                  let formatted = digits;
+                  if (digits.length > 4) formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`;
+                  else if (digits.length > 2) formatted = `${digits.slice(0,2)}/${digits.slice(2)}`;
+                  setEditStartDate(formatted);
+                  if (editStartDateError) setEditStartDateError('');
+                }}
+              />
+              {!!editStartDateError && <Text style={styles.dateErrorText}>{editStartDateError}</Text>}
+
+              <Text style={[styles.sheetSectionLabel, { marginTop: 8 }]}>End Date <Text style={{ color: colors.muted, fontFamily: 'DMSans_400Regular' }}>Optional</Text></Text>
+              <TextInput
+                style={[styles.dateInput, !!editEndDateError && styles.dateInputError]}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#b0bec5"
+                keyboardType="numeric"
+                value={editEndDate}
+                maxLength={10}
+                onChangeText={(t) => {
+                  const digits = t.replace(/\D/g, '').slice(0, 8);
+                  let formatted = digits;
+                  if (digits.length > 4) formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`;
+                  else if (digits.length > 2) formatted = `${digits.slice(0,2)}/${digits.slice(2)}`;
+                  setEditEndDate(formatted);
+                  if (editEndDateError) setEditEndDateError('');
+                }}
+              />
+              {!!editEndDateError && <Text style={styles.dateErrorText}>{editEndDateError}</Text>}
+              {editEndDate.trim() ? (
+                <TouchableOpacity onPress={() => { setEditEndDate(''); setEditEndDateError(''); }}>
+                  <Text style={styles.clearEndDate}>Clear end date</Text>
+                </TouchableOpacity>
+              ) : null}
+
+              <TouchableOpacity style={[styles.saveBtn, { marginTop: 16 }]} onPress={saveDates}>
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       {/* ── Cover Name mini-sheet ── */}
       {editMode === 'coverName' && selectedMed && (
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeAll}>
@@ -1077,6 +1196,17 @@ const styles = StyleSheet.create({
   reminderIndexLbl: { fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted },
   addSlotBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 10 },
   addSlotText: { fontSize: fontSizes.sm, fontFamily: fonts.bold, color: colors.mint },
+  // Dates edit
+  dateInput: {
+    backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 11,
+    fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy,
+    marginBottom: 4,
+  },
+  dateInputError: { borderColor: colors.rose },
+  dateErrorText: { fontSize: fontSizes.xs, color: colors.rose, marginBottom: 8 },
+  clearEndDate: { fontSize: fontSizes.xs, color: colors.muted, marginBottom: 4, textDecorationLine: 'underline' },
   // Cover name
   coverNameInput: {
     backgroundColor: colors.white,

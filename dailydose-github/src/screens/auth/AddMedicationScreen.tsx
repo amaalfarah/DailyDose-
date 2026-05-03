@@ -13,7 +13,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -122,8 +121,6 @@ export default function AddMedicationScreen() {
     }
     return '';
   });
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
   const [startDateError, setStartDateError] = useState('');
   const [endDateError, setEndDateError] = useState('');
   const [nameError, setNameError]         = useState(false);
@@ -327,9 +324,10 @@ export default function AddMedicationScreen() {
     const daysInvalid      = daysOfWeek.length === 0;
     const coverNameInvalid = privacyMode && !coverName.trim();
     const parsedStart = parseMMDDYYYY(startDateText);
-    const startDateInvalid = !parsedStart;
+    const today = new Date(); today.setHours(23, 59, 59, 999);
+    const startDateInvalid = !parsedStart || parsedStart > today;
     const parsedEnd = endDateText.trim() ? parseMMDDYYYY(endDateText) : null;
-    const endDateInvalid = endDateText.trim() && (!parsedEnd || (parsedStart && parsedEnd < parsedStart));
+    const endDateInvalid = endDateText.trim() && (!parsedEnd || (parsedStart && parsedEnd <= parsedStart));
     const newTimeErrors    = reminderHours.map(h => !h.trim());
 
     const refillError = validateRefillDate(refillDate);
@@ -338,8 +336,8 @@ export default function AddMedicationScreen() {
     setDosageError(dosageInvalid);
     setDaysError(daysInvalid);
     setCoverNameError(coverNameInvalid);
-    setStartDateError(startDateInvalid ? 'Start date is required.' : '');
-    setEndDateError(endDateInvalid ? 'End date cannot be before start date.' : '');
+    setStartDateError(startDateInvalid ? (!parsedStart ? 'Enter a complete date in MM/DD/YYYY format.' : 'Start date must be today or in the past.') : '');
+    setEndDateError(endDateInvalid ? (!parsedEnd ? 'Enter a complete date in MM/DD/YYYY format.' : 'End date must be after the start date.') : '');
     setTimeErrors(newTimeErrors);
     setRefillDateError(refillError);
     if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || startDateInvalid || endDateInvalid || newTimeErrors.some(Boolean) || refillError) return;
@@ -559,64 +557,53 @@ export default function AddMedicationScreen() {
         {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
 
         <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <View style={[s.dateInputRow, !!startDateError && s.dateInputRowErr]}>
-          <TextInput
-            style={s.dateTextInp}
-            placeholder="MM/DD/YYYY"
-            placeholderTextColor="#b0bec5"
-            keyboardType="numeric"
-            value={startDateText}
-            maxLength={10}
-            onChangeText={(t) => {
-              setStartDateText(formatDateInput(t));
-              if (startDateError) setStartDateError('');
-            }}
-          />
-          <TouchableOpacity onPress={() => setShowStartPicker(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name="calendar" size={20} color={colors.mint} />
-          </TouchableOpacity>
-        </View>
-        <DateTimePickerModal
-          isVisible={showStartPicker}
-          mode="date"
-          date={parseMMDDYYYY(startDateText) ?? new Date()}
-          onConfirm={(d) => {
-            setShowStartPicker(false);
-            setStartDateText(dateToMMDDYYYY(d));
-            setStartDateError('');
+        <TextInput
+          style={[s.inp, !!startDateError && s.inpError]}
+          placeholder="MM/DD/YYYY"
+          placeholderTextColor="#b0bec5"
+          keyboardType="numeric"
+          value={startDateText}
+          maxLength={10}
+          onChangeText={(t) => {
+            setStartDateText(formatDateInput(t));
+            if (startDateError) setStartDateError('');
           }}
-          onCancel={() => setShowStartPicker(false)}
+          onBlur={() => {
+            const parsed = parseMMDDYYYY(startDateText);
+            if (!startDateText.trim()) {
+              setStartDateError('Start date is required.');
+            } else if (!parsed) {
+              setStartDateError('Enter a complete date in MM/DD/YYYY format.');
+            } else {
+              const today = new Date();
+              today.setHours(23, 59, 59, 999);
+              if (parsed > today) setStartDateError('Start date must be today or in the past.');
+              else setStartDateError('');
+            }
+          }}
         />
         {!!startDateError && <Text style={s.errorText}>{startDateError}</Text>}
 
         <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
-        <View style={[s.dateInputRow, !!endDateError && s.dateInputRowErr]}>
-          <TextInput
-            style={s.dateTextInp}
-            placeholder="MM/DD/YYYY (leave blank if ongoing)"
-            placeholderTextColor="#b0bec5"
-            keyboardType="numeric"
-            value={endDateText}
-            maxLength={10}
-            onChangeText={(t) => {
-              setEndDateText(formatDateInput(t));
-              if (endDateError) setEndDateError('');
-            }}
-          />
-          <TouchableOpacity onPress={() => setShowEndPicker(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <MaterialCommunityIcons name="calendar" size={20} color={colors.mint} />
-          </TouchableOpacity>
-        </View>
-        <DateTimePickerModal
-          isVisible={showEndPicker}
-          mode="date"
-          date={parseMMDDYYYY(endDateText) ?? new Date()}
-          onConfirm={(d) => {
-            setShowEndPicker(false);
-            setEndDateText(dateToMMDDYYYY(d));
-            setEndDateError('');
+        <TextInput
+          style={[s.inp, !!endDateError && s.inpError]}
+          placeholder="MM/DD/YYYY (leave blank if ongoing)"
+          placeholderTextColor="#b0bec5"
+          keyboardType="numeric"
+          value={endDateText}
+          maxLength={10}
+          onChangeText={(t) => {
+            setEndDateText(formatDateInput(t));
+            if (endDateError) setEndDateError('');
           }}
-          onCancel={() => setShowEndPicker(false)}
+          onBlur={() => {
+            if (!endDateText.trim()) { setEndDateError(''); return; }
+            const parsedEnd = parseMMDDYYYY(endDateText);
+            if (!parsedEnd) { setEndDateError('Enter a complete date in MM/DD/YYYY format.'); return; }
+            const parsedStart = parseMMDDYYYY(startDateText);
+            if (parsedStart && parsedEnd <= parsedStart) setEndDateError('End date must be after the start date.');
+            else setEndDateError('');
+          }}
         />
         {!!endDateError && <Text style={s.errorText}>{endDateError}</Text>}
 
@@ -882,15 +869,4 @@ const s = StyleSheet.create({
   unitDropItemOn: { backgroundColor: colors.mintL },
   unitDropItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
   unitDropItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
-  dateInputRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11,
-    marginBottom: 12, gap: 8,
-  },
-  dateInputRowErr: { borderColor: colors.rose },
-  dateTextInp: {
-    flex: 1, fontSize: fontSizes.base, fontFamily: fonts.regular,
-    color: colors.navy, padding: 0,
-  },
 });

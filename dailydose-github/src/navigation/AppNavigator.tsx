@@ -134,7 +134,7 @@ function MainTabs() {
           borderTopWidth: 1.5,
           paddingBottom: 18,
           paddingTop: 12,
-          height: 90,
+          height: 110,
         },
         tabBarActiveTintColor: colors.mint,
         tabBarInactiveTintColor: '#aab8c0',

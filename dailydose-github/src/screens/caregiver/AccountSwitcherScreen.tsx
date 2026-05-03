@@ -31,6 +31,9 @@ export default function AccountSwitcherScreen() {
         <View style={styles.header}>
           <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
           <Text style={styles.headerTitle}>Accounts</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.closeIcon}>✕</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.subtitle}>
           Choose an account to manage. Your data is kept separate.
@@ -110,6 +113,8 @@ const styles = StyleSheet.create({
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
   headerTitle: { fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.navy },
+  closeBtn: { padding: 4 },
+  closeIcon: { fontSize: 18, color: colors.muted, fontFamily: fonts.bold },
   subtitle: { fontSize: fontSizes.base, color: colors.muted, marginBottom: 16, lineHeight: 18 },
   card: {
     borderRadius: 16, borderWidth: 2, padding: 14,

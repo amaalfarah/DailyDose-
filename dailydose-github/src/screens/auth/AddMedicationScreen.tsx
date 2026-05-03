@@ -513,7 +513,7 @@ export default function AddMedicationScreen() {
         {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
 
         <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)}>
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)} activeOpacity={0.7}>
           <Text style={s.dateBtnText}>
             {startDate.toLocaleDateString('en-US', { 
               year: 'numeric', 
@@ -542,7 +542,7 @@ export default function AddMedicationScreen() {
         {startDateError && <Text style={s.errorText}>{startDateError}</Text>}
 
         <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
-        <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)}>
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)} activeOpacity={0.7}>
           <Text style={s.dateBtnText}>
             {endDate 
               ? endDate.toLocaleDateString('en-US', { 

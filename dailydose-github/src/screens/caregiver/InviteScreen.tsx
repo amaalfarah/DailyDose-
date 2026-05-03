@@ -134,7 +134,7 @@ export default function InviteScreen() {
 
         <View style={{ height: 16 }} />
         <TouchableOpacity style={s.btn} onPress={sendInvite}>
-          <Text style={s.btnText}>Send invite link →</Text>
+          <Text style={s.btnText}>Send invite link and code →</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.btnOut} onPress={() => navigation.goBack()}>
           <Text style={s.btnOutText}>Cancel</Text>

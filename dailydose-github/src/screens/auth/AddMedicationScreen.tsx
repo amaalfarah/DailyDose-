@@ -107,8 +107,21 @@ export default function AddMedicationScreen() {
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
   const [refillDate, setRefillDate]   = useState(existingMed?.refillDate ?? '');
   const [refillDateError, setRefillDateError] = useState('');
-  const [startDate, setStartDate] = useState(existingMed?.startDate ? new Date(existingMed.startDate) : new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(existingMed?.endDate ? new Date(existingMed.endDate) : undefined);
+  const [startDateText, setStartDateText] = useState(() => {
+    if (existingMed?.startDate) {
+      const [y, m, d] = existingMed.startDate.split('-');
+      return `${m}/${d}/${y}`;
+    }
+    const t = new Date();
+    return `${String(t.getMonth() + 1).padStart(2, '0')}/${String(t.getDate()).padStart(2, '0')}/${t.getFullYear()}`;
+  });
+  const [endDateText, setEndDateText] = useState(() => {
+    if (existingMed?.endDate) {
+      const [y, m, d] = existingMed.endDate.split('-');
+      return `${m}/${d}/${y}`;
+    }
+    return '';
+  });
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [startDateError, setStartDateError] = useState('');
@@ -153,6 +166,22 @@ export default function AddMedicationScreen() {
     if (digits.length <= 2) return digits;
     if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  }
+
+  function parseMMDDYYYY(text: string): Date | null {
+    const parts = text.split('/');
+    if (parts.length !== 3 || parts[0].length !== 2 || parts[1].length !== 2 || parts[2].length !== 4) return null;
+    const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function dateToMMDDYYYY(date: Date): string {
+    return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
+  }
+
+  function mmddyyyyToISO(text: string): string {
+    const [m, d, y] = text.split('/');
+    return `${y}-${m}-${d}`;
   }
 
   function clampTime(val: string): string {
@@ -272,8 +301,10 @@ export default function AddMedicationScreen() {
     const dosageInvalid    = !dosageAmount.trim();
     const daysInvalid      = daysOfWeek.length === 0;
     const coverNameInvalid = privacyMode && !coverName.trim();
-    const startDateInvalid = !startDate;
-    const endDateInvalid   = endDate && endDate < startDate;
+    const parsedStart = parseMMDDYYYY(startDateText);
+    const startDateInvalid = !parsedStart;
+    const parsedEnd = endDateText.trim() ? parseMMDDYYYY(endDateText) : null;
+    const endDateInvalid = endDateText.trim() && (!parsedEnd || (parsedStart && parsedEnd < parsedStart));
     const newTimeErrors    = reminderHours.map(h => !h.trim());
 
     let refillError = '';
@@ -333,8 +364,8 @@ export default function AddMedicationScreen() {
         daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        startDate: mmddyyyyToISO(startDateText),
+        endDate: endDateText.trim() ? mmddyyyyToISO(endDateText) : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
@@ -357,8 +388,8 @@ export default function AddMedicationScreen() {
         isPRN: frequency === 'as-needed',
         privacyMode,
         isActive: true,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        startDate: mmddyyyyToISO(startDateText),
+        endDate: endDateText.trim() ? mmddyyyyToISO(endDateText) : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
@@ -528,64 +559,66 @@ export default function AddMedicationScreen() {
         {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
 
         <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)} activeOpacity={0.7}>
-          <Text style={s.dateBtnText}>
-            {startDate.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: '2-digit', 
-              day: '2-digit' 
-            })}
-          </Text>
-          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
-        </TouchableOpacity>
+        <View style={[s.dateInputRow, !!startDateError && s.dateInputRowErr]}>
+          <TextInput
+            style={s.dateTextInp}
+            placeholder="MM/DD/YYYY"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={startDateText}
+            maxLength={10}
+            onChangeText={(t) => {
+              setStartDateText(formatDateInput(t));
+              if (startDateError) setStartDateError('');
+            }}
+          />
+          <TouchableOpacity onPress={() => setShowStartPicker(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <MaterialCommunityIcons name="calendar" size={20} color={colors.mint} />
+          </TouchableOpacity>
+        </View>
         <DateTimePickerModal
           isVisible={showStartPicker}
           mode="date"
-          date={startDate}
-          onConfirm={(selectedDate) => {
+          date={parseMMDDYYYY(startDateText) ?? new Date()}
+          onConfirm={(d) => {
             setShowStartPicker(false);
-            setStartDate(selectedDate);
+            setStartDateText(dateToMMDDYYYY(d));
             setStartDateError('');
-            if (endDate && selectedDate > endDate) {
-              setEndDateError('End date cannot be before start date.');
-            } else {
-              setEndDateError('');
-            }
           }}
           onCancel={() => setShowStartPicker(false)}
         />
-        {startDateError && <Text style={s.errorText}>{startDateError}</Text>}
+        {!!startDateError && <Text style={s.errorText}>{startDateError}</Text>}
 
         <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
-        <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)} activeOpacity={0.7}>
-          <Text style={s.dateBtnText}>
-            {endDate 
-              ? endDate.toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: '2-digit', 
-                  day: '2-digit' 
-                })
-              : 'No end date (ongoing)'
-            }
-          </Text>
-          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
-        </TouchableOpacity>
+        <View style={[s.dateInputRow, !!endDateError && s.dateInputRowErr]}>
+          <TextInput
+            style={s.dateTextInp}
+            placeholder="MM/DD/YYYY (leave blank if ongoing)"
+            placeholderTextColor="#b0bec5"
+            keyboardType="numeric"
+            value={endDateText}
+            maxLength={10}
+            onChangeText={(t) => {
+              setEndDateText(formatDateInput(t));
+              if (endDateError) setEndDateError('');
+            }}
+          />
+          <TouchableOpacity onPress={() => setShowEndPicker(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <MaterialCommunityIcons name="calendar" size={20} color={colors.mint} />
+          </TouchableOpacity>
+        </View>
         <DateTimePickerModal
           isVisible={showEndPicker}
           mode="date"
-          date={endDate || new Date()}
-          onConfirm={(selectedDate) => {
+          date={parseMMDDYYYY(endDateText) ?? new Date()}
+          onConfirm={(d) => {
             setShowEndPicker(false);
-            setEndDate(selectedDate);
-            if (selectedDate < startDate) {
-              setEndDateError('End date cannot be before start date.');
-            } else {
-              setEndDateError('');
-            }
+            setEndDateText(dateToMMDDYYYY(d));
+            setEndDateError('');
           }}
           onCancel={() => setShowEndPicker(false)}
         />
-        {endDateError && <Text style={s.errorText}>{endDateError}</Text>}
+        {!!endDateError && <Text style={s.errorText}>{endDateError}</Text>}
 
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
@@ -849,6 +882,15 @@ const s = StyleSheet.create({
   unitDropItemOn: { backgroundColor: colors.mintL },
   unitDropItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
   unitDropItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
-  dateBtn: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  dateBtnText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
+  dateInputRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11,
+    marginBottom: 12, gap: 8,
+  },
+  dateInputRowErr: { borderColor: colors.rose },
+  dateTextInp: {
+    flex: 1, fontSize: fontSizes.base, fontFamily: fonts.regular,
+    color: colors.navy, padding: 0,
+  },
 });

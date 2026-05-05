@@ -80,7 +80,8 @@ type EditMode = 'icon' | 'dose' | 'schedule' | 'dates' | 'coverName' | 'refillDa
 
 export default function MedsScreen() {
   const navigation = useNavigation<any>();
-  const { medications, deleteMedication, updateMedication, reorderMedication } = useMedStore();
+  const { medications: allMedications, deleteMedication, updateMedication, reorderMedication } = useMedStore();
+  const medications = allMedications.filter((m) => m.owner !== 'shared');
   const { user, pendingName } = useAuthStore();
   const { refillReminders } = useSettingsStore();
   const displayName = user?.name || pendingName || 'there';

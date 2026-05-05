@@ -11,7 +11,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 export default function SharedDashboardScreen() {
   const navigation = useNavigation<any>();
-  const { medications, toggleDoseTaken } = useMedStore();
+  const { medications: allMedications, toggleDoseTaken } = useMedStore();
+  const medications = allMedications.filter((m) => m.owner === 'shared');
   const { sharedAccountOwnerName } = useAuthStore();
   const ownerName = sharedAccountOwnerName || 'Shared';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);

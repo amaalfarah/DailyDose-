@@ -73,7 +73,7 @@ export default function AddMedicationScreen() {
   const fromTab = route.params?.fromTab === true;
   const medId = route.params?.medId as string | undefined;
   const { addMedication, updateMedication, medications } = useMedStore();
-  const { pendingName } = useAuthStore();
+  const { pendingName, activeAccount } = useAuthStore();
   const displayName = pendingName || 'your';
 
   const existingMed = medId ? medications.find((m) => m.id === medId) : undefined;
@@ -390,6 +390,7 @@ export default function AddMedicationScreen() {
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
+        owner: activeAccount === 'shared' ? 'shared' : 'mine',
       });
       if (fromTab) {
         navigation.goBack();

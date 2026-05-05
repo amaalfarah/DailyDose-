@@ -12,7 +12,7 @@ export default function AccountSwitcherScreen() {
   const { switchAccount, user, sharedAccountOwnerName, savedCaregiverCode } = useAuthStore();
   const myInitials = (user?.name ?? '').split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const hasSharedAccess = !!(sharedAccountOwnerName || savedCaregiverCode);
-  const ownerName = sharedAccountOwnerName || 'Linked Account';
+  const ownerName = sharedAccountOwnerName || 'Client';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
 
   function goToMine() {
@@ -69,7 +69,7 @@ export default function AccountSwitcherScreen() {
                 <Text style={[styles.cardLabel, { color: colors.blueD }]}>
                   Shared · Caregiver access
                 </Text>
-                <Text style={styles.cardName}>{ownerName}'s Account</Text>
+                <Text style={styles.cardName}>{sharedAccountOwnerName ? `${ownerName}'s Account` : 'Client Account'}</Text>
               </View>
               <Text style={styles.cardArrow}>›</Text>
             </View>

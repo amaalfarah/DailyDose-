@@ -14,7 +14,7 @@ export default function SharedDashboardScreen() {
   const { medications: allMedications, toggleDoseTaken } = useMedStore();
   const medications = allMedications.filter((m) => m.owner === 'shared');
   const { sharedAccountOwnerName } = useAuthStore();
-  const ownerName = sharedAccountOwnerName || 'Shared';
+  const ownerName = sharedAccountOwnerName || 'Client';
   const ownerInitials = ownerName.split(' ').map((w) => w[0] ?? '').join('').toUpperCase().slice(0, 2);
   const totalDoses = medications.reduce((s, m) => s + m.totalDosesToday, 0);
   const takenDoses = medications.reduce((s, m) => s + m.dosesTakenToday.filter(Boolean).length, 0);
@@ -26,7 +26,7 @@ export default function SharedDashboardScreen() {
         <View style={s.switchBar}>
           <View>
             <Text style={[s.switchLabel, { color: colors.blueD }]}>Current Account</Text>
-            <Text style={s.switchName}>{ownerName}'s Account</Text>
+            <Text style={s.switchName}>{sharedAccountOwnerName ? `${ownerName}'s Account` : 'Client Account'}</Text>
           </View>
           <TouchableOpacity style={s.switchBtn} onPress={() => navigation.navigate('AccountSwitcher')}>
             <Text style={s.switchBtnText}>Switch ⇄</Text>

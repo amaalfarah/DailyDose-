@@ -46,9 +46,9 @@ export default function InviteScreen() {
 
     const displayName = name.trim() || 'Caregiver';
     addCaregiver({ id: token, name: displayName, email, permissions: perms, status: 'pending', inviteToken: token, invitedAt: new Date().toISOString() });
-    await shareInviteLink(token, displayName);
     setSentName(displayName);
     setSent(true);
+    try { await shareInviteLink(token, displayName); } catch (_) {}
   }
 
   return (

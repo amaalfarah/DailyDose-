@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 6,
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  pageTitle: { fontSize: 28, fontFamily: fonts.bold, color: colors.navy, marginTop: 12, marginBottom: 4 },
+  pageTitle: { fontSize: 28, fontFamily: fonts.bold, color: colors.navy, marginTop: 12, marginBottom: 4, textAlign: 'center' },
   closeBtn: { padding: 4 },
   closeIcon: { fontSize: 18, color: colors.muted, fontFamily: fonts.bold },
   subtitle: { fontSize: fontSizes.base, color: colors.muted, marginBottom: 16, lineHeight: 18 },

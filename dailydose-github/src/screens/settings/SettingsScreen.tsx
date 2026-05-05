@@ -67,8 +67,8 @@ export default function SettingsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>Daily<Text style={{ color: colors.mint }}>Dose</Text>+</Text>
-          <Text style={styles.headerTitle}>Settings</Text>
         </View>
+        <Text style={styles.pageTitle}>Settings</Text>
 
         {/* Profile */}
         <Text style={styles.sectionHead}>Profile</Text>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 14,
   },
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
-  headerTitle: { fontSize: 22, fontFamily: fonts.bold, color: colors.navy },
+  pageTitle: { fontSize: 28, fontFamily: fonts.bold, color: colors.navy, marginTop: 12, marginBottom: 4, textAlign: 'center' },
   sectionHead: {
     fontSize: fontSizes.xs - 1, fontFamily: fonts.bold, color: colors.muted,
     textTransform: 'uppercase', letterSpacing: 1,

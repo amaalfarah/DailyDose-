@@ -29,6 +29,9 @@ export default function InviteScreen() {
   const [notifyMissedDose, setNotifyMissedDose] = useState(true);
   const [notifyUpcoming, setNotifyUpcoming] = useState(false);
 
+  const [sent, setSent] = useState(false);
+  const [sentName, setSentName] = useState('');
+
   const emailError = emailTouched ? validateEmail(email) : '';
 
   async function sendInvite() {
@@ -41,9 +44,11 @@ export default function InviteScreen() {
       canEdit && 'Edit medications',
     ].filter(Boolean) as string[];
 
-    addCaregiver({ id: token, name: name || 'Caregiver', email, permissions: perms, status: 'pending', inviteToken: token, invitedAt: new Date().toISOString() });
-    await shareInviteLink(token, name || 'Caregiver');
-    navigation.navigate('InviteSent', { caregiverName: name, caregiverEmail: email });
+    const displayName = name.trim() || 'Caregiver';
+    addCaregiver({ id: token, name: displayName, email, permissions: perms, status: 'pending', inviteToken: token, invitedAt: new Date().toISOString() });
+    await shareInviteLink(token, displayName);
+    setSentName(displayName);
+    setSent(true);
   }
 
   return (
@@ -63,30 +68,33 @@ export default function InviteScreen() {
           Invite a trusted person to help manage your medications. They'll create their own account and can switch between their personal dashboard and your shared account.
         </Text>
 
-        {/* Name */}
-        <Text style={s.lbl}>Caregiver's Name</Text>
-        <TextInput
-          style={s.inp}
-          placeholder="e.g. Sofia Santos"
-          placeholderTextColor="#b0bec5"
-          value={name}
-          onChangeText={setName}
-        />
+        {/* Name + Email — hidden after send */}
+        {!sent && (
+          <>
+            <Text style={s.lbl}>Caregiver's Name</Text>
+            <TextInput
+              style={s.inp}
+              placeholder="e.g. Sofia Santos"
+              placeholderTextColor="#b0bec5"
+              value={name}
+              onChangeText={setName}
+            />
 
-        {/* Email */}
-        <Text style={s.lbl}>Caregiver's Email</Text>
-        <TextInput
-          style={[s.inp, s.inpEmail, emailError ? s.inpError : null]}
-          placeholder="sofia@email.com"
-          placeholderTextColor="#b0bec5"
-          value={email}
-          onChangeText={v => { setEmail(v); setEmailTouched(false); }}
-          onBlur={() => setEmailTouched(true)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {emailError ? <Text style={s.fieldError}>{emailError}</Text> : null}
+            <Text style={s.lbl}>Caregiver's Email</Text>
+            <TextInput
+              style={[s.inp, s.inpEmail, emailError ? s.inpError : null]}
+              placeholder="sofia@email.com"
+              placeholderTextColor="#b0bec5"
+              value={email}
+              onChangeText={v => { setEmail(v); setEmailTouched(false); }}
+              onBlur={() => setEmailTouched(true)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {emailError ? <Text style={s.fieldError}>{emailError}</Text> : null}
+          </>
+        )}
 
         {/* Access Permissions */}
         <Text style={s.lbl}>Access Permissions</Text>
@@ -133,8 +141,10 @@ export default function InviteScreen() {
         />
 
         <View style={{ height: 16 }} />
-        <TouchableOpacity style={s.btn} onPress={sendInvite}>
-          <Text style={s.btnText}>Send invite link and code →</Text>
+        <TouchableOpacity style={[s.btn, sent && s.btnSent]} onPress={sent ? undefined : sendInvite} activeOpacity={sent ? 1 : 0.8}>
+          <Text style={s.btnText}>
+            {sent ? `SENT to ${sentName} !` : 'Send invite link and code →'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.btnOut} onPress={() => navigation.goBack()}>
           <Text style={s.btnOutText}>Cancel</Text>
@@ -193,6 +203,7 @@ const s = StyleSheet.create({
   controlledText: { fontSize: 9, fontFamily: fonts.bold, color: colors.blueD, letterSpacing: 0.6 },
   notifDesc: { fontSize: fontSizes.xs, color: colors.muted, lineHeight: 16, marginBottom: 8 },
   btn: { backgroundColor: colors.mint, borderRadius: 12, padding: 14, alignItems: 'center', marginBottom: 10 },
+  btnSent: { backgroundColor: colors.mintD },
   btnText: { color: '#fff', fontFamily: fonts.bold, fontSize: fontSizes.base },
   btnOut: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, padding: 13, alignItems: 'center' },
   btnOutText: { color: colors.muted, fontFamily: fonts.medium, fontSize: fontSizes.base },

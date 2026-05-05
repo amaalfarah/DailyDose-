@@ -43,7 +43,6 @@ export default function SharedDashboardScreen() {
 
         {/* Permission warning */}
         <View style={s.permWarn}>
-          <Text style={s.permIcon}>🔒</Text>
           <View style={{ flex: 1 }}>
             <Text style={s.permTitle}>View & log access only</Text>
             <Text style={s.permSub}>You can mark doses and view the schedule. Editing medications requires {ownerName}'s approval.</Text>

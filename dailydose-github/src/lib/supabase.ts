@@ -2,22 +2,20 @@
 // Copy this into your Expo project at src/lib/supabase.ts
 // Install: npx expo install @supabase/supabase-js expo-secure-store
 
-import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// ── Secure token storage (uses iOS Keychain / Android Keystore) ──────────────
-const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
-};
-
-// On web, fall back to localStorage
+// SecureStore is native-only — require it lazily so web doesn't choke on it
 const storage = Platform.OS === 'web'
   ? undefined
-  : ExpoSecureStoreAdapter;
+  : (() => {
+      const SecureStore = require('expo-secure-store');
+      return {
+        getItem:    (key: string) => SecureStore.getItemAsync(key),
+        setItem:    (key: string, value: string) => SecureStore.setItemAsync(key, value),
+        removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+      };
+    })();
 
 // ── Supabase client ───────────────────────────────────────────────────────────
 const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL  ?? '';
@@ -44,11 +42,11 @@ export const supabase = makeClient()!;
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
-export async function signUp(email: string, password: string, fullName: string) {
+export async function signUp(email: string, password: string, username: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: { data: { full_name: username, username } },
   });
   if (error) throw error;
   return data;
@@ -225,7 +223,7 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
   if (!supabase) return true;
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('users')
       .select('id')
       .eq('username', username)
       .maybeSingle();
@@ -249,6 +247,27 @@ export async function checkEmailAvailable(email: string): Promise<boolean> {
   } catch {
     return true;
   }
+}
+
+export async function getUserEmailByUsername(username: string): Promise<string | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('users')
+    .select('email')
+    .eq('username', username)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.email;
+}
+
+export async function getProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 // ── Subscription/trial helpers ────────────────────────────────────────────────

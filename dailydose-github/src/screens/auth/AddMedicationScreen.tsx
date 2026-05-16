@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -73,7 +74,7 @@ export default function AddMedicationScreen() {
   const fromTab = route.params?.fromTab === true;
   const medId = route.params?.medId as string | undefined;
   const { addMedication, updateMedication, medications } = useMedStore();
-  const { pendingName, activeAccount } = useAuthStore();
+  const { pendingName } = useAuthStore();
   const displayName = pendingName || 'your';
 
   const existingMed = medId ? medications.find((m) => m.id === medId) : undefined;
@@ -106,21 +107,10 @@ export default function AddMedicationScreen() {
   const [daysOfWeek, setDaysOfWeek]   = useState<string[]>(existingMed?.daysOfWeek ?? []);
   const [refillDate, setRefillDate]   = useState(existingMed?.refillDate ?? '');
   const [refillDateError, setRefillDateError] = useState('');
-  const [startDateText, setStartDateText] = useState(() => {
-    if (existingMed?.startDate) {
-      const [y, m, d] = existingMed.startDate.split('-');
-      return `${m}/${d}/${y}`;
-    }
-    const t = new Date();
-    return `${String(t.getMonth() + 1).padStart(2, '0')}/${String(t.getDate()).padStart(2, '0')}/${t.getFullYear()}`;
-  });
-  const [endDateText, setEndDateText] = useState(() => {
-    if (existingMed?.endDate) {
-      const [y, m, d] = existingMed.endDate.split('-');
-      return `${m}/${d}/${y}`;
-    }
-    return '';
-  });
+  const [startDate, setStartDate] = useState(existingMed?.startDate ? new Date(existingMed.startDate) : new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(existingMed?.endDate ? new Date(existingMed.endDate) : undefined);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
   const [startDateError, setStartDateError] = useState('');
   const [endDateError, setEndDateError] = useState('');
   const [nameError, setNameError]         = useState(false);
@@ -163,22 +153,6 @@ export default function AddMedicationScreen() {
     if (digits.length <= 2) return digits;
     if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  }
-
-  function parseMMDDYYYY(text: string): Date | null {
-    const parts = text.split('/');
-    if (parts.length !== 3 || parts[0].length !== 2 || parts[1].length !== 2 || parts[2].length !== 4) return null;
-    const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  function dateToMMDDYYYY(date: Date): string {
-    return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}/${date.getFullYear()}`;
-  }
-
-  function mmddyyyyToISO(text: string): string {
-    const [m, d, y] = text.split('/');
-    return `${y}-${m}-${d}`;
   }
 
   function clampTime(val: string): string {
@@ -225,31 +199,6 @@ export default function AddMedicationScreen() {
     setHours(prev => prev.filter((_, i) => i !== index));
     setPeriods(prev => prev.filter((_, i) => i !== index));
     setTimeErrors(prev => prev.filter((_, i) => i !== index));
-  }
-
-  function validateRefillDate(value: string): string {
-    if (!value.trim()) return '';
-    const parts = value.split('/');
-    if (
-      parts.length !== 3 ||
-      parts[0]?.length !== 2 ||
-      parts[1]?.length !== 2 ||
-      parts[2]?.length !== 4
-    ) return 'Enter a complete date in MM/DD/YYYY format.';
-    const mm = parseInt(parts[0], 10);
-    const dd = parseInt(parts[1], 10);
-    const yyyy = parseInt(parts[2], 10);
-    const currentYear = new Date().getFullYear();
-    if (isNaN(mm) || mm < 1 || mm > 12) return 'Month must be between 01 and 12.';
-    if (isNaN(dd) || dd < 1 || dd > 31) return 'Day must be between 01 and 31.';
-    if (isNaN(yyyy) || yyyy < currentYear) return 'Year must be this year or later.';
-    if (yyyy > currentYear + 10) return 'Refill date can be at most 10 years in the future.';
-    const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
-    if (isNaN(d.getTime())) return 'Enter a valid date in MM/DD/YYYY format.';
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (d <= today) return 'Refill date must be in the future.';
-    return '';
   }
 
   /**
@@ -323,21 +272,29 @@ export default function AddMedicationScreen() {
     const dosageInvalid    = !dosageAmount.trim();
     const daysInvalid      = daysOfWeek.length === 0;
     const coverNameInvalid = privacyMode && !coverName.trim();
-    const parsedStart = parseMMDDYYYY(startDateText);
-    const today = new Date(); today.setHours(23, 59, 59, 999);
-    const startDateInvalid = !parsedStart || parsedStart > today;
-    const parsedEnd = endDateText.trim() ? parseMMDDYYYY(endDateText) : null;
-    const endDateInvalid = endDateText.trim() && (!parsedEnd || (parsedStart && parsedEnd <= parsedStart));
+    const startDateInvalid = !startDate;
+    const endDateInvalid   = endDate && endDate < startDate;
     const newTimeErrors    = reminderHours.map(h => !h.trim());
 
-    const refillError = validateRefillDate(refillDate);
+    let refillError = '';
+    if (refillDate.trim()) {
+      const parts = refillDate.split('/');
+      const d = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (isNaN(d.getTime()) || parts.length !== 3 || parts[2]?.length !== 4) {
+        refillError = 'Please enter a valid date (MM/DD/YYYY).';
+      } else if (d <= today) {
+        refillError = 'Refill date must be in the future.';
+      }
+    }
 
     setNameError(nameInvalid);
     setDosageError(dosageInvalid);
     setDaysError(daysInvalid);
     setCoverNameError(coverNameInvalid);
-    setStartDateError(startDateInvalid ? (!parsedStart ? 'Enter a complete date in MM/DD/YYYY format.' : 'Start date must be today or in the past.') : '');
-    setEndDateError(endDateInvalid ? (!parsedEnd ? 'Enter a complete date in MM/DD/YYYY format.' : 'End date must be after the start date.') : '');
+    setStartDateError(startDateInvalid ? 'Start date is required.' : '');
+    setEndDateError(endDateInvalid ? 'End date cannot be before start date.' : '');
     setTimeErrors(newTimeErrors);
     setRefillDateError(refillError);
     if (nameInvalid || dosageInvalid || daysInvalid || coverNameInvalid || startDateInvalid || endDateInvalid || newTimeErrors.some(Boolean) || refillError) return;
@@ -361,8 +318,8 @@ export default function AddMedicationScreen() {
         daysOfWeek,
         isPRN: frequency === 'as-needed',
         privacyMode,
-        startDate: mmddyyyyToISO(startDateText),
-        endDate: endDateText.trim() ? mmddyyyyToISO(endDateText) : undefined,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
@@ -385,12 +342,11 @@ export default function AddMedicationScreen() {
         isPRN: frequency === 'as-needed',
         privacyMode,
         isActive: true,
-        startDate: mmddyyyyToISO(startDateText),
-        endDate: endDateText.trim() ? mmddyyyyToISO(endDateText) : undefined,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         refillDate: refillDate.trim() || undefined,
         dosesTakenToday: new Array(doseCount).fill(false),
         totalDosesToday: doseCount,
-        owner: activeAccount === 'shared' ? 'shared' : 'mine',
       });
       if (fromTab) {
         navigation.goBack();
@@ -492,7 +448,6 @@ export default function AddMedicationScreen() {
               setRefillDate(formatDateInput(t));
               if (refillDateError) setRefillDateError('');
             }}
-            onBlur={() => setRefillDateError(validateRefillDate(refillDate))}
           />
           {!!refillDateError && <Text style={[s.errorText, { marginTop: 6 }]}>{refillDateError}</Text>}
         </View>
@@ -558,55 +513,64 @@ export default function AddMedicationScreen() {
         {daysError && <Text style={s.errorText}>Please select at least one day.</Text>}
 
         <Text style={s.lbl}>Start Date <Text style={{ color: colors.rose }}>Required</Text></Text>
-        <TextInput
-          style={[s.inp, !!startDateError && s.inpError]}
-          placeholder="MM/DD/YYYY"
-          placeholderTextColor="#b0bec5"
-          keyboardType="numeric"
-          value={startDateText}
-          maxLength={10}
-          onChangeText={(t) => {
-            setStartDateText(formatDateInput(t));
-            if (startDateError) setStartDateError('');
-          }}
-          onBlur={() => {
-            const parsed = parseMMDDYYYY(startDateText);
-            if (!startDateText.trim()) {
-              setStartDateError('Start date is required.');
-            } else if (!parsed) {
-              setStartDateError('Enter a complete date in MM/DD/YYYY format.');
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowStartPicker(true)} activeOpacity={0.7}>
+          <Text style={s.dateBtnText}>
+            {startDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit' 
+            })}
+          </Text>
+          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={showStartPicker}
+          mode="date"
+          date={startDate}
+          onConfirm={(selectedDate) => {
+            setShowStartPicker(false);
+            setStartDate(selectedDate);
+            setStartDateError('');
+            if (endDate && selectedDate > endDate) {
+              setEndDateError('End date cannot be before start date.');
             } else {
-              const today = new Date();
-              today.setHours(23, 59, 59, 999);
-              if (parsed > today) setStartDateError('Start date must be today or in the past.');
-              else setStartDateError('');
+              setEndDateError('');
             }
           }}
+          onCancel={() => setShowStartPicker(false)}
         />
-        {!!startDateError && <Text style={s.errorText}>{startDateError}</Text>}
+        {startDateError && <Text style={s.errorText}>{startDateError}</Text>}
 
         <Text style={s.lbl}>End Date <Text style={{ color: colors.mint }}>Optional</Text></Text>
-        <TextInput
-          style={[s.inp, !!endDateError && s.inpError]}
-          placeholder="MM/DD/YYYY (leave blank if ongoing)"
-          placeholderTextColor="#b0bec5"
-          keyboardType="numeric"
-          value={endDateText}
-          maxLength={10}
-          onChangeText={(t) => {
-            setEndDateText(formatDateInput(t));
-            if (endDateError) setEndDateError('');
+        <TouchableOpacity style={s.dateBtn} onPress={() => setShowEndPicker(true)} activeOpacity={0.7}>
+          <Text style={s.dateBtnText}>
+            {endDate 
+              ? endDate.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: '2-digit', 
+                  day: '2-digit' 
+                })
+              : 'No end date (ongoing)'
+            }
+          </Text>
+          <MaterialCommunityIcons name="calendar" size={16} color={colors.mint} />
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={showEndPicker}
+          mode="date"
+          date={endDate || new Date()}
+          onConfirm={(selectedDate) => {
+            setShowEndPicker(false);
+            setEndDate(selectedDate);
+            if (selectedDate < startDate) {
+              setEndDateError('End date cannot be before start date.');
+            } else {
+              setEndDateError('');
+            }
           }}
-          onBlur={() => {
-            if (!endDateText.trim()) { setEndDateError(''); return; }
-            const parsedEnd = parseMMDDYYYY(endDateText);
-            if (!parsedEnd) { setEndDateError('Enter a complete date in MM/DD/YYYY format.'); return; }
-            const parsedStart = parseMMDDYYYY(startDateText);
-            if (parsedStart && parsedEnd <= parsedStart) setEndDateError('End date must be after the start date.');
-            else setEndDateError('');
-          }}
+          onCancel={() => setShowEndPicker(false)}
         />
-        {!!endDateError && <Text style={s.errorText}>{endDateError}</Text>}
+        {endDateError && <Text style={s.errorText}>{endDateError}</Text>}
 
         <Text style={s.lbl}>Frequency <Text style={{ color: colors.rose }}>Required</Text></Text>
         <View style={s.chips}>
@@ -870,4 +834,6 @@ const s = StyleSheet.create({
   unitDropItemOn: { backgroundColor: colors.mintL },
   unitDropItemText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
   unitDropItemTextOn: { fontFamily: fonts.bold, color: colors.mintD },
+  dateBtn: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  dateBtnText: { fontSize: fontSizes.base, fontFamily: fonts.regular, color: colors.navy },
 });

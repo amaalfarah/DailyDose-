@@ -3,7 +3,11 @@
     "name": "DailyDose+",
     "slug": "dailydose",
     "version": "1.0.0",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,13 +16,18 @@
       "resizeMode": "contain",
       "backgroundColor": "#1fa97a"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dailydoseplus.app",
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "DailyDose+ uses notifications to remind you to take your medications on time.",
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -35,11 +44,17 @@
       ]
     },
     "plugins": [
-      ["expo-notifications", {
-        "icon": "./assets/notification-icon.png",
-        "color": "#1fa97a",
-        "sounds": []
-      }]
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1fa97a",
+          "sounds": []
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-secure-store"
     ],
     "scheme": "dailydoseplus",
     "web": {

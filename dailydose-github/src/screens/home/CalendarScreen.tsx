@@ -10,12 +10,6 @@ import { useMedStore } from '../../store/useMedStore';
 const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_KEYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// "YYYY-MM-DD" → "Apr 5, 2026" (avoids UTC shift)
-function formatISODate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 // "2:30 PM" → minutes since midnight
 function parseTimeToMinutes(timeStr: string): number {
   const parts = timeStr.trim().split(' ');
@@ -284,14 +278,6 @@ export default function CalendarScreen() {
                               <Text style={s.detailLabel}>Hide in notifications</Text>
                               <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
                             </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>Start Date</Text>
-                              <Text style={s.detailValue}>{med.startDate ? formatISODate(med.startDate) : '—'}</Text>
-                            </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>End Date</Text>
-                              <Text style={[s.detailValue, { color: med.endDate ? colors.navy : colors.muted }]}>{med.endDate ? formatISODate(med.endDate) : 'Ongoing'}</Text>
-                            </View>
                           </View>
                         )}
                       </View>
@@ -333,14 +319,6 @@ export default function CalendarScreen() {
                               <Text style={s.detailLabel}>Hide in notifications</Text>
                               <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
                             </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>Start Date</Text>
-                              <Text style={s.detailValue}>{med.startDate ? formatISODate(med.startDate) : '—'}</Text>
-                            </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>End Date</Text>
-                              <Text style={[s.detailValue, { color: med.endDate ? colors.navy : colors.muted }]}>{med.endDate ? formatISODate(med.endDate) : 'Ongoing'}</Text>
-                            </View>
                           </View>
                         )}
                       </View>
@@ -381,14 +359,6 @@ export default function CalendarScreen() {
                             <View style={s.detailRow}>
                               <Text style={s.detailLabel}>Hide in notifications</Text>
                               <Text style={[s.detailValue, { color: med.privacyMode ? colors.mint : colors.muted }]}>{med.privacyMode ? 'On' : 'Off'}</Text>
-                            </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>Start Date</Text>
-                              <Text style={s.detailValue}>{med.startDate ? formatISODate(med.startDate) : '—'}</Text>
-                            </View>
-                            <View style={s.detailRow}>
-                              <Text style={s.detailLabel}>End Date</Text>
-                              <Text style={[s.detailValue, { color: med.endDate ? colors.navy : colors.muted }]}>{med.endDate ? formatISODate(med.endDate) : 'Ongoing'}</Text>
                             </View>
                           </View>
                         )}

@@ -24,8 +24,7 @@ function toMinutes(t: string): number {
 }
 
 export default function HomeScreen() {
-  const { medications: allMedications, toggleDoseTaken } = useMedStore();
-  const medications = allMedications.filter((m) => m.owner !== 'shared');
+  const { medications, toggleDoseTaken } = useMedStore();
   const { checkTrialExpiry } = useSettingsStore();
   const { isOnTrial, daysRemaining } = useTrialStatus();
   const { user, pendingName } = useAuthStore();

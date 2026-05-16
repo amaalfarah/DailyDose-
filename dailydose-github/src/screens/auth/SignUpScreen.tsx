@@ -16,7 +16,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import TCModal from '../../components/TCModal';
 import { AuthStackParams } from '../../navigation/AppNavigator';
-import { checkUsernameAvailable, checkEmailAvailable } from '../../lib/supabase';
+import { checkUsernameAvailable, checkEmailAvailable, signUp } from '../../lib/supabase';
 
 type Nav = StackNavigationProp<AuthStackParams, 'SignUp'>;
 
@@ -120,6 +120,8 @@ export default function SignUpScreen() {
   const [touched, setTouched]           = useState<Record<string, boolean>>({});
   const [usernameStatus, setUsernameStatus] = useState<AsyncStatus>('idle');
   const [emailStatus, setEmailStatus]       = useState<AsyncStatus>('idle');
+  const [signUpError, setSignUpError]       = useState('');
+  const [signUpLoading, setSignUpLoading]   = useState(false);
 
   const usernameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const emailTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -184,16 +186,25 @@ export default function SignUpScreen() {
     setShowTC(true);
   }
 
-  function handleAcceptTC() {
+  async function handleAcceptTC() {
     setShowTC(false);
-    setPendingUser(username, email, dob);
-    if (caregiverCode.trim()) {
-      setSavedCaregiverCode(caregiverCode.trim());
-      setPendingInviteToken(caregiverCode.trim());
+    setSignUpError('');
+    setSignUpLoading(true);
+    try {
+      await signUp(email, password, username);
+      setPendingUser(username, email, dob);
+      if (caregiverCode.trim()) {
+        setSavedCaregiverCode(caregiverCode.trim());
+        setPendingInviteToken(caregiverCode.trim());
+      }
+      acceptTerms();
+      openTrialModal();
+      navigation.navigate('AddMedication');
+    } catch (err: any) {
+      setSignUpError(err?.message ?? 'Sign up failed. Please try again.');
+    } finally {
+      setSignUpLoading(false);
     }
-    acceptTerms();
-    openTrialModal();
-    navigation.navigate('AddMedication');
   }
 
   function handleGoToLogin() {
@@ -364,7 +375,15 @@ export default function SignUpScreen() {
             </View>
 
             {/* Sign up button */}
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleSignUp} activeOpacity={0.85}>
+            {signUpError ? (
+              <Text style={styles.errorText}>{signUpError}</Text>
+            ) : null}
+            <TouchableOpacity
+              style={[styles.btnPrimary, signUpLoading && { opacity: 0.7 }]}
+              onPress={handleSignUp}
+              activeOpacity={0.85}
+              disabled={signUpLoading}
+            >
               <Text style={styles.btnPrimaryText}>SIGN UP</Text>
             </TouchableOpacity>
 

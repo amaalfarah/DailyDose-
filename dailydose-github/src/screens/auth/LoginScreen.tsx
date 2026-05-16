@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform,
-  ScrollView,
+  ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import { colors } from '../../theme/colors';
 import { fonts, fontSizes } from '../../theme/typography';
 import { AuthStackParams } from '../../navigation/AppNavigator';
 import { useAuthStore } from '../../store/useAuthStore';
+import { getUserEmailByUsername, signIn, getProfile } from '../../lib/supabase';
 
 type Nav = StackNavigationProp<AuthStackParams, 'Login'>;
 
@@ -56,6 +57,8 @@ export default function LoginScreen() {
   const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [touched, setTouched]           = useState<Record<string, boolean>>({});
+  const [loading, setLoading]           = useState(false);
+  const [serverError, setServerError]   = useState('');
 
   function touch(field: string) {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -69,19 +72,46 @@ export default function LoginScreen() {
     return error ? colors.rose : colors.mint;
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     setTouched({ username: true, password: true });
+    setServerError('');
     if (validateUsername(username) || validatePassword(password)) return;
 
-    // Set the user in the auth store → AppNavigator auto-switches to MainTabs
-    login({
-      id: Date.now().toString(),
-      name: username,
-      email: '',
-      dob: '',
-      emailVerified: false,
-      type: 'primary',
-    });
+    setLoading(true);
+    try {
+      const email = await getUserEmailByUsername(username);
+      if (!email) {
+        setServerError('Account not found.');
+        return;
+      }
+
+      const { user } = await signIn(email, password);
+      if (!user) {
+        setServerError('Login failed. Please try again.');
+        return;
+      }
+
+      const profile = await getProfile(user.id);
+      login({
+        id: user.id,
+        name: profile.username ?? profile.full_name,
+        email: profile.email,
+        dob: profile.date_of_birth ?? '',
+        emailVerified: !!user.email_confirmed_at,
+        type: 'primary',
+      });
+    } catch (err: any) {
+      const msg = err?.message ?? '';
+      if (msg.toLowerCase().includes('invalid login')) {
+        setServerError('Incorrect password.');
+      } else if (msg.toLowerCase().includes('email not confirmed')) {
+        setServerError('Please verify your email before logging in.');
+      } else {
+        setServerError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleForgotPassword() {
@@ -168,9 +198,22 @@ export default function LoginScreen() {
               <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
 
+            {/* Server error */}
+            {serverError ? (
+              <Text style={styles.serverError}>{serverError}</Text>
+            ) : null}
+
             {/* Login button */}
-            <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} activeOpacity={0.85}>
-              <Text style={styles.loginBtnText}>LOGIN</Text>
+            <TouchableOpacity
+              style={[styles.loginBtn, loading && { opacity: 0.7 }]}
+              onPress={handleLogin}
+              activeOpacity={0.85}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator color={colors.white} />
+                : <Text style={styles.loginBtnText}>LOGIN</Text>
+              }
             </TouchableOpacity>
 
             {/* Sign up link */}
@@ -257,6 +300,14 @@ const styles = StyleSheet.create({
     color: colors.rose,
     marginTop: 4,
     marginLeft: 30,
+  },
+
+  serverError: {
+    fontSize: fontSizes.sm,
+    color: colors.rose,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 4,
   },
 
   forgotRow: {

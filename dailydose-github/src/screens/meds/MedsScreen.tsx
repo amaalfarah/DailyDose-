@@ -355,8 +355,14 @@ export default function MedsScreen() {
       </View>
       <Text style={styles.headerTitle}>My Medications</Text>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {medications.map((med, index) => {
+      <ScrollView contentContainerStyle={[styles.scroll, medications.length === 0 && styles.emptyScroll]} showsVerticalScrollIndicator={false}>
+        {medications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="pill" size={46} color={colors.muted} style={styles.emptyIcon} />
+            <Text style={styles.emptyTitle}>No current medications recorded</Text>
+            <Text style={styles.emptySubtitle}>Tap the + button to add your first medication.</Text>
+          </View>
+        ) : medications.map((med, index) => {
           const days = daysUntilRefill(med.refillDate);
           const isRefillSoon = days !== null && days >= 0 && days <= 3;
           const showRefillWarning = refillReminders && isRefillSoon;
@@ -1008,6 +1014,17 @@ const styles = StyleSheet.create({
   logo: { fontSize: 18, fontFamily: fonts.bold, color: colors.navy },
   headerTitle: { fontSize: 22, fontFamily: fonts.bold, color: colors.navy, textAlign: 'center', marginTop: 10, marginBottom: 4, paddingHorizontal: 16 },
   scroll: { padding: 16, paddingBottom: 100 },
+  emptyScroll: { flexGrow: 1, justifyContent: 'center' },
+  emptyState: { alignItems: 'center', paddingHorizontal: 18 },
+  emptyIcon: { marginBottom: 14 },
+  emptyTitle: {
+    fontSize: fontSizes.md, fontFamily: fonts.bold, color: colors.muted,
+    textAlign: 'center', marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: fontSizes.sm, color: colors.muted,
+    textAlign: 'center', lineHeight: 20,
+  },
   sectionHead: {
     fontSize: fontSizes.xs, fontFamily: fonts.bold, color: colors.muted,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10,

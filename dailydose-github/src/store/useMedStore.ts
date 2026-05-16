@@ -35,7 +35,6 @@ export interface Medication {
   dosesTakenToday: boolean[];
   totalDosesToday: number;
   createdAt: string;
-  owner: 'mine' | 'shared';
 }
 
 interface MedStore {
@@ -138,6 +137,7 @@ export const useMedStore = create<MedStore>()(
       storage: createJSONStorage(() => AsyncStorage),
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
+          // Migrate existing medications to have startDate
           const meds = persistedState?.medications || [];
           persistedState.medications = meds.map((m: any) => ({
             ...m,
@@ -145,16 +145,9 @@ export const useMedStore = create<MedStore>()(
             endDate: m.endDate || undefined,
           }));
         }
-        if (version <= 1) {
-          const meds = persistedState?.medications || [];
-          persistedState.medications = meds.map((m: any) => ({
-            ...m,
-            owner: m.owner ?? 'mine',
-          }));
-        }
         return persistedState;
       },
-      version: 2,
+      version: 1,
     }
   )
 );
